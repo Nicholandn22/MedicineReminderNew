@@ -1,4 +1,4 @@
-package com.example.medicineremindernew.ui.theme
+package com.example.medicineremindernew.ui.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,13 +1,22 @@
-package com.example.medicineremindernew;
+package com.example.medicineremindernew.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,18 +25,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.compose.rememberNavController
+import com.example.medicineremindernew.ui.ui.components.BottomNavigationBar
+import com.example.medicineremindernew.ui.ui.navigation.NavGraph
+import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                HomeScreen()
+            MedicineReminderNewTheme {
+                val navController = rememberNavController()
+                Scaffold(
+                    bottomBar = { BottomNavigationBar(navController = navController) }
+                ) {
+                    NavGraph(navController = navController)
+                }
+            }
             }
         }
     }
-}
+
 
 @Composable
 fun HomeScreen() {
