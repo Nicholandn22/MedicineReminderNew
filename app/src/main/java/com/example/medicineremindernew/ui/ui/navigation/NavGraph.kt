@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
+import com.example.medicineremindernew.ui.ui.screen.AddLansiaScreen
 import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
 import com.example.medicineremindernew.ui.ui.screen.HomeScreen
 import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
@@ -24,11 +25,17 @@ fun NavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() }
             )
         }
+        composable("addlansia") {
+            AddLansiaScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
 //        composable(BottomNavItem.Home.route) {
 //            HomeScreen(navController = navController)
 //        }
 
-        composable(BottomNavItem.Lansia.route) { LansiaScreen() }
+        composable(BottomNavItem.Lansia.route) { LansiaScreen(navController) }
         composable(BottomNavItem.Obat.route) { ObatScreen(navController) }
     }
 }
