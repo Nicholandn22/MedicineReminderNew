@@ -13,8 +13,8 @@ import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
         BottomNavItem.Home,
-        BottomNavItem.Reminder,
-        BottomNavItem.Profile
+        BottomNavItem.Lansia,
+        BottomNavItem.Obat
     )
 
     NavigationBar(

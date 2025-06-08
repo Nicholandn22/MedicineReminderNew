@@ -1,9 +1,10 @@
 package com.example.medicineremindernew.ui.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.graphics.vector.ImageVector
+
 
 sealed class BottomNavItem(
     val route: String,
@@ -11,6 +12,6 @@ sealed class BottomNavItem(
     val icon: ImageVector
 ) {
     object Home : BottomNavItem("home", "Home", Icons.Default.Home)
-    object Reminder : BottomNavItem("reminder", "Reminder", Icons.Default.Notifications)
-    object Profile : BottomNavItem("profile", "Profile", Icons.Default.Person)
+    object Lansia : BottomNavItem("lansia", "Lansia", Icons.Default.Person)
+    object Obat : BottomNavItem("obat", "Obat", Icons.Default.Medication)
 }
