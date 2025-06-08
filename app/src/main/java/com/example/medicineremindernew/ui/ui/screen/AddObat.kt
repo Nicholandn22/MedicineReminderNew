@@ -1,29 +1,12 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,30 +17,40 @@ import androidx.compose.ui.unit.sp
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.ui.theme.AbuMenu
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
-
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddObatScreen(
     onBackClick: () -> Unit = {},
-    onSaveClick: () -> Unit = {},
+    onSaveClick: (nama: String, jenis: String, satuan: String, notes: String) -> Unit = { _, _, _, _ -> },
     onCancelClick: () -> Unit = {}
 ) {
+    var namaObat by remember { mutableStateOf("") }
+    var jenisObat by remember { mutableStateOf("Tablet") }
+    var satuanDosis by remember { mutableStateOf("mg") }
+    var notes by remember { mutableStateOf("") }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()) // agar bisa scroll seluruh layar
+            .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .background(OrenMuda), // pastikan warna terimport
+                .background(OrenMuda),
             contentAlignment = Alignment.Center
         ) {
             IconButton(
                 onClick = onBackClick,
-                modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
             ) {
                 Icon(
                     painter = painterResource(id = back_white),
@@ -69,7 +62,7 @@ fun AddObatScreen(
             Text(text = "Tambah Obat", color = Color.White, fontSize = 20.sp)
         }
 
-        // ✅ Subheader "Data Obat"
+        // Subheader
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -79,7 +72,7 @@ fun AddObatScreen(
             Text("Data Obat", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
-        // ✅ Card Section: Nama, Jenis, Satuan, Notes
+        // Form Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -89,30 +82,48 @@ fun AddObatScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Nama Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text("Nama Obat", modifier = Modifier.padding(bottom = 20.dp))
+                TextField(
+                    value = namaObat,
+                    onValueChange = { namaObat = it },
+                    placeholder = { Text("Masukkan nama obat") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
+                )
 
                 Text("Jenis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                // Pakai DropdownMenuField dari desain kamu
                 DropdownMenuField(
                     options = listOf("Tablet", "Sirup", "Salep"),
-                    selectedOption = remember { mutableStateOf("Tablet") }.value,
-                ) { /* handle selection */ }
+                    selectedOption = jenisObat,
+                    onOptionSelected = { jenisObat = it }
+                )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
                     options = listOf("mg", "ml", "IU"),
-                    selectedOption = remember { mutableStateOf("mg") }.value,
-                ) { /* handle selection */ }
+                    selectedOption = satuanDosis,
+                    onOptionSelected = { satuanDosis = it }
+                )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(15.dp))
 
                 Text("Notes (Opsional)", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Text("(Notes)", modifier = Modifier.padding(bottom = 20.dp))
+                TextField(
+                    value = notes,
+                    onValueChange = { notes = it },
+                    placeholder = { Text("Catatan tambahan") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(bottom = 4.dp)
+                )
             }
         }
 
-        // ✅ Tombol Save & Clear
+        // Buttons Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,26 +131,44 @@ fun AddObatScreen(
             horizontalArrangement = Arrangement.Center
         ) {
             Button(
-                onClick = onSaveClick,
+                onClick = {
+                    onSaveClick(namaObat, jenisObat, satuanDosis, notes)
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Data Obat berhasil disimpan")
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = OrenMuda
+                    containerColor = Color(0xFFBDBDBD),
+                    contentColor = Color.Black
                 ),
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                modifier = Modifier.weight(1f).padding(end = 8.dp)
             ) {
                 Text("Save")
             }
 
             Button(
-                onClick = onCancelClick,
+                onClick = {
+                    namaObat = ""
+                    jenisObat = "Tablet"
+                    satuanDosis = "mg"
+                    notes = ""
+                    onCancelClick()
+                },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = OrenMuda
+                    containerColor = Color(0xFFBDBDBD),
+                    contentColor = Color.Black
                 ),
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
             ) {
                 Text("Clear")
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
     }
 }
