@@ -1,34 +1,12 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,16 +17,14 @@ import androidx.compose.ui.unit.sp
 import com.example.medicineremindernew.R.drawable.add_file
 import com.example.medicineremindernew.R.drawable.plus_black
 import com.example.medicineremindernew.ui.ui.theme.AbuMenu
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.theme.PutihKolom
-
 
 @Composable
 fun AddReminderScreen(
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
-    onCancelClick: () -> Unit = {}
+    onClearClick: () -> Unit = {}
 ) {
     val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
     val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
@@ -56,97 +32,91 @@ fun AddReminderScreen(
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
     var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        // Header
-        Box(
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(Color.White),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                //.padding(bottom = 72.dp) // dihapus supaya scroll penuh
+                .verticalScroll(rememberScrollState())
         ) {
-            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
-                Icon(
-                    painter = painterResource(id = add_file),
-                    contentDescription = "Back",
-                    tint = Color.White,
-                    modifier = Modifier.padding(16.dp).size(32.dp)
-                )
-            }
-            Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp)
-        }
-
-        // Section: Pengingat
-        SectionTitle("Pengingat")
-
-        CardSection {
-            TextLabelValue(label = "Tanggal", value = "DD/MM/YYYY")
-            TextLabelValue(label = "Waktu", value = "(Pilih Waktu)")
-
-            Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
-            DropdownMenuField(options = pengulanganOptions, selectedOption = selectedPengulangan) {
-                selectedPengulangan = it
-            }
-
-            Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
-            DropdownMenuField(options = nadaDeringOptions, selectedOption = selectedNadaDering) {
-                selectedNadaDering = it
-            }
-        }
-
-        // Section: Pasien
-        SectionWithAddButton("Pasien")
-
-        CardSection {
-            ReminderButton(text = "Data Lansia 1")
-            ReminderButton(text = "Data Lansia 2")
-        }
-
-        // Section: Obat
-        SectionWithAddButton("List Obat")
-
-        CardSection {
-            ReminderButton(text = "Obat 1")
-            ReminderButton(text = "Obat 2")
-        }
-
-        // Save & Cancel buttons
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                onClick = onSaveClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = OrenMuda
-                )
-                ,
+            // Header
+            Box(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .weight(1f)
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
+                    Icon(
+                        painter = painterResource(id = add_file),
+                        contentDescription = "Back",
+                        tint = Color.White,
+                        modifier = Modifier.padding(16.dp).size(32.dp)
+                    )
+                }
+                Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp)
+            }
+
+            // Section: Pengingat
+            SectionTitle("Pengingat")
+            CardSection {
+                TextLabelValue(label = "Tanggal", value = "DD/MM/YYYY")
+                TextLabelValue(label = "Waktu", value = "(Pilih Waktu)")
+
+                Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
+                DropdownMenuField(
+                    options = pengulanganOptions,
+                    selectedOption = selectedPengulangan
+                ) { selectedPengulangan = it }
+
+                Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
+                DropdownMenuField(
+                    options = nadaDeringOptions,
+                    selectedOption = selectedNadaDering
+                ) { selectedNadaDering = it }
+            }
+
+            // Section: Pasien
+            SectionWithAddButton("Pasien")
+            CardSection {
+                ReminderButton(text = "Data Lansia 1")
+                ReminderButton(text = "Data Lansia 2")
+            }
+
+            // Section: Obat
+            SectionWithAddButton("List Obat")
+            CardSection {
+                ReminderButton(text = "Obat 1")
+                ReminderButton(text = "Obat 2")
+            }
+
+            // Clear button di bawah konten
+            OutlinedButton(
+                onClick = onClearClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color(0xFFBDBDBD),
+                    contentColor = Color.Black
+                )
             ) {
                 Text("Save")
             }
 
-            Button(
-                onClick = onCancelClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = OrenMuda
-                )
-                ,
+            // Save button non-sticky di bawah tombol Clear
+            OutlinedButton(
+                onClick = onSaveClick,
                 modifier = Modifier
-                    .padding(8.dp)
-                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color(0xFFBDBDBD),
+                    contentColor = Color.Black
+                )
             ) {
-                Text("Cancel")
+                Text("Save")
             }
         }
     }
@@ -195,8 +165,7 @@ fun CardSection(content: @Composable ColumnScope.() -> Unit) {
             .padding(8.dp),
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    )
-    {
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -238,12 +207,11 @@ fun DropdownMenuField(
                         onOptionSelected(it)
                         expanded = false
                     }
-                )}
-
+                )
             }
         }
     }
-
+}
 
 @Composable
 fun ReminderButton(text: String) {
@@ -252,8 +220,7 @@ fun ReminderButton(text: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-            colors = ButtonDefaults.buttonColors(PutihKolom
-        )
+        colors = ButtonDefaults.buttonColors(PutihKolom)
     ) {
         Text(text)
     }
