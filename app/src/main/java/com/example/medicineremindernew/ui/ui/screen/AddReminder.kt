@@ -1,12 +1,36 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +55,9 @@ fun AddReminderScreen(
 
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
     var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -91,36 +118,52 @@ fun AddReminderScreen(
                 ReminderButton(text = "Obat 2")
             }
 
-            // Clear button di bawah konten
-            OutlinedButton(
-                onClick = onClearClick,
+            // Buttons Row
+            // Buttons Row
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color(0xFFBDBDBD),
-                    contentColor = Color.Black
-                )
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text("Save")
+                Button(
+                    onClick = {
+                        onSaveClick()
+
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFBDBDBD),
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                ) {
+                    Text("Save")
+                }
+
+                Button(
+                    onClick = {
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFBDBDBD),
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                ) {
+                    Text("Clear")
+                }
             }
 
-            // Save button non-sticky di bawah tombol Clear
-            OutlinedButton(
-                onClick = onSaveClick,
+            SnackbarHost(
+                hostState = snackbarHostState,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color(0xFFBDBDBD),
-                    contentColor = Color.Black
-                )
-            ) {
-                Text("Save")
-            }
+                    .padding(50.dp)
+            )
+
+        }
         }
     }
-}
+
 
 @Composable
 fun SectionTitle(title: String) {

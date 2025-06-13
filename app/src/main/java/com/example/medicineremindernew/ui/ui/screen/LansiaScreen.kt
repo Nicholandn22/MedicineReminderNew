@@ -1,28 +1,71 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.medicineremindernew.ui.data.local.ObatDatabase
+import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.data.repository.LansiaRepository
+import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
+import kotlinx.coroutines.launch
+import java.sql.Date
+import java.util.Calendar
 
 @Composable
-fun LansiaScreen(navHostController: NavHostController) {
+fun LansiaScreen(
+    navController: NavController,
+    context: Context = LocalContext.current
+) {
+
+    val db = remember { ObatDatabase.getDatabase(context) }
+    val repository = remember { LansiaRepository(db.lansiaDao()) }
+    val viewModelFactory = remember { LansiaViewModelFactory(repository) }
+
+    val lansiaViewModel: LansiaViewModel = viewModel(
+        factory = LansiaViewModelFactory(repository)
+    )
+    val lansiaList = lansiaViewModel.getAllLansia.collectAsState(initial = emptyList()).value
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -33,7 +76,6 @@ fun LansiaScreen(navHostController: NavHostController) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Navbar (judul)
             Text(
                 text = "Lansia Page",
                 modifier = Modifier
@@ -45,19 +87,32 @@ fun LansiaScreen(navHostController: NavHostController) {
                 color = Color.White
             )
 
-            val scrollState = rememberScrollState()
-
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .verticalScroll(scrollState)
+                    .verticalScroll(rememberScrollState())
             ) {
-                LansiaItem(name = "Lansia 1", age = 23, GolDar = "AB")
-                LansiaItem(name = "Lansia 2", age = 24, GolDar = "B")
-                LansiaItem(name = "Lansia 3", age = 43, GolDar = "C")
-                LansiaItem(name = "Lansia 4", age = 63, GolDar = "O")
-                LansiaItem(name = "Lansia 5", age = 28, GolDar = "O+")
-                LansiaItem(name = "Lansia 6", age = 13, GolDar = "AD")
+                if (lansiaList.isEmpty()) {
+                    Text(
+                        text = "Belum ada data lansia",
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.White
+                    )
+                } else {
+                    lansiaList.forEach { lansia ->
+                        val usia = hitungUsiaDariTanggalLahir(java.sql.Date(lansia.lahir.time))
+                        LansiaItem(
+                            lansia = lansia,
+                            usia = usia,
+                            onDeleteClick = {
+                                lansiaViewModel.delete(lansia)
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Lansia berhasil dihapus")
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -67,14 +122,25 @@ fun LansiaScreen(navHostController: NavHostController) {
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 80.dp),
             onClick = {
-                navHostController.navigate("AddLansia")
+                navController.navigate("AddLansia")
             }
+        )
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp)
         )
     }
 }
 
 @Composable
-fun LansiaItem(name: String, age: Int, GolDar: String) {
+fun LansiaItem(
+    lansia: Lansia,
+    usia: Int,
+    onDeleteClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -84,18 +150,49 @@ fun LansiaItem(name: String, age: Int, GolDar: String) {
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Text(
-            text = name,
+            text = lansia.name,
             fontSize = 20.sp,
             color = Color.Black
         )
         Row {
-            Text("Usia : ", fontSize = 16.sp, color = Color.DarkGray)
-            Text("$age ", fontSize = 16.sp, color = Color.DarkGray)
-            Text("| Golongan Darah : ", fontSize = 16.sp, color = Color.DarkGray)
-            Text(GolDar, fontSize = 16.sp, color = Color.DarkGray)
+            Text("Usia : $usia", fontSize = 16.sp, color = Color.DarkGray)
+            Text(" | Golongan Darah : ${lansia.goldar}", fontSize = 16.sp, color = Color.DarkGray)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedButton(
+            onClick = onDeleteClick,
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color.Red
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Hapus",
+                tint = Color.Red
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Hapus", color = Color.Red)
         }
     }
 }
+
+fun hitungUsiaDariTanggalLahir(date: Date): Int {
+    val dob = Calendar.getInstance()
+    dob.time = date
+
+    val today = Calendar.getInstance()
+
+    var age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR)
+
+    if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+        age--
+    }
+
+    return age
+}
+
 
 @Composable
 fun AddLansia(
