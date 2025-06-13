@@ -59,6 +59,8 @@ dependencies {
     implementation ("com.google.android.material:material:1.9.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(libs.androidx.navigation.runtime.android)
+    implementation(libs.androidx.adapters)
+    implementation(libs.protolite.well.known.types)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

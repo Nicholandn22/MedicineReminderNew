@@ -167,8 +167,8 @@ fun AddObatScreen(
                     }
                     // Reset form
                     namaObat = ""
-                    jenisObat = "Tablet"
-                    satuanDosis = "mg"
+                    jenisObat = ""
+                    satuanDosis = ""
                     notes = ""
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -183,8 +183,8 @@ fun AddObatScreen(
             Button(
                 onClick = {
                     namaObat = ""
-                    jenisObat = "Tablet"
-                    satuanDosis = "mg"
+                    jenisObat = ""
+                    satuanDosis = ""
                     notes = ""
                 },
                 colors = ButtonDefaults.buttonColors(
