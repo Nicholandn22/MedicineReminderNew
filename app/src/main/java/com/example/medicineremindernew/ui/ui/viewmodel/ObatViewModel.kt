@@ -21,5 +21,8 @@ class ObatViewModel(private val repository: ObatRepository) : ViewModel() {
             repository.insert(obat)
         }
     }
+    fun delete(obat: Obat) = viewModelScope.launch {
+        repository.delete(obat)
+    }
 
 }
