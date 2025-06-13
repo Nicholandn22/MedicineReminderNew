@@ -1,5 +1,5 @@
-package com.example.medicineremindernew.ui.ui.screen
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,22 +18,41 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.R.drawable.pill
+import com.example.medicineremindernew.R
+import com.example.medicineremindernew.ui.data.local.ObatDatabase
+import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
-
+import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
 
 @Composable
-fun ObatScreen(navController: NavController) {
+fun ObatScreen(
+    navController: NavController,
+    context: Context = LocalContext.current
+) {
+    val db = remember { ObatDatabase.getDatabase(context) }
+    val repository = remember { ObatRepository(db.obatDao()) }
+    val viewModelFactory = remember { ObatViewModelFactory(repository) }
+
+    val viewModel: ObatViewModel = viewModel(factory = viewModelFactory)
+
+    val obatList by viewModel.allObat.collectAsState(initial = emptyList())
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -44,7 +63,6 @@ fun ObatScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Navbar (judul) tetap di atas, tidak scroll
             Text(
                 text = "Obat Page",
                 modifier = Modifier
@@ -56,33 +74,35 @@ fun ObatScreen(navController: NavController) {
                 color = Color.White
             )
 
-            // Konten reminder yang scrollable
-            // Bisa menggunakan LazyColumn atau Column + verticalScroll
-
             val scrollState = rememberScrollState()
 
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .verticalScroll(scrollState) // enable scroll vertikal
+                    .verticalScroll(scrollState)
             ) {
-
-
-                // List reminder (bisa dipakai list biasa karena sudah di dalam scrollable)
-                ObatItem(name = "Lansia 1", jenis = "Tablet")
-                ObatItem(name = "Lansia 2", jenis = "Sirup")
-                ObatItem(name = "Lansia 3", jenis = "Krim")
-                ObatItem(name = "Lansia 4", jenis = "Puyer")
-                ObatItem(name = "Lansia 5", jenis = "Tablet")
-                ObatItem(name = "Lansia 6", jenis = "Krim")
-
-
+                if (obatList.isEmpty()) {
+                    Text(
+                        text = "Belum ada data obat",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                } else {
+                    // ✅ ObatItem butuh nama field yg benar (nama, bukan name)
+                    obatList.forEach { obat ->
+                        ObatItem(
+                            name = obat.nama,
+                            jenis = obat.jenis,
+                            dosis = obat.dosis,
+                            keterangan = obat.keterangan
+                        )
+                    }
+                }
             }
         }
 
-        // Tombol Add tetap floating di kanan bawah layar (di luar scroll)
-        // Tombol Add tetap floating di kanan bawah layar (di luar scroll)
-        AddObat (
+        AddObat(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 80.dp),
@@ -94,7 +114,7 @@ fun ObatScreen(navController: NavController) {
 }
 
 @Composable
-fun ObatItem(name: String,jenis: String) {
+fun ObatItem(name: String, jenis: String, dosis: String, keterangan: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -103,46 +123,37 @@ fun ObatItem(name: String,jenis: String) {
             .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-
         Text(
             text = name,
             fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
             color = Color.Black
         )
-        Row {
 
-            Text(
-                text = "Jenis Obat : ",
-                fontSize = 16.sp,
-                color = Color.DarkGray
-            )
-            Text(
-                text = jenis,
-                fontSize = 16.sp,
-                color = Color.DarkGray
-            )
-        }
-
+        Text(text = "Jenis Obat: $jenis", fontSize = 16.sp, color = Color.DarkGray)
+        Text(text = "Dosis: $dosis", fontSize = 16.sp, color = Color.DarkGray)
+        Text(text = "Keterangan: $keterangan", fontSize = 16.sp, color = Color.DarkGray)
     }
 }
 
 @Composable
 fun AddObat(
+//    viewModel: ObatViewModel,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = OrenMuda,         // Latar belakang tombol
-        contentColor = Color.White         // Warna konten (ikon & teks)
+        containerColor = OrenMuda,
+        contentColor = Color.White
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 20.dp)
         ) {
             Icon(
-                painter = painterResource(id = pill),  // pastikan file ada di drawable
+                painter = painterResource(id = R.drawable.pill),
                 contentDescription = "Add",
                 modifier = Modifier.size(30.dp)
             )

@@ -1,7 +1,11 @@
+//import jdk.tools.jlink.internal.Platform.runtime
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt") // ✅ Tambahkan ini untuk Room (kapt)
+
 }
 
 android {
@@ -66,7 +70,13 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.1.2")
     implementation("androidx.compose.ui:ui-tooling-preview:1.5.0")
     debugImplementation("androidx.compose.ui:ui-tooling:1.5.0")
-    implementation ("androidx.compose.material:material-icons-extended:<version>")
+    implementation("androidx.compose.material:material-icons-extended:1.5.0") // ✅ Ganti <version>
+
+    // ✅ Room dependencies
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
 
 //    implementation ("androidx.compose.material:material:1.6.1")
 //    implementation ("androidx.navigation:navigation-compose:2.7.7")
