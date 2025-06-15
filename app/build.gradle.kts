@@ -79,6 +79,8 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
+    implementation("androidx.compose.material3:material3:1.2.0") // atau versi terbaru
+
 
 //    implementation ("androidx.compose.material:material:1.6.1")
 //    implementation ("androidx.navigation:navigation-compose:2.7.7")

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ReminderViewModel(private val repository: ReminderRepository) : ViewModel() {
-    val lansiaList: StateFlow<List<Reminder>> = repository.getAllReminder.stateIn(
+    val reminderList: StateFlow<List<Reminder>> = repository.getAllReminder.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

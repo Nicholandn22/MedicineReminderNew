@@ -53,8 +53,8 @@ class MainActivity : ComponentActivity() {
                     NavGraph(
                         navController = navController,
                         obatViewModel = obatViewModel,
-                        lansiaViewModel = lansiaViewModel
-//                        reminderViewModel = reminderViewModel
+                        lansiaViewModel = lansiaViewModel,
+                        reminderViewModel = reminderViewModel
                     )
                 }
             }

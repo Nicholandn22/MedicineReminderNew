@@ -15,32 +15,51 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R.drawable.add_file
+import com.example.medicineremindernew.ui.data.local.ObatDatabase
+import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
 
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewModel) {
+
+
+    val context = LocalContext.current
+    val db = remember { ObatDatabase.getDatabase(context) }
+
+    val reminderViewModel: ReminderViewModel = viewModel(
+        factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))
+    )
+
+// GANTI 'viewModel.reminde' DENGAN 'reminderViewModel.reminderList'
+    val reminders by reminderViewModel.reminderList.collectAsState()
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -51,7 +70,7 @@ fun HomeScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Navbar (judul) tetap di atas, tidak scroll
+            // Navbar
             Text(
                 text = "Home Page",
                 modifier = Modifier
@@ -63,17 +82,14 @@ fun HomeScreen(navController: NavController) {
                 color = Color.White
             )
 
-            // Konten reminder yang scrollable
-            // Bisa menggunakan LazyColumn atau Column + verticalScroll
-
             val scrollState = rememberScrollState()
 
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .verticalScroll(scrollState) // enable scroll vertikal
+                    .verticalScroll(scrollState)
             ) {
-                // CardView: Reminder Terdekat
+                // Reminder Terdekat (sementara contoh statis, bisa diubah jadi reminder[0])
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -97,7 +113,7 @@ fun HomeScreen(navController: NavController) {
                         )
 
                         Text(
-                            text = "10:00 AM - 30 April 2024",
+                            text = "10:00 AM - 30 April 2024", // TODO: Ganti ke reminder paling awal
                             color = Color(0xFF666666),
                             fontSize = 14.sp,
                             modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
@@ -138,21 +154,17 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
 
-                // List reminder (bisa dipakai list biasa karena sudah di dalam scrollable)
-                ReminderItem(title = "Reminder 1", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 2", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 3", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 4", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 5", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 6", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 7", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 8", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 9", time = "23 May, 2024  02:00PM")
-                ReminderItem(title = "Reminder 10", time = "23 May, 2024  02:00PM")
+                // Daftar reminder dari database
+                reminders.forEach { reminder ->
+                    ReminderItem(
+                        title = "Reminder Lansia ${reminder.lansiaId} - Obat ${reminder.obatId}",
+                        time = "${reminder.tanggal} - ${reminder.waktu}"
+                    )
+                }
             }
         }
 
-        // Tombol Add tetap floating di kanan bawah layar (di luar scroll)
+        // Tombol tambah reminder
         AddButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -180,35 +192,20 @@ fun ReminderItem(title: String, time: String) {
             color = Color.Black
         )
         Row {
-        Text(text = "Waktu : ",
-        fontSize = 16.sp,
-        color = Color.DarkGray
-        )
-        Text(
-            text = time,
-            fontSize = 16.sp,
-            color = Color.DarkGray
-        )
+            Text(
+                text = "Waktu : ",
+                fontSize = 16.sp,
+                color = Color.DarkGray
+            )
+            Text(
+                text = time,
+                fontSize = 16.sp,
+                color = Color.DarkGray
+            )
         }
     }
 }
 
-@Composable
-fun AddButton(modifier: Modifier = Modifier) {
-    ExtendedFloatingActionButton(
-        onClick = { /* TODO: aksi tambah */ },
-        modifier = modifier,
-        containerColor = Color(0xFFFC5007),
-        contentColor = Color.White,
-        text = { Text("Add Reminder") },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Tambah"
-            )
-        }
-    )
-}
 @Composable
 fun AddButton(
     modifier: Modifier = Modifier,
@@ -217,15 +214,15 @@ fun AddButton(
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = OrenMuda,         // Latar belakang tombol
-        contentColor = Color.Black         // Warna konten (ikon & teks)
+        containerColor = OrenMuda,
+        contentColor = Color.Black
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 12.dp)
         ) {
             Icon(
-                painter = painterResource(id = add_file),  // pastikan file ada di drawable
+                painter = painterResource(id = add_file),
                 contentDescription = "Add",
                 modifier = Modifier.size(30.dp)
             )
@@ -234,5 +231,3 @@ fun AddButton(
         }
     }
 }
-
-
