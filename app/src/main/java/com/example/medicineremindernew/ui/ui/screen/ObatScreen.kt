@@ -1,4 +1,3 @@
-
 import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.background
@@ -11,14 +10,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -31,18 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.R
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
 
@@ -99,14 +95,14 @@ fun ObatScreen(
                     obatList.forEach { obat ->
                         ObatItem(
                             obat = obat,
-                            onDeleteClick = { viewModel.delete(it) } // atau aksi lain untuk menghapus
+                            onDeleteClick = { viewModel.delete(it) }
                         )
                     }
                 }
-
             }
         }
 
+        // Tombol Tambah Obat
         AddObat(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -117,6 +113,7 @@ fun ObatScreen(
         )
     }
 }
+
 @Composable
 fun ObatItem(
     obat: Obat,
@@ -158,27 +155,22 @@ fun ObatItem(
 
 @Composable
 fun AddObat(
-//    viewModel: ObatViewModel,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    FloatingActionButton(
+    ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = OrenMuda,
-        contentColor = Color.White
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 20.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.pill),
-                contentDescription = "Add",
-                modifier = Modifier.size(30.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+        containerColor = Color(0xFFFC5007),
+        contentColor = Color.White,
+        text = {
             Text(text = "Tambah Obat")
+        },
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Tambah Obat"
+            )
         }
-    }
+    )
 }

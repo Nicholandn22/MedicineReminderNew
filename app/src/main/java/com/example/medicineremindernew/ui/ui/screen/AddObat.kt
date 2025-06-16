@@ -134,7 +134,7 @@ fun AddObatScreen(
                 onClick = {
                     if (namaObat.isBlank() || jenisObat.isBlank() || satuanDosis.isBlank()) {
                         scope.launch {
-                            snackbarHostState.showSnackbar("Field wajib tidak boleh kosong!")
+                            snackbarHostState.showSnackbar("Data obat tidak boleh kosong!")
                         }
                     } else {
                         val newObat = Obat(
