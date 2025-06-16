@@ -1,5 +1,7 @@
+// AddReminderScreen.kt
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,21 +29,41 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.medicineremindernew.R.drawable.add_file
 import com.example.medicineremindernew.R.drawable.plus_black
+import com.example.medicineremindernew.ui.data.local.ObatDatabase
+import com.example.medicineremindernew.ui.data.model.Reminder
+import com.example.medicineremindernew.ui.data.repository.LansiaRepository
+import com.example.medicineremindernew.ui.data.repository.ObatRepository
+import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.AbuMenu
 import com.example.medicineremindernew.ui.ui.theme.PutihKolom
+import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
+import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
+import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
+import kotlinx.coroutines.launch
+import java.sql.Time
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun AddReminderScreen(
@@ -50,6 +72,32 @@ fun AddReminderScreen(
     onSaveClick: () -> Unit = {},
     onClearClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val db = remember { ObatDatabase.getDatabase(application) }
+
+    val reminderViewModel: ReminderViewModel = viewModel(
+        factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))
+    )
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val obatViewModel: ObatViewModel = viewModel(
+        factory = ObatViewModelFactory(ObatRepository(db.obatDao()))
+    )
+
+    val lansiaViewModel: LansiaViewModel = viewModel(
+        factory = LansiaViewModelFactory(LansiaRepository(db.lansiaDao()))
+    )
+
+    val lansiaList = lansiaViewModel.getAllLansia.collectAsState(initial = emptyList()).value
+    val obatList = obatViewModel.allObat.collectAsState(initial = emptyList()).value
+
+    var selectedLansia by remember { mutableStateOf<Int?>(null) }
+    var selectedObat by remember { mutableStateOf<Int?>(null) }
+    var tanggal by remember { mutableStateOf("") }
+    var waktu by remember { mutableStateOf("") }
+
     val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
     val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
 
@@ -58,12 +106,10 @@ fun AddReminderScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                //.padding(bottom = 72.dp) // dihapus supaya scroll penuh
                 .verticalScroll(rememberScrollState())
         ) {
             // Header
@@ -88,37 +134,91 @@ fun AddReminderScreen(
             // Section: Pengingat
             SectionTitle("Pengingat")
             CardSection {
-                TextLabelValue(label = "Tanggal", value = "DD/MM/YYYY")
-                TextLabelValue(label = "Waktu", value = "(Pilih Waktu)")
+                val context = LocalContext.current
+                val calendar = remember { Calendar.getInstance() }
+
+                val datePickerDialog = remember {
+                    android.app.DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            tanggal = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    )
+                }
+
+                Button(
+                    onClick = { datePickerDialog.show() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
+                }
+
+                val timePickerDialog = remember {
+                    android.app.TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            waktu = String.format("%02d:%02d", hourOfDay, minute)
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        true
+                    )
+                }
+
+                Button(
+                    onClick = { timePickerDialog.show() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
+                }
 
                 Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
-                DropdownMenuField(
-                    options = pengulanganOptions,
-                    selectedOption = selectedPengulangan
-                ) { selectedPengulangan = it }
-
+                DropdownMenuField(pengulanganOptions, selectedPengulangan) {
+                    selectedPengulangan = it
+                }
                 Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
-                DropdownMenuField(
-                    options = nadaDeringOptions,
-                    selectedOption = selectedNadaDering
-                ) { selectedNadaDering = it }
+                DropdownMenuField(nadaDeringOptions, selectedNadaDering) {
+                    selectedNadaDering = it
+                }
             }
 
             // Section: Pasien
             SectionWithAddButton("Pasien")
             CardSection {
-                ReminderButton(text = "Data Lansia 1")
-                ReminderButton(text = "Data Lansia 2")
+                if (lansiaList.isEmpty()) {
+                    Text("Belum ada data lansia")
+                } else {
+                    lansiaList.forEach { lansia ->
+                        ReminderButton(
+                            text = lansia.name,
+                            onClick = { selectedLansia = lansia.id },
+                            isSelected = selectedLansia == lansia.id
+                        )
+
+                    }
+                }
             }
 
             // Section: Obat
             SectionWithAddButton("List Obat")
             CardSection {
-                ReminderButton(text = "Obat 1")
-                ReminderButton(text = "Obat 2")
+                if (obatList.isEmpty()) {
+                    Text("Belum ada data obat")
+                } else {
+                    obatList.forEach { obat ->
+                        ReminderButton(
+                            text = obat.nama,
+                            onClick = { selectedObat = obat.id },
+                            isSelected = selectedObat == obat.id
+                        )
+
+                    }
+                }
             }
 
-            // Buttons Row
             // Buttons Row
             Row(
                 modifier = Modifier
@@ -128,8 +228,26 @@ fun AddReminderScreen(
             ) {
                 Button(
                     onClick = {
-                        onSaveClick()
-
+                        if (selectedLansia != null && selectedObat != null && tanggal.isNotEmpty() && waktu.isNotEmpty()) {
+                            val formatterDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            val formatterTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            val reminder = Reminder(
+                                obatId = selectedObat!!,
+                                lansiaId = selectedLansia!!,
+                                tanggal = java.sql.Date(formatterDate.parse(tanggal)!!.time),
+                                waktu = Time(formatterTime.parse(waktu)!!.time),
+                                pengulangan = selectedPengulangan
+                            )
+                            reminderViewModel.insert(reminder)
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Reminder berhasil disimpan")
+                            }
+                            onSaveClick()
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Harap lengkapi semua data")
+                            }
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFBDBDBD),
@@ -142,6 +260,16 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = {
+                        selectedLansia = null
+                        selectedObat = null
+                        tanggal = ""
+                        waktu = ""
+                        selectedPengulangan = pengulanganOptions.first()
+                        selectedNadaDering = nadaDeringOptions.first()
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Form telah direset")
+                        }
+                        onClearClick()
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFBDBDBD),
@@ -159,11 +287,11 @@ fun AddReminderScreen(
                     .fillMaxWidth()
                     .padding(50.dp)
             )
-
-        }
         }
     }
+}
 
+// ====================== Helper Composables ======================
 
 @Composable
 fun SectionTitle(title: String) {
@@ -219,12 +347,6 @@ fun CardSection(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun TextLabelValue(label: String, value: String) {
-    Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-    Text(text = value, fontSize = 14.sp, modifier = Modifier.padding(bottom = 16.dp))
-}
-
-@Composable
 fun DropdownMenuField(
     options: List<String>,
     selectedOption: String,
@@ -257,14 +379,39 @@ fun DropdownMenuField(
 }
 
 @Composable
-fun ReminderButton(text: String) {
+fun ReminderButton(
+    text: String,
+    onClick: () -> Unit,
+    isSelected: Boolean
+) {
+    val backgroundColor = if (isSelected) Color(0xFFA5D6A7) else PutihKolom // Hijau muda
+    val contentColor = if (isSelected) Color.White else Color.Black
+
     Button(
-        onClick = { },
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        colors = ButtonDefaults.buttonColors(PutihKolom)
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = contentColor
+        )
     ) {
-        Text(text)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text)
+            if (isSelected) {
+                Icon(
+                    painter = painterResource(id = android.R.drawable.checkbox_on_background),
+                    contentDescription = "Selected",
+                    modifier = Modifier.size(18.dp),
+                    tint = Color.White
+                )
+            }
+        }
     }
 }
+

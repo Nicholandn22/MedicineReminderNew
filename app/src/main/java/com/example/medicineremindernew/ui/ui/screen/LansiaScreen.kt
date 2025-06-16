@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -55,7 +56,8 @@ fun LansiaScreen(
     context: Context = LocalContext.current
 ) {
 
-    val db = remember { ObatDatabase.getDatabase(context) }
+    val application = context.applicationContext as Application
+    val db = remember { ObatDatabase.getDatabase(application) }
     val repository = remember { LansiaRepository(db.lansiaDao()) }
     val viewModelFactory = remember { LansiaViewModelFactory(repository) }
 
