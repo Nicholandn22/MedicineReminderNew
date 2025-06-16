@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("kotlin-kapt") // ✅ Tambahkan ini untuk Room (kapt)
+    id ("kotlin-parcelize")
 
 }
 
@@ -61,6 +62,9 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.android)
     implementation(libs.androidx.adapters)
     implementation(libs.protolite.well.known.types)
+    implementation(libs.androidx.animation.core.android)
+    implementation(libs.androidx.animation.core.android)
+    implementation(libs.androidx.animation.core.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
