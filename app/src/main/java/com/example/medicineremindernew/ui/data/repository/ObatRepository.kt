@@ -15,4 +15,14 @@ class ObatRepository(private val obatDao: ObatDao) {
     suspend fun delete(obat: Obat) {
         obatDao.delete(obat)
     }
+
+    suspend fun update(obat: Obat) {
+        obatDao.update(obat)
+    }
+
+    // Tambahkan fungsi ini:
+    fun getObatById(id: Int): Flow<Obat?> {
+        return obatDao.getObatById(id)
+    }
 }
+

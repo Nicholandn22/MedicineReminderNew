@@ -3,6 +3,7 @@ package com.example.medicineremindernew.ui.ui.screen
 import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -111,7 +112,13 @@ fun LansiaScreen(
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar("Lansia berhasil dihapus")
                                 }
+                            },
+                            onItemClick = {
+                                navController.navigate("detail_lansia/${lansia.id}")
+
+
                             }
+
                         )
                     }
                 }
@@ -141,7 +148,9 @@ fun LansiaScreen(
 fun LansiaItem(
     lansia: Lansia,
     usia: Int,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onItemClick: () -> Unit // 👈 Tambah parameter
+
 ) {
     Column(
         modifier = Modifier
@@ -150,6 +159,7 @@ fun LansiaItem(
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 12.dp)
+            .clickable { onItemClick() } // 👈 Navigasi ke detail
     ) {
         Text(
             text = lansia.name,

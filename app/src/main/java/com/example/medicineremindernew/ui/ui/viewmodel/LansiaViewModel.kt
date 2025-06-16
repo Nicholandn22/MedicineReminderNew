@@ -14,6 +14,8 @@ class LansiaViewModel(private val repository: LansiaRepository) : ViewModel() {
 //        initialValue = emptyList()
 //    )
 
+
+
     val getAllLansia: Flow<List<Lansia>> = repository.getAllLansia
 
 
@@ -25,4 +27,18 @@ class LansiaViewModel(private val repository: LansiaRepository) : ViewModel() {
     fun delete(lansia: Lansia) = viewModelScope.launch {
         repository.delete(lansia)
     }
+
+    fun update(lansia: Lansia) {
+        viewModelScope.launch {
+            repository.update(lansia)
+        }
+    }
+
+
+
+    fun getLansiaById(id: Int): Flow<Lansia?> {
+        return repository.getLansiaById(id)
+    }
+
+
 }
