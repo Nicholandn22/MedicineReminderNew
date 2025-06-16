@@ -6,6 +6,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
@@ -45,17 +47,31 @@ class MainActivity : ComponentActivity() {
         val lansiaViewModel = LansiaViewModel(lansiaRepository)
         val reminderViewModel = ReminderViewModel(reminderRepository)
 
-        // ✅ INI DIPINDAH KE SINI
-        val authViewModelFactory = AuthViewModelFactory(application) // ✅ application adalah android.app.Application
+        // 4. Inisialisasi AuthViewModel
+        val authViewModelFactory = AuthViewModelFactory(application)
         val authViewModel: AuthViewModel by viewModels { authViewModelFactory }
 
-        // 4. Pasang ke UI
+        // 5. Pasang ke UI
         setContent {
             MedicineReminderNewTheme {
                 val navController = rememberNavController()
-                Scaffold(
-                    bottomBar = { BottomNavigationBar(navController = navController) }
-                ) {
+                val loginSuccess by authViewModel.loginSuccess.collectAsState()
+
+                if (loginSuccess) {
+                    // ✅ Bottom bar hanya muncul kalau sudah login
+                    Scaffold(
+                        bottomBar = { BottomNavigationBar(navController = navController) }
+                    ) {
+                        NavGraph(
+                            navController = navController,
+                            obatViewModel = obatViewModel,
+                            lansiaViewModel = lansiaViewModel,
+                            reminderViewModel = reminderViewModel,
+                            authViewModel = authViewModel
+                        )
+                    }
+                } else {
+                    // ✅ Jangan pakai BottomNavigationBar
                     NavGraph(
                         navController = navController,
                         obatViewModel = obatViewModel,
@@ -68,4 +84,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
