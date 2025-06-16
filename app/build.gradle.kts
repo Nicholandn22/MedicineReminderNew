@@ -80,6 +80,10 @@ dependencies {
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
     implementation("androidx.compose.material3:material3:1.2.0") // atau versi terbaru
+//    implementation (androidx.room:room-runtime:2.6.1)
+//    kapt (androidx.room:room-compiler:2.6.1)
+//    implementation (androidx.room:room-ktx:2.6.1)
+
 
 
 //    implementation ("androidx.compose.material:material:1.6.1")

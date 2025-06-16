@@ -10,31 +10,71 @@ import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
 import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
 import com.example.medicineremindernew.ui.ui.screen.HomeScreen
 import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
+import com.example.medicineremindernew.ui.ui.screen.LoginScreen
+import com.example.medicineremindernew.ui.ui.screen.RegisterScreen
+import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 
 @Composable
-fun NavGraph(navController: NavHostController,obatViewModel: ObatViewModel, lansiaViewModel: LansiaViewModel,reminderViewModel: ReminderViewModel) {
-    NavHost(navController, startDestination = BottomNavItem.Home.route) {
-        composable(BottomNavItem.Home.route)
-        { HomeScreen(
-            navController = navController,
-            reminderViewModel = reminderViewModel
-        )
+fun NavGraph(
+    navController: NavHostController,
+    obatViewModel: ObatViewModel,
+    lansiaViewModel: LansiaViewModel,
+    reminderViewModel: ReminderViewModel,
+    authViewModel: AuthViewModel // ✅ Tambahkan ViewModel Auth
+) {
+    NavHost(navController, startDestination = "login") { // ✅ Awali dari login
+        // ✅ LOGIN SCREEN
+        composable("login") {
+            LoginScreen(
+                viewModel = authViewModel,
+                onLoginSuccess = {
+                    navController.navigate(BottomNavItem.Home.route) {
+                        popUpTo("login") { inclusive = true } // Hapus login dari backstack
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate("register")
+                }
+            )
         }
 
+        // ✅ REGISTER SCREEN
+        composable("register") {
+            RegisterScreen(
+                viewModel = authViewModel,
+                onLoginSuccess = {
+                    navController.navigate(BottomNavItem.Home.route) {
+                        popUpTo("register") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // ✅ HOME (Reminder)
+        composable(BottomNavItem.Home.route) {
+            HomeScreen(
+                navController = navController,
+                reminderViewModel = reminderViewModel
+            )
+        }
+
+        // ✅ Tambahan lain
         composable("add_reminder") {
             AddReminderScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }
+
         composable("addObat") {
             AddObatScreen(
                 viewModel = obatViewModel,
                 onBackClick = { navController.popBackStack() }
             )
         }
+
         composable("addlansia") {
             AddLansiaScreen(
                 viewModel = lansiaViewModel,
@@ -42,11 +82,9 @@ fun NavGraph(navController: NavHostController,obatViewModel: ObatViewModel, lans
             )
         }
 
-//        composable(BottomNavItem.Home.route) {
-//            HomeScreen(navController = navController)
-//        }
-
+        // ✅ Lainnya
         composable(BottomNavItem.Lansia.route) { LansiaScreen(navController) }
         composable(BottomNavItem.Obat.route) { ObatScreen(navController) }
     }
 }
+

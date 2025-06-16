@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.material3.Scaffold
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
@@ -14,6 +15,8 @@ import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.components.BottomNavigationBar
 import com.example.medicineremindernew.ui.ui.navigation.NavGraph
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
+import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModelFactory
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
@@ -37,10 +40,14 @@ class MainActivity : ComponentActivity() {
         val lansiaRepository = LansiaRepository(database.lansiaDao())
         val reminderRepository = ReminderRepository(database.reminderDao())
 
-        // 3. Inisialisasi ViewModel secara manual (tanpa Hilt)
+        // 3. Inisialisasi ViewModel secara manual (non-Hilt)
         val obatViewModel = ObatViewModel(obatRepository)
         val lansiaViewModel = LansiaViewModel(lansiaRepository)
         val reminderViewModel = ReminderViewModel(reminderRepository)
+
+        // ✅ INI DIPINDAH KE SINI
+        val authViewModelFactory = AuthViewModelFactory(application) // ✅ application adalah android.app.Application
+        val authViewModel: AuthViewModel by viewModels { authViewModelFactory }
 
         // 4. Pasang ke UI
         setContent {
@@ -49,15 +56,16 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     bottomBar = { BottomNavigationBar(navController = navController) }
                 ) {
-                    // 5. Kirim semua ViewModel ke NavGraph
                     NavGraph(
                         navController = navController,
                         obatViewModel = obatViewModel,
                         lansiaViewModel = lansiaViewModel,
-                        reminderViewModel = reminderViewModel
+                        reminderViewModel = reminderViewModel,
+                        authViewModel = authViewModel
                     )
                 }
             }
         }
     }
 }
+

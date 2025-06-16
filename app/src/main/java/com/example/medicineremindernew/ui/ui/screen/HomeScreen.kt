@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,7 +51,8 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
 
 
     val context = LocalContext.current
-    val db = remember { ObatDatabase.getDatabase(context) }
+    val application = context.applicationContext as Application
+    val db = remember { ObatDatabase.getDatabase(application) }
 
     val reminderViewModel: ReminderViewModel = viewModel(
         factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))

@@ -1,4 +1,5 @@
 
+import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +51,8 @@ fun ObatScreen(
     navController: NavController,
     context: Context = LocalContext.current
 ) {
-    val db = remember { ObatDatabase.getDatabase(context) }
+    val application = context.applicationContext as Application
+    val db = remember { ObatDatabase.getDatabase(application) }
     val repository = remember { ObatRepository(db.obatDao()) }
     val viewModelFactory = remember { ObatViewModelFactory(repository) }
 
