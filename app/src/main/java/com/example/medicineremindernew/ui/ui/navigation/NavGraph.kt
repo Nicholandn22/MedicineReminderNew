@@ -12,6 +12,7 @@ import com.example.medicineremindernew.ui.ui.screen.AddLansiaScreen
 import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
 import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
 import com.example.medicineremindernew.ui.ui.screen.DetailLansiaScreen
+import com.example.medicineremindernew.ui.ui.screen.DetailObatScreen
 import com.example.medicineremindernew.ui.ui.screen.HomeScreen
 import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
 import com.example.medicineremindernew.ui.ui.screen.LoginScreen
@@ -98,6 +99,19 @@ fun NavGraph(
             val lansiaId = backStackEntry.arguments?.getInt("lansiaId") ?: return@composable
             DetailLansiaScreen(lansiaId = lansiaId, viewModel = lansiaViewModel,navController = navController )
         }
+
+        composable("DetailObat/{obatId}") { backStackEntry ->
+            val obatId = backStackEntry.arguments?.getString("obatId")?.toIntOrNull()
+            if (obatId != null) {
+                DetailObatScreen(
+                    obatId = obatId,
+                    viewModel = obatViewModel, // pastikan ini dari parent
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+        }
+
+
 
 
 

@@ -1,16 +1,16 @@
+
 import android.app.Application
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -95,7 +95,11 @@ fun ObatScreen(
                     obatList.forEach { obat ->
                         ObatItem(
                             obat = obat,
-                            onDeleteClick = { viewModel.delete(it) }
+                            onDeleteClick = { viewModel.deleteObat(it) },
+                            onItemClick = {
+                                navController.navigate("DetailObat/${obat.id}")
+                            }
+
                         )
                     }
                 }
@@ -117,7 +121,8 @@ fun ObatScreen(
 @Composable
 fun ObatItem(
     obat: Obat,
-    onDeleteClick: (Obat) -> Unit
+    onDeleteClick: (Obat) -> Unit,
+    onItemClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -125,6 +130,7 @@ fun ObatItem(
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
+            .clickable { onItemClick() } // ✅ Tambahkan ini
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
