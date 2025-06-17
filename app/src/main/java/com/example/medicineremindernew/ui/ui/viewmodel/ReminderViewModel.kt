@@ -79,15 +79,16 @@ val reminderList: StateFlow<List<Reminder>> = flow {
     }
 
     fun insertAndSchedule(reminder: Reminder, context: Context, onComplete: () -> Unit) {
-
         viewModelScope.launch {
-            Log.d("ReminderDebug", "Tanggal: ${reminder.tanggal}, Waktu: ${reminder.waktu}") // ⬅️ log di sini
-            Log.d("ReminderDebug", "Menjadwalkan alarm pada ${reminder.waktu} tanggal ${reminder.tanggal}")
-
-            val insertedId = repository.insertAndReturnId(reminder) // ⬅️ pakai repository
-            val insertedReminder = reminder.copy(id = insertedId.toInt())
-            scheduleAlarm(context, insertedReminder)
-            onComplete()
+            try {
+                Log.d("ReminderDebug", "Tanggal: ${reminder.tanggal}, Waktu: ${reminder.waktu}")
+                val insertedId = repository.insertAndReturnId(reminder)
+                val insertedReminder = reminder.copy(id = insertedId.toInt())
+                scheduleAlarm(context, insertedReminder)
+                onComplete()
+            } catch (e: Exception) {
+                Log.e("ReminderCrash", "Gagal insert reminder: ${e.message}", e)
+            }
         }
     }
 
