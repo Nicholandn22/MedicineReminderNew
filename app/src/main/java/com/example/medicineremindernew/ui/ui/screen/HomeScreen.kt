@@ -2,6 +2,7 @@ package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -160,7 +161,10 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                 reminders.forEach { reminder ->
                     ReminderItem(
                         title = "Reminder Lansia ${reminder.lansiaId} - Obat ${reminder.obatId}",
-                        time = "${reminder.tanggal} - ${reminder.waktu}"
+                        time = "${reminder.tanggal} - ${reminder.waktu}",
+                        onClick = {
+                            navController.navigate("detail_reminder/${reminder.id}")
+                        }
                     )
                 }
             }
@@ -179,13 +183,14 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
 }
 
 @Composable
-fun ReminderItem(title: String, time: String) {
+fun ReminderItem(title: String, time: String, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
+            .clickable { onClick() } // 👈 Bisa diklik
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Text(
@@ -207,6 +212,7 @@ fun ReminderItem(title: String, time: String) {
         }
     }
 }
+
 
 @Composable
 fun AddButton(

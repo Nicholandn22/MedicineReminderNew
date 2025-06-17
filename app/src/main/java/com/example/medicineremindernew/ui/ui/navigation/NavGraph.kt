@@ -13,6 +13,7 @@ import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
 import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
 import com.example.medicineremindernew.ui.ui.screen.DetailLansiaScreen
 import com.example.medicineremindernew.ui.ui.screen.DetailObatScreen
+import com.example.medicineremindernew.ui.ui.screen.DetailReminderScreen
 import com.example.medicineremindernew.ui.ui.screen.HomeScreen
 import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
 import com.example.medicineremindernew.ui.ui.screen.LoginScreen
@@ -110,6 +111,25 @@ fun NavGraph(
                 )
             }
         }
+
+        composable("detail_reminder/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
+            DetailReminderScreen(reminderId = id)
+        }
+
+        composable(
+            route = "detail_reminder/{reminderId}",
+            arguments = listOf(navArgument("reminderId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val reminderId = backStackEntry.arguments?.getInt("reminderId") ?: 0
+            DetailReminderScreen(
+                reminderId = reminderId,
+                onBackClick = { navController.popBackStack() },
+                onUpdateClick = { navController.popBackStack() }
+            )
+        }
+
+
 
 
 

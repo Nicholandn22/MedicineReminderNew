@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -23,4 +24,12 @@ class ReminderViewModel(private val repository: ReminderRepository) : ViewModel(
     fun delete(reminder: Reminder) = viewModelScope.launch {
         repository.delete(reminder)
     }
+
+    fun getReminderById(id: Int): Flow<Reminder?> = repository.getReminderById(id)
+
+    fun update(reminder: Reminder) = viewModelScope.launch {
+        repository.update(reminder)
+    }
+
+
 }
