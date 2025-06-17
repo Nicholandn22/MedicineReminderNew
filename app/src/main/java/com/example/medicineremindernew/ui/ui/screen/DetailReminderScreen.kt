@@ -142,12 +142,13 @@ fun DetailReminderScreen(
                         waktu = Time(formatterTime.parse(waktu)!!.time),
                         pengulangan = selectedPengulangan
                     )
-                    reminderViewModel.update(updatedReminder)
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("Reminder berhasil diperbarui")
-                    }
-                    onUpdateClick()
-                } else {
+                    reminderViewModel.updateAndSchedule(updatedReminder, context) {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Reminder berhasil diperbarui")
+                        }
+                        onUpdateClick()
+                        navController.navigate("login")
+                    }} else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar("Harap lengkapi semua data")
                     }

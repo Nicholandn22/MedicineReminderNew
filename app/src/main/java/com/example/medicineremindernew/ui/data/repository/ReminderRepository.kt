@@ -11,4 +11,8 @@ class ReminderRepository(private val dao: ReminderDao) {
     fun getReminderById(id: Int): Flow<Reminder?> = dao.getReminderById(id)
     suspend fun update(reminder: Reminder) = dao.update(reminder)
 
+    suspend fun insertAndReturnId(reminder: Reminder): Long {
+        return dao.insert(reminder)
+    }
+
 }
