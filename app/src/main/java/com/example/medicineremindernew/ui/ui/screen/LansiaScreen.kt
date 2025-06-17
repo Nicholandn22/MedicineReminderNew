@@ -1,7 +1,6 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -54,9 +53,11 @@ import java.util.Calendar
 @Composable
 fun LansiaScreen(
     navController: NavController,
-    context: Context = LocalContext.current
+    lansiaViewModel1: LansiaViewModel,
+//    context: LansiaViewModel = LocalContext.current
 ) {
 
+    val context = LocalContext.current
     val application = context.applicationContext as Application
     val db = remember { ObatDatabase.getDatabase(application) }
     val repository = remember { LansiaRepository(db.lansiaDao()) }

@@ -71,7 +71,11 @@ fun NavGraph(
         // ✅ Tambahan lain
         composable("add_reminder") {
             AddReminderScreen(
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                navController = navController, // ✅ Kirim navController ke sini
+                obatViewModel = obatViewModel,
+                lansiaViewModel = lansiaViewModel,
+                reminderViewModel = reminderViewModel
             )
         }
 
@@ -90,8 +94,8 @@ fun NavGraph(
         }
 
         // ✅ Lainnya
-        composable(BottomNavItem.Lansia.route) { LansiaScreen(navController) }
-        composable(BottomNavItem.Obat.route) { ObatScreen(navController) }
+        composable(BottomNavItem.Lansia.route) { LansiaScreen(navController, lansiaViewModel) }
+        composable(BottomNavItem.Obat.route) { ObatScreen(navController, obatViewModel) }
 
         composable(
             "detail_lansia/{lansiaId}",
@@ -114,7 +118,7 @@ fun NavGraph(
 
         composable("detail_reminder/{id}") { backStackEntry ->
             val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
-            DetailReminderScreen(reminderId = id)
+            DetailReminderScreen(reminderId = id, navController = navController)
         }
 
         composable(
@@ -124,10 +128,22 @@ fun NavGraph(
             val reminderId = backStackEntry.arguments?.getInt("reminderId") ?: 0
             DetailReminderScreen(
                 reminderId = reminderId,
+                navController = navController, // <- pastikan ini sesuai
                 onBackClick = { navController.popBackStack() },
                 onUpdateClick = { navController.popBackStack() }
             )
         }
+
+
+        // Tambah ini jika kamu punya screen khusus untuk daftar obat/lansia:
+        composable("lansia") {
+            LansiaScreen(navController, lansiaViewModel)
+        }
+        composable("obat") {
+            ObatScreen(navController, obatViewModel)
+        }
+
+
 
 
 

@@ -44,8 +44,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.add_file
-import com.example.medicineremindernew.R.drawable.plus_black
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
@@ -67,10 +68,14 @@ import java.util.Locale
 
 @Composable
 fun AddReminderScreen(
+    navController: NavController,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
-    onClearClick: () -> Unit = {}
+    onClearClick: () -> Unit = {},
+    obatViewModel: ObatViewModel,
+    lansiaViewModel: LansiaViewModel,
+    reminderViewModel: ReminderViewModel
 ) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
@@ -186,7 +191,7 @@ fun AddReminderScreen(
             }
 
             // Section: Pasien
-            SectionWithAddButton("Pasien")
+            SectionWithAddButton("Pasien", navController = navController)
             CardSection {
                 if (lansiaList.isEmpty()) {
                     Text("Belum ada data lansia")
@@ -203,7 +208,7 @@ fun AddReminderScreen(
             }
 
             // Section: Obat
-            SectionWithAddButton("List Obat")
+            SectionWithAddButton("List Obat", navController = navController)
             CardSection {
                 if (obatList.isEmpty()) {
                     Text("Belum ada data obat")
@@ -306,7 +311,7 @@ fun SectionTitle(title: String) {
 }
 
 @Composable
-fun SectionWithAddButton(title: String) {
+fun SectionWithAddButton(title: String, navController: NavController) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,17 +319,21 @@ fun SectionWithAddButton(title: String) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            title,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Icon(
-            painter = painterResource(id = plus_black),
-            contentDescription = null,
-            modifier = Modifier.size(24.dp)
-        )
+        IconButton(onClick = { navController.navigate("obat") }) {
+            Icon(
+                painter = painterResource(id = R.drawable.plus_black), // Ikon menuju Obat
+                contentDescription = "Ke Obat",
+                tint = Color.Black
+            )
+        }
+
+        IconButton(onClick = { navController.navigate("lansia") }) {
+            Icon(
+                painter = painterResource(id = R.drawable.plus_black), // Sama ikon tapi bisa dibedakan jika ingin
+                contentDescription = "Ke Lansia",
+                tint = Color.Black
+            )
+        }
     }
 }
 

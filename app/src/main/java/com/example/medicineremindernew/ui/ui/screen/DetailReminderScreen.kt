@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Lansia
@@ -61,10 +62,12 @@ import java.util.Locale
 @Composable
 fun DetailReminderScreen(
     reminderId: Int,
+    navController: NavController,
     modifier: Modifier = Modifier,
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {}
 ) {
+
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val db = remember { ObatDatabase.getDatabase(application) }
@@ -149,7 +152,9 @@ fun DetailReminderScreen(
                         snackbarHostState.showSnackbar("Harap lengkapi semua data")
                     }
                 }
-            }
+            },
+            navController = navController // ✅ Tambahkan ini
+
         )
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -177,7 +182,8 @@ fun AddReminderScreenContent(
     obatList: List<Obat>,
     snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit,
-    onSaveClick: () -> Unit
+    onSaveClick: () -> Unit,
+    navController: NavController
 ) {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
@@ -259,7 +265,7 @@ fun AddReminderScreenContent(
         }
 
         // Section: Lansia
-        SectionWithAddButton("Pasien")
+        SectionWithAddButton("Pasien", navController = navController)
         CardSection {
             if (lansiaList.isEmpty()) {
                 Text("Belum ada data lansia")
@@ -275,7 +281,7 @@ fun AddReminderScreenContent(
         }
 
         // Section: Obat
-        SectionWithAddButton("List Obat")
+        SectionWithAddButton("List Obat", navController = navController)
         CardSection {
             if (obatList.isEmpty()) {
                 Text("Belum ada data obat")
