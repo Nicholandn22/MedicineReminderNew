@@ -65,6 +65,12 @@ import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+
+
 
 @Composable
 fun AddReminderScreen(
@@ -323,31 +329,52 @@ fun SectionTitle(title: String) {
 }
 
 @Composable
-fun SectionWithAddButton(title: String, navController: NavController) {
+fun SectionWithAddButton(
+    title: String,
+    navController: NavController
+) {
+    val route = when (title) {
+        "List Obat" -> "obat"
+        "Pasien" -> "lansia"
+        else -> ""
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(AbuMenu)
             .padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { navController.navigate("obat") }) {
+        Text(
+            text = title,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        Button(
+            onClick = { navController.navigate(route) },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Color.Black
+            ),
+            shape = RoundedCornerShape(12.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Text("Tambah")
+            Spacer(modifier = Modifier.width(8.dp))
             Icon(
-                painter = painterResource(id = R.drawable.plus_black), // Ikon menuju Obat
-                contentDescription = "Ke Obat",
-                tint = Color.Black
-            )
-        }
-
-        IconButton(onClick = { navController.navigate("lansia") }) {
-            Icon(
-                painter = painterResource(id = R.drawable.plus_black), // Sama ikon tapi bisa dibedakan jika ingin
-                contentDescription = "Ke Lansia",
+                painter = painterResource(id = R.drawable.plus_black),
+                contentDescription = "Tambah $title",
+                modifier = Modifier.size(18.dp),
                 tint = Color.Black
             )
         }
     }
 }
+
+
 
 @Composable
 fun CardSection(content: @Composable ColumnScope.() -> Unit) {
