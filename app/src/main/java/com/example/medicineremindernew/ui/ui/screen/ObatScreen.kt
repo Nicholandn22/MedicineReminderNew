@@ -1,6 +1,5 @@
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,8 +44,10 @@ import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
 @Composable
 fun ObatScreen(
     navController: NavController,
-    context: Context = LocalContext.current
+    obatViewModel: ObatViewModel,
+//    context: ObatViewModel = LocalContext.current
 ) {
+    val context = LocalContext.current
     val application = context.applicationContext as Application
     val db = remember { ObatDatabase.getDatabase(application) }
     val repository = remember { ObatRepository(db.obatDao()) }

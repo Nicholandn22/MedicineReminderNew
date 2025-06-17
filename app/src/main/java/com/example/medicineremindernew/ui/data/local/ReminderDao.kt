@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.medicineremindernew.ui.data.model.Reminder
 import kotlinx.coroutines.flow.Flow
 
@@ -18,4 +19,11 @@ interface ReminderDao {
 
     @Query("SELECT * FROM reminder_table")
     fun getAll(): Flow<List<Reminder>>
+
+    @Query("SELECT * FROM reminder_table WHERE id = :id")
+    fun getReminderById(id: Int): Flow<Reminder?>
+
+    @Update
+    suspend fun update(reminder: Reminder)
+
 }
