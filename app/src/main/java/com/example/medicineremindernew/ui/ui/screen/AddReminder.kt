@@ -231,11 +231,13 @@ fun AddReminderScreen(
                     .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
+                // Tombol Save
                 Button(
                     onClick = {
                         if (selectedLansia != null && selectedObat != null && tanggal.isNotEmpty() && waktu.isNotEmpty()) {
                             val formatterDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                             val formatterTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+
                             val reminder = Reminder(
                                 obatId = selectedObat!!,
                                 lansiaId = selectedLansia!!,
@@ -243,11 +245,16 @@ fun AddReminderScreen(
                                 waktu = Time(formatterTime.parse(waktu)!!.time),
                                 pengulangan = selectedPengulangan
                             )
-                            reminderViewModel.insert(reminder)
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Reminder berhasil disimpan")
+
+                            // Insert dan jadwalkan alarm
+                            reminderViewModel.insertAndSchedule(reminder, context) {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Reminder berhasil disimpan dan alarm dijadwalkan")
+                                }
+                                onSaveClick()
+                                navController.popBackStack() // 👈 ini akan kembali ke halaman sebelumnya
+
                             }
-                            onSaveClick()
                         } else {
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar("Harap lengkapi semua data")
@@ -258,11 +265,14 @@ fun AddReminderScreen(
                         containerColor = Color(0xFFBDBDBD),
                         contentColor = Color.Black
                     ),
-                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
                 ) {
                     Text("Save")
                 }
 
+                // Tombol Clear
                 Button(
                     onClick = {
                         selectedLansia = null
@@ -280,7 +290,9 @@ fun AddReminderScreen(
                         containerColor = Color(0xFFBDBDBD),
                         contentColor = Color.Black
                     ),
-                    modifier = Modifier.weight(1f).padding(start = 8.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
                 ) {
                     Text("Clear")
                 }

@@ -1,7 +1,12 @@
 package com.example.medicineremindernew.ui
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -27,6 +32,25 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Minta izin notifikasi (Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 100)
+            }
+        }
+
+        // ✅ Cek apakah user sudah mengaktifkan izin exact alarm (Android 12+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Toast.makeText(
+                    this,
+                    "Izin SCHEDULE_EXACT_ALARM belum diberikan. Harap aktifkan secara manual di pengaturan aplikasi.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
         // 1. Inisialisasi database Room
         val database = Room.databaseBuilder(

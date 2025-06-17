@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- (Opsional jika kamu pakai WAKE_LOCK di alarm manager atau notifikasi) -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,6 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MedicineReminderNew"
         tools:targetApi="31">
+
+        <!-- Aktivitas utama -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
@@ -19,10 +27,15 @@
             android:theme="@style/Theme.MedicineReminderNew">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- BroadcastReceiver untuk Alarm -->
+        <receiver
+            android:name=".ui.alarm.AlarmReceiver"
+            android:exported="true"
+            android:enabled="true" />
     </application>
 
 </manifest>
