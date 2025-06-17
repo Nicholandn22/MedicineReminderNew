@@ -25,7 +25,7 @@ fun scheduleAlarm(context: Context, reminder: Reminder) {
     }
 
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    alarmManager.setExact(
+    alarmManager.setExactAndAllowWhileIdle(
         AlarmManager.RTC_WAKEUP,
         calendar.timeInMillis,
         pendingIntent

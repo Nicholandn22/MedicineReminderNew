@@ -1,6 +1,7 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -68,6 +70,15 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
             .fillMaxSize()
             .background(Color(0xFFFC5007))
     ) {
+        LaunchedEffect(reminders) {
+            Log.d("ReminderDebug", "Reminder yang tampil: ${reminders.size}")
+            reminders.forEach {
+                Log.d("ReminderDebug", "Reminder -> Tanggal: ${it.tanggal}, Waktu: ${it.waktu}")
+            }
+//            Log.d("ReminderDebug", "Semua data: ${Reminder.tanggal} ${Reminder.waktu}")
+
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
