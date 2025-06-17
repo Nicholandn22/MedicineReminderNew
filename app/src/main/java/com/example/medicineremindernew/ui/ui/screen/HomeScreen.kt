@@ -175,6 +175,9 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                         time = "${reminder.tanggal} - ${reminder.waktu}",
                         onClick = {
                             navController.navigate("detail_reminder/${reminder.id}")
+                        },
+                        onDelete = {
+                            reminderViewModel.delete(reminder) // 🔸 ini yang menghapus data
                         }
                     )
                 }
@@ -194,35 +197,42 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
 }
 
 @Composable
-fun ReminderItem(title: String, time: String, onClick: () -> Unit) {
+fun ReminderItem(
+    title: String,
+    time: String,
+    onClick: () -> Unit,
+    onDelete: () -> Unit // Tambahan parameter
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable { onClick() } // 👈 Bisa diklik
+            .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        Text(
-            text = title,
-            fontSize = 20.sp,
-            color = Color.Black
-        )
+        Text(text = title, fontSize = 20.sp, color = Color.Black)
         Row {
-            Text(
-                text = "Waktu : ",
-                fontSize = 16.sp,
-                color = Color.DarkGray
-            )
-            Text(
-                text = time,
-                fontSize = 16.sp,
-                color = Color.DarkGray
-            )
+            Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
+        }
+
+        // 🔸 Ini bagian tombol hapus
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Button(
+                onClick = onDelete,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Hapus")
+            }
         }
     }
 }
+
 
 
 @Composable
