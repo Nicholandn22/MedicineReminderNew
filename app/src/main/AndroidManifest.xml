@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- (Opsional jika kamu pakai WAKE_LOCK di alarm manager atau notifikasi) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+
 
     <application
         android:allowBackup="true"
