@@ -258,47 +258,29 @@ fun ReminderItem(
 
 
 
-//@Composable
-//fun AddButton(
-//    modifier: Modifier = Modifier,
-//    onClick: () -> Unit
-//) {
-//    FloatingActionButton(
-//        onClick = onClick,
-//        modifier = modifier,
-//        containerColor = OrenMuda,
-//        contentColor = Color.Black
-//    ) {
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            modifier = Modifier.padding(horizontal = 12.dp)
-//        ) {
-//            Icon(
-//                painter = painterResource(id = add_file),
-//                contentDescription = "Add",
-//                modifier = Modifier.size(30.dp)
-//            )
-//            Spacer(modifier = Modifier.width(8.dp))
-//            Text(text = "Tambah Pengingat")
-//        }
-//    }
-//}
 @Composable
-fun AddReminderButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
+fun AddButton(
+   modifier: Modifier = Modifier,
+   onClick: () -> Unit
 ) {
-    ExtendedFloatingActionButton(
-        onClick = onClick,
-        modifier = modifier,
-        containerColor = Color(0xFFFC5007), // Warna oranye seperti di LansiaScreen
-        contentColor = Color.White,
-        text = { Text("Tambah Pengingat") },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Tambah"
-            )
-        }
-    )
+   FloatingActionButton(
+       onClick = onClick,
+       modifier = modifier,
+       containerColor = OrenMuda,
+       contentColor = Color.Black
+   ) {
+       Row(
+           verticalAlignment = Alignment.CenterVertically,
+           modifier = Modifier.padding(horizontal = 12.dp)
+       ) {
+           Icon(
+               painter = painterResource(id = add_file),
+               contentDescription = "Add",
+               modifier = Modifier.size(30.dp)
+           )
+           Spacer(modifier = Modifier.width(8.dp))
+           Text(text = "Tambah Pengingat")
+       }
+   }
 }
+
