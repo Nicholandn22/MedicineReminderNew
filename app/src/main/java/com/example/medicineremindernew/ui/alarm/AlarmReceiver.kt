@@ -11,13 +11,16 @@ import com.example.medicineremindernew.R
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        val mediaPlayer = MediaPlayer.create(context, R.raw.nada1) // pastikan ada di res/raw
-        mediaPlayer.start()
+        context?.let {
+            val mediaPlayer = MediaPlayer.create(it, R.raw.nada1)
+            mediaPlayer.start()
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            mediaPlayer.stop()
-            mediaPlayer.release()
-        }, 10_000)
+            Handler(Looper.getMainLooper()).postDelayed({
+                mediaPlayer.stop()
+                mediaPlayer.release()
+            }, 10_000)
+        }
     }
+
 }
 
