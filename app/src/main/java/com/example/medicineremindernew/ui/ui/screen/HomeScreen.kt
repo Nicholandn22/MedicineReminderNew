@@ -254,7 +254,7 @@ fun AddButton(
         onClick = onClick,
         modifier = modifier,
         containerColor = OrenMuda,
-        contentColor = Color.Black
+        contentColor = Color.White
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
