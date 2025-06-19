@@ -81,7 +81,8 @@ fun DetailLansiaScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(top = 50.dp)
+
     ) {
         TextField(
             value = namaLansia,
