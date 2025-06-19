@@ -44,6 +44,7 @@ import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
+import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
 import kotlinx.coroutines.launch
@@ -130,7 +131,7 @@ fun LansiaScreen(
         AddLansia(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 80.dp),
+                .padding(end = 20.dp, bottom = 120.dp),
             onClick = {
                 navController.navigate("AddLansia")
             }
@@ -215,7 +216,7 @@ fun AddLansia(
     ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = Color(0xFFFC5007),
+        containerColor = OrenMuda,
         contentColor = Color.White,
         text = { Text("Add Lansia") },
         icon = {

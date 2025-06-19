@@ -185,7 +185,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
         AddButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 80.dp),
+                .padding(end = 20.dp, bottom = 120.dp),
             onClick = {
                 navController.navigate("add_reminder")
             }
