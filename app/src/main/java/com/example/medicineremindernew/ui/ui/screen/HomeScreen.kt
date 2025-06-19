@@ -47,6 +47,10 @@ import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+
 
 
 @Composable
@@ -185,7 +189,15 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
         }
 
         // Tombol tambah reminder
-        AddButton(
+//        AddButton(
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(end = 20.dp, bottom = 80.dp),
+//            onClick = {
+//                navController.navigate("add_reminder")
+//            }
+//        )
+        AddReminderButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 80.dp),
@@ -193,6 +205,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                 navController.navigate("add_reminder")
             }
         )
+
     }
 }
 
@@ -235,28 +248,47 @@ fun ReminderItem(
 
 
 
+//@Composable
+//fun AddButton(
+//    modifier: Modifier = Modifier,
+//    onClick: () -> Unit
+//) {
+//    FloatingActionButton(
+//        onClick = onClick,
+//        modifier = modifier,
+//        containerColor = OrenMuda,
+//        contentColor = Color.Black
+//    ) {
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            modifier = Modifier.padding(horizontal = 12.dp)
+//        ) {
+//            Icon(
+//                painter = painterResource(id = add_file),
+//                contentDescription = "Add",
+//                modifier = Modifier.size(30.dp)
+//            )
+//            Spacer(modifier = Modifier.width(8.dp))
+//            Text(text = "Tambah Pengingat")
+//        }
+//    }
+//}
 @Composable
-fun AddButton(
+fun AddReminderButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    FloatingActionButton(
+    ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = OrenMuda,
-        contentColor = Color.Black
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        ) {
+        containerColor = Color(0xFFFC5007), // Warna oranye seperti di LansiaScreen
+        contentColor = Color.White,
+        text = { Text("Tambah Pengingat") },
+        icon = {
             Icon(
-                painter = painterResource(id = add_file),
-                contentDescription = "Add",
-                modifier = Modifier.size(30.dp)
+                imageVector = Icons.Default.Add,
+                contentDescription = "Tambah"
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Tambah Pengingat")
         }
-    }
+    )
 }
