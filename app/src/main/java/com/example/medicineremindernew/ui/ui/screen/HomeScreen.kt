@@ -47,10 +47,6 @@ import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-
 
 
 @Composable
@@ -199,22 +195,22 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
         }
 
         // Tombol tambah reminder
-//        AddButton(
-//            modifier = Modifier
-//                .align(Alignment.BottomEnd)
-//                .padding(end = 20.dp, bottom = 80.dp),
-//            onClick = {
-//                navController.navigate("add_reminder")
-//            }
-//        )
-        AddReminderButton(
+        AddButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 120.dp),
+                .padding(end = 20.dp, bottom = 80.dp),
             onClick = {
                 navController.navigate("add_reminder")
             }
         )
+//        AddReminderButton(
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(end = 20.dp, bottom = 120.dp),
+//            onClick = {
+//                navController.navigate("add_reminder")
+//            }
+//        )
 
     }
 }
