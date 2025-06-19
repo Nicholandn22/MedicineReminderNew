@@ -112,7 +112,7 @@ fun ObatScreen(
         AddObat(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 120.dp),
+                .padding(end = 20.dp, bottom = 100.dp),
             onClick = {
                 navController.navigate("AddObat")
             }
