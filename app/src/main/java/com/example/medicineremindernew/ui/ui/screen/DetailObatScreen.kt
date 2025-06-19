@@ -1,47 +1,25 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.medicineremindernew.R
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.ui.res.painterResource
-import com.example.medicineremindernew.R
-
 
 @Composable
 fun DetailObatScreen(
@@ -82,23 +60,25 @@ fun DetailObatScreen(
         ) {
             IconButton(
                 onClick = onBackClick,
-                modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
             ) {
-                val back_white = 0
                 Icon(
                     painter = painterResource(id = R.drawable.back_white),
                     contentDescription = "Back",
                     tint = Color.White,
                     modifier = Modifier.size(32.dp)
                 )
-
             }
             Text(text = "Edit Obat", color = Color.White, fontSize = 20.sp)
         }
 
-        // FORM (sama seperti AddObatScreen)
+        // FORM
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -107,7 +87,9 @@ fun DetailObatScreen(
                 TextField(
                     value = namaObat,
                     onValueChange = { namaObat = it },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp)
                 )
 
                 Text("Jenis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -132,12 +114,15 @@ fun DetailObatScreen(
                 TextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    modifier = Modifier.fillMaxWidth().height(60.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
                 )
             }
         }
 
-        Button(
+        // TOMBOL UPDATE
+        OutlinedButton(
             onClick = {
                 obat?.let {
                     val updated = it.copy(
@@ -155,15 +140,21 @@ fun DetailObatScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
+            border = ButtonDefaults.outlinedButtonBorder.copy(
+                brush = SolidColor(OrenMuda)
+            )
         ) {
             Text("Update")
         }
 
+        // SNACKBAR
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         )
     }
 }
-

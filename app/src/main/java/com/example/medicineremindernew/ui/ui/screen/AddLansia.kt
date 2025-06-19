@@ -1,31 +1,14 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,7 +17,7 @@ import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import kotlinx.coroutines.launch
 import java.sql.Date
-import java.util.Calendar
+import java.util.*
 
 @Composable
 fun AddLansiaScreen(
@@ -54,6 +37,7 @@ fun AddLansiaScreen(
     var tanggalLahir by remember { mutableStateOf<Date?>(null) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
+    val orangeColor = Color(0xFFFF6600)
 
     val datePickerDialog = remember {
         val calendar = Calendar.getInstance()
@@ -73,8 +57,8 @@ fun AddLansiaScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(vertical = 60.dp)
     ) {
-        // --- Form Card ---
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -88,16 +72,10 @@ fun AddLansiaScreen(
                     value = namaLansia,
                     onValueChange = { namaLansia = it },
                     placeholder = { Text("Masukkan nama lansia") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
-
-//                Text("Usia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-//                TextField(
-//                    value = usia,
-//                    onValueChange = { if (it.all { c -> c.isDigit() }) usia = it },
-//                    placeholdera = { Text("Masukkan usia") },
-//                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-//                )
 
                 Text("Golongan Darah", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
@@ -112,7 +90,9 @@ fun AddLansiaScreen(
                     value = penyakit,
                     onValueChange = { penyakit = it },
                     placeholder = { Text("Masukkan penyakit") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
 
                 Text("Nomor Wali", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -120,27 +100,34 @@ fun AddLansiaScreen(
                     value = nomorWali,
                     onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
                     placeholder = { Text("Masukkan nomor wali") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
 
                 Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                Button(
+                OutlinedButton(
                     onClick = { datePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
+                    )
                 ) {
                     Text(tanggalLahir?.toString() ?: "Pilih Tanggal Lahir")
                 }
             }
         }
 
-        // --- Tombol ---
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(
+            OutlinedButton(
                 onClick = {
                     if (
                         namaLansia.isNotBlank() &&
@@ -150,7 +137,7 @@ fun AddLansiaScreen(
                         val lansia = Lansia(
                             name = namaLansia,
                             goldar = golonganDarah,
-                            gender = "L", // bisa dijadikan dropdown
+                            gender = "L", // default
                             lahir = tanggalLahir!!,
                             nomorwali = nomorWali.toInt(),
                             penyakit = penyakit
@@ -161,7 +148,6 @@ fun AddLansiaScreen(
                             snackbarHostState.showSnackbar("Data Lansia berhasil disimpan")
                         }
 
-                        // Reset form
                         namaLansia = ""
                         usia = ""
                         penyakit = ""
@@ -174,12 +160,18 @@ fun AddLansiaScreen(
                         }
                     }
                 },
-                modifier = Modifier.weight(1f).padding(end = 8.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
+                )
             ) {
                 Text("Save")
             }
 
-            Button(
+            OutlinedButton(
                 onClick = {
                     namaLansia = ""
                     usia = ""
@@ -189,7 +181,13 @@ fun AddLansiaScreen(
                     tanggalLahir = null
                     onCancelClick()
                 },
-                modifier = Modifier.weight(1f).padding(start = 8.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
+                )
             ) {
                 Text("Clear")
             }

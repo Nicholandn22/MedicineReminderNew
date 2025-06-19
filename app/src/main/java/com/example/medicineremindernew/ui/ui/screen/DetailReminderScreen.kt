@@ -2,36 +2,15 @@ package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.Application
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,18 +25,12 @@ import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
+import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.viewmodel.*
 import kotlinx.coroutines.launch
 import java.sql.Time
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-
+import java.util.*
 
 @Composable
 fun DetailReminderScreen(
@@ -67,7 +40,6 @@ fun DetailReminderScreen(
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {}
 ) {
-
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val db = remember { ObatDatabase.getDatabase(application) }
@@ -83,23 +55,18 @@ fun DetailReminderScreen(
     )
 
     val coroutineScope = rememberCoroutineScope()
-
     val lansiaList = lansiaViewModel.getAllLansia.collectAsState(initial = emptyList()).value
     val obatList = obatViewModel.allObat.collectAsState(initial = emptyList()).value
-
     val reminder by reminderViewModel.getReminderById(reminderId).collectAsState(initial = null)
 
     var selectedLansia by remember { mutableStateOf<Int?>(null) }
     var selectedObat by remember { mutableStateOf<Int?>(null) }
     var tanggal by remember { mutableStateOf("") }
     var waktu by remember { mutableStateOf("") }
-
     val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
     val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
-
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
     var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
-
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(reminder) {
@@ -148,14 +115,14 @@ fun DetailReminderScreen(
                         }
                         onUpdateClick()
                         navController.navigate("login")
-                    }} else {
+                    }
+                } else {
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar("Harap lengkapi semua data")
                     }
                 }
             },
-            navController = navController // ✅ Tambahkan ini
-
+            navController = navController
         )
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -218,11 +185,10 @@ fun AddReminderScreenContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
+                .height(60.dp)
                 .background(Color.White),
             contentAlignment = Alignment.Center
         ) {
@@ -237,91 +203,71 @@ fun AddReminderScreenContent(
             Text("Pengingat", color = Color.White, fontSize = 20.sp)
         }
 
-        // Section: Pengingat
         SectionTitle("Pengingat")
         CardSection {
-            Button(
+            OutlinedButton(
                 onClick = { datePickerDialog.show() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda))
             ) {
-                Text(text = if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
+                Text(if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
             }
 
-            Button(
+            OutlinedButton(
                 onClick = { timePickerDialog.show() },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda))
             ) {
-                Text(text = if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
+                Text(if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
             }
 
-            Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
+            Text("Pengulangan", fontWeight = FontWeight.Bold)
             DropdownMenuField(listOf("Harian", "Mingguan", "Bulanan"), selectedPengulangan) {
                 onPengulanganChange(it)
             }
 
-            Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
+            Text("Nada Dering", fontWeight = FontWeight.Bold)
             DropdownMenuField(listOf("Nada 1", "Nada 2", "Nada 3"), selectedNadaDering) {
                 onNadaDeringChange(it)
             }
         }
 
-        // Section: Lansia
-        SectionWithAddButton("Pasien", navController = navController)
+        SectionWithAddButton("Pasien", navController)
         CardSection {
-            if (lansiaList.isEmpty()) {
-                Text("Belum ada data lansia")
-            } else {
-                lansiaList.forEach { lansia ->
-                    ReminderButton(
-                        text = lansia.name,
-                        onClick = { onLansiaSelect(lansia.id) },
-                        isSelected = selectedLansia == lansia.id
-                    )
-                }
+            if (lansiaList.isEmpty()) Text("Belum ada data lansia")
+            else lansiaList.forEach {
+                ReminderButton(it.name, { onLansiaSelect(it.id) }, selectedLansia == it.id)
             }
         }
 
-        // Section: Obat
-        SectionWithAddButton("List Obat", navController = navController)
+        SectionWithAddButton("List Obat", navController)
         CardSection {
-            if (obatList.isEmpty()) {
-                Text("Belum ada data obat")
-            } else {
-                obatList.forEach { obat ->
-                    ReminderButton(
-                        text = obat.nama,
-                        onClick = { onObatSelect(obat.id) },
-                        isSelected = selectedObat == obat.id
-                    )
-                }
+            if (obatList.isEmpty()) Text("Belum ada data obat")
+            else obatList.forEach {
+                ReminderButton(it.nama, { onObatSelect(it.id) }, selectedObat == it.id)
             }
         }
 
-        // Save Button
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
-            Button(
+            OutlinedButton(
                 onClick = onSaveClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFBDBDBD),
-                    contentColor = Color.Black
-                ),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda)),
                 modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
             ) {
                 Text("Simpan")
             }
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(50.dp)
-        )
+        SnackbarHost(snackbarHostState, modifier = Modifier.fillMaxWidth().padding(50.dp))
     }
 }
-

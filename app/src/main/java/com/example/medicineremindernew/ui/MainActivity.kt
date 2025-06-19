@@ -6,7 +6,9 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import com.example.medicineremindernew.R.drawable.sign_out
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -16,6 +18,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
@@ -87,8 +93,11 @@ class MainActivity : AppCompatActivity() {
                                         }
                                     }) {
                                         Icon(
-                                            imageVector = Icons.Default.ArrowBack,
-                                            contentDescription = "Logout"
+                                            painter = painterResource(sign_out),
+//                                            imageVector = Icons.Default.ArrowBack,
+                                            contentDescription = "Logout",
+                                            tint = Color.Red,
+                                            modifier = Modifier.size(20.dp)
                                         )
                                     }
                                 }
