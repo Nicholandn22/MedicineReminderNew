@@ -29,6 +29,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.ButtonDefaults
+
 
 
 
@@ -52,7 +54,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5)),
+            .background(Color(0xFFFC5007)),
         contentAlignment = Alignment.Center
     ) {
         Card(
@@ -100,6 +102,7 @@ fun LoginScreen(
                 Button(
                     onClick = { viewModel.login(email, password) },
                     modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA726))
                 ) {
                     Text("Login")
                 }
@@ -107,7 +110,7 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TextButton(onClick = onNavigateToRegister) {
-                    Text("Belum punya akun? Daftar di sini")
+                    Text("Belum punya akun? Daftar di sini", color = Color.Black)
                 }
 
                 errorMessage?.let {
