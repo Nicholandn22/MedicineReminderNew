@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +44,7 @@ fun AddObatScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
+                .height(60.dp)
                 .background(OrenMuda),
             contentAlignment = Alignment.Center
         ) {
@@ -123,14 +124,16 @@ fun AddObatScreen(
             }
         }
 
-        // Buttons Row
+        // Buttons Row (Save + Clear with Outlined Style)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
+            val orange = OrenMuda
+
+            OutlinedButton(
                 onClick = {
                     if (namaObat.isBlank() || jenisObat.isBlank() || satuanDosis.isBlank()) {
                         scope.launch {
@@ -147,38 +150,37 @@ fun AddObatScreen(
                         scope.launch {
                             snackbarHostState.showSnackbar("Data Obat berhasil disimpan")
                         }
-                        // Reset form
                         namaObat = ""
                         jenisObat = "Tablet"
                         satuanDosis = "mg"
                         notes = ""
                     }
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFBDBDBD),
-                    contentColor = Color.Black
-                ),
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp)
+                    .padding(end = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = orange),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = SolidColor(orange)
+                )
             ) {
                 Text("Save")
             }
 
-            Button(
+            OutlinedButton(
                 onClick = {
                     namaObat = ""
                     jenisObat = "Tablet"
                     satuanDosis = "mg"
                     notes = ""
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFBDBDBD),
-                    contentColor = Color.Black
-                ),
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = 8.dp)
+                    .padding(start = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = orange),
+                border = ButtonDefaults.outlinedButtonBorder.copy(
+                    brush = SolidColor(orange)
+                )
             ) {
                 Text("Clear")
             }
