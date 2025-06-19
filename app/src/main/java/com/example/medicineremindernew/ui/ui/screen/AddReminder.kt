@@ -3,6 +3,7 @@ package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R
-import com.example.medicineremindernew.R.drawable.add_file
+import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
@@ -121,25 +122,26 @@ fun AddReminderScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0x0FFFFFFF))
                 .verticalScroll(rememberScrollState())
         ) {
             // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .background(Color.White),
+                    .height(80.dp)
+                    .background(Color(0xFFFC5007)),
                 contentAlignment = Alignment.Center
             ) {
-                IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
+                IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart).padding(top = 25.dp)) {
                     Icon(
-                        painter = painterResource(id = add_file),
+                        painter = painterResource(id = back_white),
                         contentDescription = "Back",
                         tint = Color.White,
-                        modifier = Modifier.padding(16.dp).size(32.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
-                Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp)
+                Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp, modifier = Modifier.padding(top = 15.dp))
             }
 
             // Section: Pengingat
@@ -162,10 +164,17 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = { datePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xBDBDBD),
+                        contentColor = Color(0xFFFF6F00)
+                    ),
+                    shape = RoundedCornerShape(30.dp)
                 ) {
                     Text(text = if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val timePickerDialog = remember {
                     android.app.TimePickerDialog(
@@ -181,19 +190,33 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = { timePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
+                    colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xBDBDBD),
+                    contentColor = Color(0xFFFF6F00)
+                ),
+                shape = RoundedCornerShape(30.dp)
                 ) {
                     Text(text = if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
                 }
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
                 DropdownMenuField(pengulanganOptions, selectedPengulangan) {
                     selectedPengulangan = it
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
                 DropdownMenuField(nadaDeringOptions, selectedNadaDering) {
                     selectedNadaDering = it
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+
+
             }
 
             // Section: Pasien
@@ -234,7 +257,7 @@ fun AddReminderScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 // Tombol Save
@@ -268,13 +291,14 @@ fun AddReminderScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFBDBDBD),
-                        contentColor = Color.Black
+                        containerColor = Color(0x0FFFFFFF),
+                        contentColor = Color(0xFFFF6F00)
                     ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp)
-                ) {
+                        .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(35.dp)),
+                ){
                     Text("Save")
                 }
 
@@ -293,12 +317,13 @@ fun AddReminderScreen(
                         onClearClick()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFBDBDBD),
-                        contentColor = Color.Black
+                        containerColor = Color(0x0FFFFFFF),
+                        contentColor = Color(0xFFFF6F00)
                     ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp)
+                        .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(35.dp)),
                 ) {
                     Text("Clear")
                 }
@@ -380,9 +405,9 @@ fun SectionWithAddButton(
 fun CardSection(content: @Composable ColumnScope.() -> Unit) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(8.dp),
+            .fillMaxWidth(),
+//            .padding(8.dp),
+//        shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -403,12 +428,20 @@ fun DropdownMenuField(
     var expanded by remember { mutableStateOf(false) }
 
     Box {
-        OutlinedButton(
+        Button(
             onClick = { expanded = true },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xBDBDBD), // abu-abu
+                contentColor = Color(0xFFFF6F00)    // orange terang
+            ),
+            shape = RoundedCornerShape(30.dp)
         ) {
             Text(selectedOption)
         }
+
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
@@ -432,7 +465,7 @@ fun ReminderButton(
     onClick: () -> Unit,
     isSelected: Boolean
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFA5D6A7) else PutihKolom // Hijau muda
+    val backgroundColor = if (isSelected) Color(0xFFFF6F00) else PutihKolom // Oren
     val contentColor = if (isSelected) Color.White else Color.Black
 
     Button(
