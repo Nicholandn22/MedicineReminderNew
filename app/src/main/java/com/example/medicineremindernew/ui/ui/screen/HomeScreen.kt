@@ -291,7 +291,7 @@ fun AddReminderButton(
     ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = Color(0xFFFC5007), // Warna oranye seperti di LansiaScreen
+        containerColor = OrenMuda, // Warna oranye seperti di LansiaScreen
         contentColor = Color.White,
         text = { Text("Tambah Pengingat") },
         icon = {
