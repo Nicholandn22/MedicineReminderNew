@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui
 
+import BottomNavigationBar
 import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.content.Context
@@ -19,7 +20,6 @@ import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
-import com.example.medicineremindernew.ui.ui.components.BottomNavigationBar
 import com.example.medicineremindernew.ui.ui.navigation.NavGraph
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModel

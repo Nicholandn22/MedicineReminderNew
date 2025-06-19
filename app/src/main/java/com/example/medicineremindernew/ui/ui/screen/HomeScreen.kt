@@ -64,6 +64,11 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
 // GANTI 'viewModel.reminde' DENGAN 'reminderViewModel.reminderList'
     val reminders by reminderViewModel.reminderList.collectAsState()
 
+    val reminderTerdekat = reminders
+        .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
+        .firstOrNull()
+
+
 
     Box(
         modifier = Modifier
@@ -126,44 +131,49 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                             modifier = Modifier.padding(top = 10.dp)
                         )
 
-                        Text(
-                            text = "10:00 AM - 30 April 2024", // TODO: Ganti ke reminder paling awal
-                            color = Color(0xFF666666),
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
-                        )
+                        if (reminderTerdekat != null) {
+                            Text(
+                                text = "${reminderTerdekat.waktu} - ${reminderTerdekat.tanggal}",
+                                color = Color(0xFF666666),
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+                            )
+                        } else {
+                            Text(
+                                text = "Tidak ada reminder terdekat",
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+                            )
+                        }
+
 
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Button(
-                                onClick = { /* TODO: aksi selesai */ },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 4.dp)
-                            ) {
-                                Text("SELESAI")
+                            if (reminderTerdekat != null) {
+                                Button(onClick = {
+                                    reminderViewModel.delete(reminderTerdekat)
+                                }) {
+                                    Text("HAPUS")
+                                }
+
+                                Button(onClick = {
+                                    navController.navigate("detail_reminder/${reminderTerdekat.id}")
+                                }) {
+                                    Text("UBAH")
+                                }
+
+                                Button(onClick = {
+                                    // Tambahkan aksi "SELESAI", misal menghapus atau memberi status
+                                    reminderViewModel.delete(reminderTerdekat)
+                                }) {
+                                    Text("SELESAI")
+                                }
                             }
 
-                            Button(
-                                onClick = { /* TODO: aksi ubah */ },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 4.dp)
-                            ) {
-                                Text("UBAH")
-                            }
-
-                            Button(
-                                onClick = { /* TODO: aksi hapus */ },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 4.dp)
-                            ) {
-                                Text("HAPUS")
-                            }
                         }
                     }
                 }

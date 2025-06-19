@@ -91,13 +91,13 @@ fun AddLansiaScreen(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
 
-                Text("Usia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                TextField(
-                    value = usia,
-                    onValueChange = { if (it.all { c -> c.isDigit() }) usia = it },
-                    placeholder = { Text("Masukkan usia") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                )
+//                Text("Usia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+//                TextField(
+//                    value = usia,
+//                    onValueChange = { if (it.all { c -> c.isDigit() }) usia = it },
+//                    placeholdera = { Text("Masukkan usia") },
+//                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+//                )
 
                 Text("Golongan Darah", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
