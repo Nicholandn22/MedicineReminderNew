@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem
+import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
@@ -19,7 +20,7 @@ fun BottomNavigationBar(navController: NavController) {
 
     NavigationBar(
         containerColor = Color.White,
-        contentColor = Color.Black
+        contentColor = OrenMuda
     ) {
         val currentRoute = navController.currentDestination?.route
         items.forEach { item ->

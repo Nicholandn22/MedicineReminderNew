@@ -38,6 +38,7 @@ import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
+import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
 
@@ -111,7 +112,7 @@ fun ObatScreen(
         AddObat(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 80.dp),
+                .padding(end = 20.dp, bottom = 120.dp),
             onClick = {
                 navController.navigate("AddObat")
             }
@@ -168,7 +169,7 @@ fun AddObat(
     ExtendedFloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = Color(0xFFFC5007),
+        containerColor = OrenMuda,
         contentColor = Color.White,
         text = {
             Text(text = "Tambah Obat")
