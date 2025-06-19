@@ -8,6 +8,8 @@
     <!-- (Opsional jika kamu pakai WAKE_LOCK di alarm manager atau notifikasi) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
 
 
     <application
@@ -20,6 +22,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MedicineReminderNew"
         tools:targetApi="31">
+
 
         <!-- Aktivitas utama -->
         <activity
