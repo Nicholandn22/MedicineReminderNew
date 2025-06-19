@@ -4,35 +4,17 @@ import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,14 +27,12 @@ import com.example.medicineremindernew.R.drawable.add_file
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.theme.Hijau
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
 
-
 @Composable
 fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewModel) {
-
-
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val db = remember { ObatDatabase.getDatabase(application) }
@@ -61,27 +41,19 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
         factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))
     )
 
-// GANTI 'viewModel.reminde' DENGAN 'reminderViewModel.reminderList'
     val reminders by reminderViewModel.reminderList.collectAsState()
-
-    val reminderTerdekat = reminders
-        .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
-        .firstOrNull()
-
-
+    val reminderTerdekat = reminders.sortedWith(compareBy({ it.tanggal }, { it.waktu })).firstOrNull()
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFC5007))
+            .background(Color(0xFFF3570F))
     ) {
         LaunchedEffect(reminders) {
             Log.d("ReminderDebug", "Reminder yang tampil: ${reminders.size}")
             reminders.forEach {
                 Log.d("ReminderDebug", "Reminder -> Tanggal: ${it.tanggal}, Waktu: ${it.waktu}")
             }
-//            Log.d("ReminderDebug", "Semua data: ${Reminder.tanggal} ${Reminder.waktu}")
-
         }
 
         Column(
@@ -89,7 +61,6 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
         ) {
-            // Navbar
             Text(
                 text = "Home Page",
                 modifier = Modifier
@@ -108,7 +79,6 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                     .fillMaxHeight()
                     .verticalScroll(scrollState)
             ) {
-                // Reminder Terdekat (sementara contoh statis, bisa diubah jadi reminder[0])
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -120,7 +90,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color(0xFFFFF3E0))
+                            .background(Color.White)
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Text(
@@ -147,38 +117,45 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                             )
                         }
 
-
                         Row(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             if (reminderTerdekat != null) {
-                                Button(onClick = {
-                                    reminderViewModel.delete(reminderTerdekat)
-                                }) {
+                                OutlinedButton(
+                                    onClick = { reminderViewModel.delete(reminderTerdekat) },
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(Color.Red))
+                                ) {
                                     Text("HAPUS")
                                 }
 
-                                Button(onClick = {
-                                    navController.navigate("detail_reminder/${reminderTerdekat.id}")
-                                }) {
+                                Spacer(modifier = Modifier.width(5.dp))
+
+                                OutlinedButton(
+                                    onClick = { navController.navigate("detail_reminder/${reminderTerdekat.id}") },
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(OrenMuda))
+                                ) {
                                     Text("UBAH")
                                 }
 
-                                Button(onClick = {
-                                    // Tambahkan aksi "SELESAI", misal menghapus atau memberi status
-                                    reminderViewModel.delete(reminderTerdekat)
-                                }) {
+                                Spacer(modifier = Modifier.width(5.dp))
+
+                                OutlinedButton(
+                                    onClick = { reminderViewModel.delete(reminderTerdekat) },
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Hijau),
+                                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(Hijau))
+                                ) {
                                     Text("SELESAI")
                                 }
-                            }
 
+                            }
                         }
                     }
                 }
 
-                // Daftar reminder dari database
                 reminders.forEach { reminder ->
                     ReminderItem(
                         title = "Reminder Lansia ${reminder.lansiaId} - Obat ${reminder.obatId}",
@@ -187,31 +164,21 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                             navController.navigate("detail_reminder/${reminder.id}")
                         },
                         onDelete = {
-                            reminderViewModel.delete(reminder) // 🔸 ini yang menghapus data
+                            reminderViewModel.delete(reminder)
                         }
                     )
                 }
             }
         }
 
-        // Tombol tambah reminder
         AddButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 120.dp),
+                .padding(end = 20.dp, bottom = 100.dp),
             onClick = {
                 navController.navigate("add_reminder")
             }
         )
-//        AddReminderButton(
-//            modifier = Modifier
-//                .align(Alignment.BottomEnd)
-//                .padding(end = 20.dp, bottom = 120.dp),
-//            onClick = {
-//                navController.navigate("add_reminder")
-//            }
-//        )
-
     }
 }
 
@@ -220,7 +187,7 @@ fun ReminderItem(
     title: String,
     time: String,
     onClick: () -> Unit,
-    onDelete: () -> Unit // Tambahan parameter
+    onDelete: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -237,14 +204,15 @@ fun ReminderItem(
             Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
         }
 
-        // 🔸 Ini bagian tombol hapus
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            Button(
+            OutlinedButton(
                 onClick = onDelete,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(Color.Red))
             ) {
                 Text("Hapus")
             }
@@ -252,31 +220,28 @@ fun ReminderItem(
     }
 }
 
-
-
 @Composable
 fun AddButton(
-   modifier: Modifier = Modifier,
-   onClick: () -> Unit
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
-   FloatingActionButton(
-       onClick = onClick,
-       modifier = modifier,
-       containerColor = OrenMuda,
-       contentColor = Color.White
-   ) {
-       Row(
-           verticalAlignment = Alignment.CenterVertically,
-           modifier = Modifier.padding(horizontal = 12.dp)
-       ) {
-           Icon(
-               painter = painterResource(id = add_file),
-               contentDescription = "Add",
-               modifier = Modifier.size(30.dp)
-           )
-           Spacer(modifier = Modifier.width(8.dp))
-           Text(text = "Tambah Pengingat")
-       }
-   }
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor = OrenMuda,
+        contentColor = Color.White
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = add_file),
+                contentDescription = "Add",
+                modifier = Modifier.size(30.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text = "Tambah Pengingat")
+        }
+    }
 }
-
