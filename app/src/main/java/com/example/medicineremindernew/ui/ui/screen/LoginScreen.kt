@@ -69,7 +69,7 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Login",
+                    text = "Selamat Datang",
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color(0xFF333333)
                 )
