@@ -1,12 +1,31 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -17,7 +36,7 @@ import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import kotlinx.coroutines.launch
 import java.sql.Date
-import java.util.*
+import java.util.Calendar
 
 @Composable
 fun AddLansiaScreen(
@@ -67,14 +86,16 @@ fun AddLansiaScreen(
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Nama Lansia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                TextField(
+//                Text("Nama Lansia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
                     value = namaLansia,
                     onValueChange = { namaLansia = it },
-                    placeholder = { Text("Masukkan nama lansia") },
+                    placeholder = { Text("Nama Lansia") },
+                    label = { Text("Masukkan Nama Lansia") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 16.dp),
+                    singleLine = true
                 )
 
                 Text("Golongan Darah", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -85,24 +106,30 @@ fun AddLansiaScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Penyakit", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                TextField(
+//                Text("Penyakit", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
                     value = penyakit,
                     onValueChange = { penyakit = it },
-                    placeholder = { Text("Masukkan penyakit") },
+                    placeholder = { Text("Penyakit") },
+                    label = { Text("Masukkan Penyakit") },
+
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 16.dp),
+                    singleLine = true
                 )
 
-                Text("Nomor Wali", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                TextField(
+//                Text("Nomor Wali", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                OutlinedTextField(
                     value = nomorWali,
                     onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
-                    placeholder = { Text("Masukkan nomor wali") },
+                    placeholder = { Text("Nomor Wali") },
+                    label = { Text("Masukkan Nomor Wali") },
+
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+                        .padding(bottom = 16.dp),
+                    singleLine = true
                 )
 
                 Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
