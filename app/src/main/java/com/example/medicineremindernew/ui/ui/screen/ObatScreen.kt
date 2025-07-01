@@ -10,13 +10,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -166,19 +167,17 @@ fun AddObat(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    ExtendedFloatingActionButton(
+    FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
         containerColor = OrenMuda,
-        contentColor = Color.White,
-        text = {
-            Text(text = "Tambah Obat")
-        },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Tambah Obat"
-            )
-        }
-    )
+        contentColor = Color.White
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Tambah",
+            modifier = Modifier.size(30.dp)
+        )
+    }
 }
+
