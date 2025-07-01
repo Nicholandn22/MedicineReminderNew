@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -189,36 +192,42 @@ fun ReminderItem(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = title, fontSize = 20.sp, color = Color.Black)
-        Row {
-            Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray)
-            Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
+        // Bagian teks di kiri
+        Column(
+            modifier = Modifier.weight(1f) // agar teks fleksibel
+        ) {
+            Text(text = title, fontSize = 20.sp, color = Color.Black)
+            Row {
+                Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray)
+                Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
+            }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+        // Ikon hapus di kanan
+        IconButton(
+            onClick = onDelete
         ) {
-            OutlinedButton(
-                onClick = onDelete,
-                modifier = Modifier.padding(top = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
-                border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(Color.Red))
-            ) {
-                Text("Hapus")
-            }
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Hapus",
+                tint = Color.Red,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
+
 
 @Composable
 fun AddButton(
@@ -231,17 +240,11 @@ fun AddButton(
         containerColor = OrenMuda,
         contentColor = Color.White
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = add_file),
-                contentDescription = "Add",
-                modifier = Modifier.size(30.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "Tambah Pengingat")
-        }
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Tambah",
+            modifier = Modifier.size(30.dp)
+        )
     }
 }
+

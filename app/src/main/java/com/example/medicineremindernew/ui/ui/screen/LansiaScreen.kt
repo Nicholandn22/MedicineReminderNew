@@ -3,6 +3,7 @@ package com.example.medicineremindernew.ui.ui.screen
 import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,8 +22,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -151,46 +154,46 @@ fun LansiaItem(
     lansia: Lansia,
     usia: Int,
     onDeleteClick: () -> Unit,
-    onItemClick: () -> Unit // 👈 Tambah parameter
-
+    onItemClick: () -> Unit
 ) {
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .clickable { onItemClick() } // 👈 Navigasi ke detail
+            .clickable { onItemClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = lansia.name,
-            fontSize = 20.sp,
-            color = Color.Black
-        )
-        Row {
-            Text("Usia : $usia", fontSize = 16.sp, color = Color.DarkGray)
-            Text(" | Golongan Darah : ${lansia.goldar}", fontSize = 16.sp, color = Color.DarkGray)
+        // Informasi Lansia (kiri)
+        Column {
+            Text(
+                text = lansia.name,
+                fontSize = 20.sp,
+                color = Color.Black
+            )
+            Row {
+                Text("Usia : $usia", fontSize = 16.sp, color = Color.DarkGray)
+                Text(" | Golongan Darah : ${lansia.goldar}", fontSize = 16.sp, color = Color.DarkGray)
+            }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedButton(
-            onClick = onDeleteClick,
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = Color.Red
-            )
+        // Tombol Hapus (kanan)
+        IconButton(
+            onClick = onDeleteClick
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Hapus",
-                tint = Color.Red
+                tint = Color.Red,
+                modifier = Modifier.size(24.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Hapus", color = Color.Red)
         }
     }
 }
+
 
 fun hitungUsiaDariTanggalLahir(date: Date): Int {
     val dob = Calendar.getInstance()
@@ -208,22 +211,42 @@ fun hitungUsiaDariTanggalLahir(date: Date): Int {
 }
 
 
+//@Composable
+//fun AddLansia(
+//    modifier: Modifier = Modifier,
+//    onClick: () -> Unit
+//) {
+//    ExtendedFloatingActionButton(
+//        onClick = onClick,
+//        modifier = modifier,
+//        containerColor = OrenMuda,
+//        contentColor = Color.White,
+//        text = { Text("") },
+//        icon = {
+//            Icon(
+//                imageVector = Icons.Default.Add,
+//                contentDescription = "Tambah"
+//            )
+//        }
+//    )
+//}
+
 @Composable
 fun AddLansia(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    ExtendedFloatingActionButton(
+    FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
         containerColor = OrenMuda,
-        contentColor = Color.White,
-        text = { Text("Add Lansia") },
-        icon = {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Tambah"
-            )
-        }
-    )
+        contentColor = Color.White
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Tambah",
+            modifier = Modifier.size(30.dp)
+        )
+    }
 }
+
