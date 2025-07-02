@@ -3,30 +3,31 @@ package com.example.medicineremindernew.ui.ui.screen
 import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.R.drawable.add_file
 import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
@@ -87,7 +88,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                         .fillMaxWidth()
                         .padding(bottom = 40.dp),
                     elevation = CardDefaults.cardElevation(8.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Column(
@@ -126,34 +127,57 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             if (reminderTerdekat != null) {
-                                OutlinedButton(
-                                    onClick = { reminderViewModel.delete(reminderTerdekat) },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
-                                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(Color.Red))
-                                ) {
-                                    Text("HAPUS")
+                                IconButton(onClick = { reminderViewModel.delete(reminderTerdekat) }) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .border(1.dp, Color.Red, CircleShape)
+                                            .padding(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Hapus",
+                                            tint = Color.Red,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
 
-                                Spacer(modifier = Modifier.width(5.dp))
-
-                                OutlinedButton(
-                                    onClick = { navController.navigate("detail_reminder/${reminderTerdekat.id}") },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
-                                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(OrenMuda))
-                                ) {
-                                    Text("UBAH")
+                                IconButton(onClick = {
+                                    navController.navigate("detail_reminder/${reminderTerdekat.id}")
+                                }) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .border(1.dp, OrenMuda, CircleShape)
+                                            .padding(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Ubah",
+                                            tint = OrenMuda,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
 
-                                Spacer(modifier = Modifier.width(5.dp))
-
-                                OutlinedButton(
-                                    onClick = { reminderViewModel.delete(reminderTerdekat) },
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Hijau),
-                                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp, brush = SolidColor(Hijau))
-                                ) {
-                                    Text("SELESAI")
+                                IconButton(onClick = {
+                                    reminderViewModel.delete(reminderTerdekat)
+                                }) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .border(1.dp, Hijau, CircleShape)
+                                            .padding(6.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selesai",
+                                            tint = Hijau,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
                                 }
-
                             }
                         }
                     }
@@ -203,10 +227,7 @@ fun ReminderItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Bagian teks di kiri
-        Column(
-            modifier = Modifier.weight(1f) // agar teks fleksibel
-        ) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(text = title, fontSize = 20.sp, color = Color.Black)
             Row {
                 Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray)
@@ -214,10 +235,7 @@ fun ReminderItem(
             }
         }
 
-        // Ikon hapus di kanan
-        IconButton(
-            onClick = onDelete
-        ) {
+        IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Hapus",
@@ -227,7 +245,6 @@ fun ReminderItem(
         }
     }
 }
-
 
 @Composable
 fun AddButton(
@@ -247,4 +264,3 @@ fun AddButton(
         )
     }
 }
-
