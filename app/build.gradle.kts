@@ -4,9 +4,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt") // ✅ Tambahkan ini untuk Room (kapt)
-    id ("kotlin-parcelize")
-
+    id("kotlin-kapt") // Untuk Room
+    id("kotlin-parcelize")
+    id("com.google.gms.google-services") // ✅ Tambahkan ini
 }
 
 android {
@@ -35,8 +35,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-
-
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -47,7 +45,25 @@ android {
 }
 
 dependencies {
+    // ✅ Firebase BOM untuk sinkronisasi versi
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
 
+    // ✅ Firebase Realtime Database
+    implementation("com.google.firebase:firebase-database")
+
+    // ✅ Firebase Authentication (opsional)
+    implementation("com.google.firebase:firebase-auth")
+
+    // ✅ Firebase Analytics (opsional)
+    implementation("com.google.firebase:firebase-analytics")
+
+    // Room dependencies (masih dipertahankan jika masih digunakan)
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
+
+    // AndroidX & Compose dependencies
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -57,15 +73,9 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
-    implementation ("com.google.android.material:material:1.9.0")
+    implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation(libs.androidx.navigation.runtime.android)
-    implementation(libs.androidx.adapters)
-    implementation(libs.protolite.well.known.types)
-    implementation(libs.androidx.animation.core.android)
-    implementation(libs.androidx.animation.core.android)
-    implementation(libs.androidx.animation.core.android)
-    implementation(libs.androidx.foundation.android)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -73,33 +83,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
     implementation("androidx.activity:activity-compose:1.8.0")
-    implementation("androidx.compose.material3:material3:1.1.2")
-    implementation("androidx.compose.ui:ui-tooling-preview:1.5.0")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.5.0")
-    implementation("androidx.compose.material:material-icons-extended:1.5.0") // ✅ Ganti <version>
-
-    // ✅ Room dependencies
-    val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
-    implementation("androidx.compose.material3:material3:1.2.0") // atau versi terbaru
-
-    implementation ("androidx.biometric:biometric:1.1.0")
-    implementation ("androidx.fragment:fragment-ktx:1.6.2")
-
-//    implementation (androidx.room:room-runtime:2.6.1)
-//    kapt (androidx.room:room-compiler:2.6.1)
-//    implementation (androidx.room:room-ktx:2.6.1)
-
-
-
-//    implementation ("androidx.compose.material:material:1.6.1")
-//    implementation ("androidx.navigation:navigation-compose:2.7.7")
-
-
-
-
-
+    implementation("androidx.compose.material:material-icons-extended:1.5.0")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
+    implementation("androidx.biometric:biometric:1.1.0")
 }
