@@ -4,43 +4,49 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class ObatViewModel(private val repository: ObatRepository) : ViewModel() {
 
-    // Ambil semua obat
-    val allObat: Flow<List<Obat>> = repository.getAllObat
+    private val _obatList = MutableStateFlow<List<Obat>>(emptyList())
+    val obatList: StateFlow<List<Obat>> = _obatList
 
-    // Tambah obat
-    fun insertObat(obat: Obat) {
-        viewModelScope.launch {
-            repository.insert(obat)
+    private val _obatDetail = MutableStateFlow<Obat?>(null)
+    val obatDetail: StateFlow<Obat?> = _obatDetail
+
+    init {
+        repository.getAllObat { obatList ->
+            _obatList.value = obatList
         }
     }
 
-    // Update obat
-    fun updateObat(obat: Obat) {
+
+    fun addObat(obat: Obat, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            repository.update(obat)
+            repository.addObat(obat) { success ->
+                onResult(success)
+            }
         }
     }
 
-    // Hapus obat
-    fun deleteObat(obat: Obat) {
+    fun updateObat(obat: Obat, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
-            repository.delete(obat)
+            val success = repository.updateObat(obat)
+            onResult(success)
         }
     }
 
-    // Ambil obat berdasarkan ID
-    fun getObatById(id: Int): Flow<Obat?> {
-        return repository.getObatById(id)
+    fun getObatById(id: String) {
+        viewModelScope.launch {
+            _obatDetail.value = repository.getObatById(id)
+        }
     }
 
-
-    // (Opsional) Jika masih digunakan di fitur lain
-    fun getLansiaById(id: Int): Flow<Obat?> {
-        return repository.getObatById(id)
+    fun deleteObat(id: String) {
+        viewModelScope.launch {
+            repository.deleteObat(id)
+        }
     }
 }

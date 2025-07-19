@@ -57,11 +57,19 @@ dependencies {
     // ✅ Firebase Analytics (opsional)
     implementation("com.google.firebase:firebase-analytics")
 
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+
     // Room dependencies (masih dipertahankan jika masih digunakan)
     val room_version = "2.6.1"
-    implementation("androidx.room:room-runtime:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
-    implementation("androidx.room:room-ktx:$room_version")
+//    implementation("androidx.room:room-runtime:$room_version")
+//    kapt("androidx.room:room-compiler:$room_version")
+//    implementation("androidx.room:room-ktx:$room_version")
 
     // AndroidX & Compose dependencies
     implementation(libs.androidx.core.ktx)

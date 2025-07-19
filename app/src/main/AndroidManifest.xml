@@ -1,34 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- (Opsional jika kamu pakai WAKE_LOCK di alarm manager atau notifikasi) -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-
-
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.MedicineReminderNew"
         tools:targetApi="31">
-
 
         <!-- Aktivitas utama -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.MedicineReminderNew">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -41,6 +34,11 @@
             android:name=".ui.alarm.AlarmReceiver"
             android:exported="true"
             android:enabled="true" />
-    </application>
 
+        <!-- Service untuk menjalankan alarm di background -->
+        <service
+            android:name=".ui.alarm.AlarmService"
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback" />
+    </application>
 </manifest>

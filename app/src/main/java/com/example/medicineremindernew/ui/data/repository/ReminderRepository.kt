@@ -1,55 +1,53 @@
 package com.example.medicineremindernew.ui.data.repository
 
-import android.icu.util.Calendar
-import android.util.Log
-import com.example.medicineremindernew.ui.data.local.ReminderDao
 import com.example.medicineremindernew.ui.data.model.Reminder
-import kotlinx.coroutines.flow.Flow
-import java.sql.Date
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
-class ReminderRepository(private val dao: ReminderDao) {
-//    fun getUpcomingReminders(): Flow<List<Reminder>> {
-//        val now = Calendar.getInstance()
-//
-//        // Zeroing detik dan milidetik
-//        now.set(Calendar.SECOND, 0)
-//        now.set(Calendar.MILLISECOND, 0)
-//
-//        val currentDate = java.sql.Date(now.time.time)
-//        val currentTime = java.sql.Time(now.time.time)
-//
-//        Log.d("ReminderDebug", "QUERY Reminder pakai Tanggal: $currentDate, Waktu: $currentTime")
-//
-//        return dao.getAll(currentDate, currentTime)
-//    }
+class ReminderRepository(private val firestoreRepository: FirestoreRepository) {
 
+    private val db = FirebaseFirestore.getInstance()
+    private val collection = db.collection("reminders")
 
-    suspend fun insert(reminder: Reminder) = dao.insert(reminder)
-    suspend fun delete(reminder: Reminder) = dao.delete(reminder)
-    fun getReminderById(id: Int): Flow<Reminder?> = dao.getReminderById(id)
-    suspend fun update(reminder: Reminder) = dao.update(reminder)
-
-    suspend fun insertAndReturnId(reminder: Reminder): Long {
-        return dao.insert(reminder)
+    suspend fun getAllReminders(): List<Reminder> {
+        return try {
+            val snapshot = collection.get().await()
+            snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Reminder::class.java)?.copy(id = doc.id)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
-    fun getAllValidReminder(): Flow<List<Reminder>> {
-        val now = Calendar.getInstance()
-        now.set(Calendar.HOUR_OF_DAY, 0)
-        now.set(Calendar.MINUTE, 0)
-        now.set(Calendar.SECOND, 0)
-        now.set(Calendar.MILLISECOND, 0)
+    suspend fun addReminder(reminder: Reminder) {
+        val newDoc = collection.document()
+        val data = reminder.copy(id = newDoc.id)
+        newDoc.set(data).await()
+    }
 
-        val currentDate = Date(now.time.time)
-
-        Log.d("ReminderDebug", "QUERY pakai currentDate=$currentDate")
-        return dao.getAll(currentDate)
+    suspend fun updateReminder(reminder: Reminder): Boolean {
+        return try {
+            db.document(reminder.id).set(reminder).await()
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
 
-    fun debugGetAll(): Flow<List<Reminder>> = dao.getAllRemindersRaw()
+    suspend fun deleteReminder(id: String) {
+        if (id.isNotEmpty()) {
+            collection.document(id).delete().await()
+        }
+    }
 
-
-
-
+    suspend fun getReminderById(id: String): Reminder? {
+        return try {
+            val snapshot = db.document(id).get().await()
+            snapshot.toObject(Reminder::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
 }

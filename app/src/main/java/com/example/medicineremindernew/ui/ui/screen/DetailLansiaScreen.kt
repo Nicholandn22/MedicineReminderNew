@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,14 +44,17 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailLansiaScreen(
-    lansiaId: Int,
+    lansiaId: String,
     viewModel: LansiaViewModel,
     navController: NavHostController,
     onBackClick: () -> Unit = {}
@@ -58,7 +62,11 @@ fun DetailLansiaScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    val lansia by viewModel.getLansiaById(lansiaId).collectAsStateWithLifecycle(initialValue = null)
+    val lansia by viewModel.lansiaDetail.collectAsStateWithLifecycle()
+
+    LaunchedEffect(lansiaId) {
+        viewModel.getLansiaById(lansiaId)
+    }
 
     if (lansia == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -67,25 +75,28 @@ fun DetailLansiaScreen(
         return
     }
 
-    var namaLansia by remember { mutableStateOf(lansia!!.name) }
+    var namaLansia by remember { mutableStateOf(lansia!!.nama) }
     var golonganDarah by remember { mutableStateOf(lansia!!.goldar) }
-    var expanded by remember { mutableStateOf(false) }
-    var penyakit by remember { mutableStateOf(lansia!!.penyakit ?: "") }
+    var gender by remember { mutableStateOf(lansia!!.gender) }
+    var penyakit by remember { mutableStateOf(lansia!!.penyakit) }
     var nomorWali by remember { mutableStateOf(lansia!!.nomorwali.toString()) }
-    var tanggalLahir by remember { mutableStateOf<Date?>(lansia!!.lahir) }
+    var tanggalLahir by remember { mutableStateOf(lansia!!.lahir?.toDate() ?: Date()) }
+    var expandedGolongan by remember { mutableStateOf(false) }
+    var expandedGender by remember { mutableStateOf(false) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
+    val genderOptions = listOf("Laki-laki", "Perempuan")
     val context = LocalContext.current
     val orangeColor = Color(0xFFFF6600)
 
     val datePickerDialog = remember {
         val calendar = Calendar.getInstance()
-        calendar.time = tanggalLahir ?: Date(System.currentTimeMillis())
+        calendar.time = tanggalLahir
         DatePickerDialog(
             context,
             { _, year, month, day ->
                 calendar.set(year, month, day)
-                tanggalLahir = Date(calendar.timeInMillis)
+                tanggalLahir = calendar.time
             },
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
@@ -100,160 +111,139 @@ fun DetailLansiaScreen(
             .padding(vertical = 60.dp)
     ) {
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-//                Text("Nama Lansia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = namaLansia,
                     onValueChange = { namaLansia = it },
-                    placeholder = { Text("Nama Lansia") },
-                    label = { Text("Masukkan Nama Lansia") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    singleLine = true
+                    label = { Text("Nama Lansia") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
 
+                // ✅ Golongan Darah
                 Text("Golongan Darah", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
+                ExposedDropdownMenuBox(expanded = expandedGolongan, onExpandedChange = { expandedGolongan = !expandedGolongan }) {
                     TextField(
                         readOnly = true,
                         value = golonganDarah,
                         onValueChange = {},
                         label = { Text("Pilih golongan darah") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGolongan) },
                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
+                    ExposedDropdownMenu(expanded = expandedGolongan, onDismissRequest = { expandedGolongan = false }) {
                         golonganOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    golonganDarah = option
-                                    expanded = false
-                                }
-                            )
+                            DropdownMenuItem(text = { Text(option) }, onClick = {
+                                golonganDarah = option
+                                expandedGolongan = false
+                            })
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-//                Text("Penyakit", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                // ✅ Gender
+                Text("Jenis Kelamin", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                ExposedDropdownMenuBox(expanded = expandedGender, onExpandedChange = { expandedGender = !expandedGender }) {
+                    TextField(
+                        readOnly = true,
+                        value = gender,
+                        onValueChange = {},
+                        label = { Text("Pilih jenis kelamin") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGender) },
+                        colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                        modifier = Modifier.menuAnchor().fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = expandedGender, onDismissRequest = { expandedGender = false }) {
+                        genderOptions.forEach { option ->
+                            DropdownMenuItem(text = { Text(option) }, onClick = {
+                                gender = option
+                                expandedGender = false
+                            })
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ✅ Penyakit
                 OutlinedTextField(
                     value = penyakit,
                     onValueChange = { penyakit = it },
-                    placeholder = { Text("Penyakit") },
-                    label = { Text("Masukkan Penyakit") },
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    singleLine = true
+                    label = { Text("Penyakit") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
 
-//                Text("Nomor Wali", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                // ✅ Nomor Wali
                 OutlinedTextField(
                     value = nomorWali,
                     onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
-                    placeholder = { Text("Nomor Wali") },
-                    label = { Text("Masukkan Nomor Wali") },
-
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    singleLine = true
+                    label = { Text("Nomor Wali") },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 )
 
-                Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                // ✅ Tanggal Lahir
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
-                    )
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor)
                 ) {
-                    Text(tanggalLahir?.toString() ?: "Pilih Tanggal Lahir")
+                    Text(SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(tanggalLahir))
                 }
             }
         }
 
+        // ✅ Buttons
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
             OutlinedButton(
                 onClick = {
-                    if (tanggalLahir != null && namaLansia.isNotBlank()) {
+                    if (namaLansia.isNotBlank() && nomorWali.isNotBlank()) {
                         val updatedLansia = lansia!!.copy(
-                            name = namaLansia,
+                            nama = namaLansia,
                             goldar = golonganDarah,
+                            gender = gender,
                             penyakit = penyakit,
                             nomorwali = nomorWali.toInt(),
-                            lahir = tanggalLahir!!
+                            lahir = Timestamp(tanggalLahir)
                         )
-                        viewModel.update(updatedLansia)
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Data berhasil diperbarui")
+                        viewModel.updateLansia(updatedLansia) { success ->
+                            scope.launch {
+                                if (success) {
+                                    snackbarHostState.showSnackbar("Data berhasil diperbarui")
+                                    navController.popBackStack()
+                                } else {
+                                    snackbarHostState.showSnackbar("Gagal memperbarui data")
+                                }
+                            }
                         }
-                        navController.popBackStack()
                     } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Mohon lengkapi semua data")
-                        }
+                        scope.launch { snackbarHostState.showSnackbar("Lengkapi semua data!") }
                     }
                 },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
-                )
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor)
             ) {
                 Text("Update")
             }
 
             OutlinedButton(
-                onClick = {
-                    onBackClick()
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
-                )
+                onClick = onBackClick,
+                modifier = Modifier.weight(1f).padding(start = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor)
             ) {
                 Text("Cancel")
             }
         }
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.fillMaxWidth().padding(16.dp))
     }
 }
+

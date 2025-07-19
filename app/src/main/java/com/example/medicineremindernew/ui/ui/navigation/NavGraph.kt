@@ -16,9 +16,8 @@ import com.example.medicineremindernew.ui.ui.screen.DetailObatScreen
 import com.example.medicineremindernew.ui.ui.screen.DetailReminderScreen
 import com.example.medicineremindernew.ui.ui.screen.HomeScreen
 import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
-import com.example.medicineremindernew.ui.ui.screen.LoginScreen
-import com.example.medicineremindernew.ui.ui.screen.RegisterScreen
-import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModel
+//import com.example.medicineremindernew.ui.ui.screen.LoginScreen
+//import com.example.medicineremindernew.ui.ui.screen.RegisterScreen
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
@@ -29,36 +28,35 @@ fun NavGraph(
     navController: NavHostController,
     obatViewModel: ObatViewModel,
     lansiaViewModel: LansiaViewModel,
-    reminderViewModel: ReminderViewModel,
-    authViewModel: AuthViewModel // ✅ Tambahkan ViewModel Auth
+    reminderViewModel: ReminderViewModel
 ) {
-    NavHost(navController, startDestination = "login") { // ✅ Awali dari login
+    NavHost(navController, startDestination = "home") { // ✅ Awali dari login
         // ✅ LOGIN SCREEN
-        composable("login") {
-            LoginScreen(
-                viewModel = authViewModel,
-                onLoginSuccess = {
-                    navController.navigate(BottomNavItem.Home.route) {
-                        popUpTo("login") { inclusive = true } // Hapus login dari backstack
-                    }
-                },
-                onNavigateToRegister = {
-                    navController.navigate("register")
-                }
-            )
-        }
+//        composable("login") {
+//            LoginScreen(
+//                viewModel = authViewModel,
+//                onLoginSuccess = {
+//                    navController.navigate(BottomNavItem.Home.route) {
+//                        popUpTo("login") { inclusive = true } // Hapus login dari backstack
+//                    }
+//                },
+//                onNavigateToRegister = {
+//                    navController.navigate("register")
+//                }
+//            )
+//        }
 
-        // ✅ REGISTER SCREEN
-        composable("register") {
-            RegisterScreen(
-                viewModel = authViewModel,
-                onLoginSuccess = {
-                    navController.navigate(BottomNavItem.Home.route) {
-                        popUpTo("register") { inclusive = true }
-                    }
-                }
-            )
-        }
+//        // ✅ REGISTER SCREEN
+//        composable("register") {
+//            RegisterScreen(
+//                viewModel = authViewModel,
+//                onLoginSuccess = {
+//                    navController.navigate(BottomNavItem.Home.route) {
+//                        popUpTo("register") { inclusive = true }
+//                    }
+//                }
+//            )
+//        }
 
         // ✅ HOME (Reminder)
         composable(BottomNavItem.Home.route) {
@@ -99,40 +97,44 @@ fun NavGraph(
 
         composable(
             "detail_lansia/{lansiaId}",
-            arguments = listOf(navArgument("lansiaId") { type = NavType.IntType })
+            arguments = listOf(navArgument("lansiaId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val lansiaId = backStackEntry.arguments?.getInt("lansiaId") ?: return@composable
-            DetailLansiaScreen(lansiaId = lansiaId, viewModel = lansiaViewModel,navController = navController )
+            val lansiaId = backStackEntry.arguments?.getString("lansiaId") ?: return@composable
+            DetailLansiaScreen(lansiaId = lansiaId, viewModel = lansiaViewModel, navController = navController)
         }
 
-        composable("DetailObat/{obatId}") { backStackEntry ->
-            val obatId = backStackEntry.arguments?.getString("obatId")?.toIntOrNull()
-            if (obatId != null) {
-                DetailObatScreen(
-                    obatId = obatId,
-                    viewModel = obatViewModel, // pastikan ini dari parent
-                    onBackClick = { navController.popBackStack() }
-                )
-            }
+        composable("detail_obat/{obatId}") { backStackEntry ->
+            val obatId = backStackEntry.arguments?.getString("obatId") ?: return@composable
+            DetailObatScreen(
+                obatId = obatId,
+                viewModel = obatViewModel,
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
-        composable("detail_reminder/{id}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
-            DetailReminderScreen(reminderId = id, navController = navController)
-        }
+
+//        composable("detail_reminder/{id}") { backStackEntry ->
+//            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
+//            DetailReminderScreen(reminderId = id, navController = navController)
+//        }
 
         composable(
             route = "detail_reminder/{reminderId}",
-            arguments = listOf(navArgument("reminderId") { type = NavType.IntType })
+            arguments = listOf(navArgument("reminderId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val reminderId = backStackEntry.arguments?.getInt("reminderId") ?: 0
+            val reminderId = backStackEntry.arguments?.getString("reminderId") ?: return@composable
             DetailReminderScreen(
                 reminderId = reminderId,
-                navController = navController, // <- pastikan ini sesuai
+                navController = navController,
+                reminderViewModel = reminderViewModel,
+                lansiaViewModel = lansiaViewModel,
+                obatViewModel = obatViewModel,
                 onBackClick = { navController.popBackStack() },
                 onUpdateClick = { navController.popBackStack() }
             )
         }
+
+
 
 
         // Tambah ini jika kamu punya screen khusus untuk daftar obat/lansia:
@@ -142,17 +144,6 @@ fun NavGraph(
         composable("obat") {
             ObatScreen(navController, obatViewModel)
         }
-
-
-
-
-
-
-
-
-
-
-
     }
 }
 

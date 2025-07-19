@@ -1,31 +1,12 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -35,8 +16,10 @@ import androidx.compose.ui.unit.sp
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import kotlinx.coroutines.launch
-import java.sql.Date
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.*
+import com.google.firebase.Timestamp
+
 
 @Composable
 fun AddLansiaScreen(
@@ -49,28 +32,25 @@ fun AddLansiaScreen(
     val scope = rememberCoroutineScope()
 
     var namaLansia by remember { mutableStateOf("") }
-    var usia by remember { mutableStateOf("") }
-    var golonganDarah by remember { mutableStateOf("A") }
     var penyakit by remember { mutableStateOf("") }
     var nomorWali by remember { mutableStateOf("") }
+    var golonganDarah by remember { mutableStateOf("A") }
     var tanggalLahir by remember { mutableStateOf<Date?>(null) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
     val orangeColor = Color(0xFFFF6600)
 
-    val datePickerDialog = remember {
-        val calendar = Calendar.getInstance()
-        DatePickerDialog(
-            context,
-            { _, year, month, day ->
-                calendar.set(year, month, day)
-                tanggalLahir = Date(calendar.timeInMillis)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-    }
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, day ->
+            calendar.set(year, month, day)
+            tanggalLahir = calendar.time
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     Column(
         modifier = Modifier
@@ -86,7 +66,6 @@ fun AddLansiaScreen(
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-//                Text("Nama Lansia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = namaLansia,
                     onValueChange = { namaLansia = it },
@@ -106,26 +85,22 @@ fun AddLansiaScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-//                Text("Penyakit", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = penyakit,
                     onValueChange = { penyakit = it },
                     placeholder = { Text("Penyakit") },
                     label = { Text("Masukkan Penyakit") },
-
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                     singleLine = true
                 )
 
-//                Text("Nomor Wali", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = nomorWali,
                     onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
                     placeholder = { Text("Nomor Wali") },
                     label = { Text("Masukkan Nomor Wali") },
-
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
@@ -143,7 +118,11 @@ fun AddLansiaScreen(
                         brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
                     )
                 ) {
-                    Text(tanggalLahir?.toString() ?: "Pilih Tanggal Lahir")
+                    Text(
+                        tanggalLahir?.let {
+                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(it)
+                        } ?: "Pilih Tanggal Lahir"
+                    )
                 }
             }
         }
@@ -162,25 +141,30 @@ fun AddLansiaScreen(
                         tanggalLahir != null
                     ) {
                         val lansia = Lansia(
-                            name = namaLansia,
+                            nama = namaLansia,
                             goldar = golonganDarah,
-                            gender = "L", // default
-                            lahir = tanggalLahir!!,
+                            gender = "L", // Default
+                            lahir = Timestamp(tanggalLahir!!), // ✅ Konversi ke Firestore Timestamp
                             nomorwali = nomorWali.toInt(),
                             penyakit = penyakit
                         )
-                        viewModel.insert(lansia)
 
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Data Lansia berhasil disimpan")
+
+                        viewModel.addLansia(lansia) { success ->
+                            scope.launch {
+                                if (success) {
+                                    snackbarHostState.showSnackbar("Data Lansia berhasil disimpan")
+                                    // Reset form
+                                    namaLansia = ""
+                                    penyakit = ""
+                                    nomorWali = ""
+                                    golonganDarah = "A"
+                                    tanggalLahir = null
+                                } else {
+                                    snackbarHostState.showSnackbar("Gagal menyimpan data")
+                                }
+                            }
                         }
-
-                        namaLansia = ""
-                        usia = ""
-                        penyakit = ""
-                        nomorWali = ""
-                        golonganDarah = "A"
-                        tanggalLahir = null
                     } else {
                         scope.launch {
                             snackbarHostState.showSnackbar("Mohon lengkapi semua field")
@@ -201,7 +185,6 @@ fun AddLansiaScreen(
             OutlinedButton(
                 onClick = {
                     namaLansia = ""
-                    usia = ""
                     penyakit = ""
                     nomorWali = ""
                     golonganDarah = "A"

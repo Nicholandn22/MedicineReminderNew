@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
@@ -46,18 +45,9 @@ import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
 @Composable
 fun ObatScreen(
     navController: NavController,
-    obatViewModel: ObatViewModel,
-//    context: ObatViewModel = LocalContext.current
+    obatViewModel: ObatViewModel
 ) {
-    val context = LocalContext.current
-    val application = context.applicationContext as Application
-    val db = remember { ObatDatabase.getDatabase(application) }
-    val repository = remember { ObatRepository(db.obatDao()) }
-    val viewModelFactory = remember { ObatViewModelFactory(repository) }
-
-    val viewModel: ObatViewModel = viewModel(factory = viewModelFactory)
-
-    val obatList by viewModel.allObat.collectAsState(initial = emptyList())
+    val obatList by obatViewModel.obatList.collectAsState(initial = emptyList())
 
     Box(
         modifier = Modifier
@@ -80,12 +70,10 @@ fun ObatScreen(
                 color = Color.White
             )
 
-            val scrollState = rememberScrollState()
-
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .verticalScroll(scrollState)
+                    .verticalScroll(rememberScrollState())
             ) {
                 if (obatList.isEmpty()) {
                     Text(
@@ -98,33 +86,33 @@ fun ObatScreen(
                     obatList.forEach { obat ->
                         ObatItem(
                             obat = obat,
-                            onDeleteClick = { viewModel.deleteObat(it) },
+                            onDeleteClick = { obatViewModel.deleteObat(obat.id) },
                             onItemClick = {
-                                navController.navigate("DetailObat/${obat.id}")
+                                navController.navigate("detail_obat/${obat.id}")
                             }
-
                         )
                     }
                 }
             }
         }
 
-        // Tombol Tambah Obat
-        AddObat(
+        FloatingActionButton(
+            onClick = { navController.navigate("addObat") },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 100.dp),
-            onClick = {
-                navController.navigate("AddObat")
-            }
-        )
+            containerColor = OrenMuda,
+            contentColor = Color.White
+        ) {
+            Icon(imageVector = Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp))
+        }
     }
 }
 
 @Composable
 fun ObatItem(
     obat: Obat,
-    onDeleteClick: (Obat) -> Unit,
+    onDeleteClick: () -> Unit,
     onItemClick: () -> Unit
 ) {
     Row(
@@ -133,34 +121,24 @@ fun ObatItem(
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable { onItemClick() } // ✅ Tambahkan ini
+            .clickable { onItemClick() }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = obat.nama,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-            Text(text = "Jenis Obat: ${obat.jenis}", fontSize = 16.sp, color = Color.DarkGray)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = obat.nama, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Jenis: ${obat.jenis}", fontSize = 16.sp, color = Color.DarkGray)
             Text(text = "Dosis: ${obat.dosis}", fontSize = 16.sp, color = Color.DarkGray)
-            Text(text = "Keterangan: ${obat.keterangan}", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = "Keterangan: ${obat.catatan}", fontSize = 16.sp, color = Color.DarkGray)
         }
 
-        IconButton(onClick = { onDeleteClick(obat) }) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete",
-                tint = Color.Red
-            )
+        IconButton(onClick = onDeleteClick) {
+            Icon(imageVector = Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
         }
     }
 }
+
 
 @Composable
 fun AddObat(
