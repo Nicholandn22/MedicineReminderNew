@@ -6,17 +6,10 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import com.example.medicineremindernew.R.drawable.sign_out
-import com.example.medicineremindernew.ui.data.local.SessionManager
 import com.example.medicineremindernew.ui.data.repository.FirestoreRepository
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
@@ -49,10 +42,6 @@ class MainActivity : AppCompatActivity() {
         ReminderViewModelFactory(reminderRepository)
     }
 
-//    private val authViewModel: AuthViewModel by viewModels {
-//        AuthViewModelFactory(application)
-//    }
-
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,22 +55,26 @@ class MainActivity : AppCompatActivity() {
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("Medicine Reminder") }
+                            title = { Text("Medicine Reminder") },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                titleContentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         )
                     },
-                    bottomBar = { BottomNavigationBar(navController) }
-                ) {
+                    bottomBar = {
+                        BottomNavigationBar(navController)
+                    }
+                ) { innerPadding ->
                     NavGraph(
                         navController = navController,
                         obatViewModel = obatViewModel,
                         lansiaViewModel = lansiaViewModel,
-                        reminderViewModel = reminderViewModel
-//                        authViewModel = null // ✅ Kalau tidak dipakai lagi
+                        reminderViewModel = reminderViewModel,
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
-
 }
-

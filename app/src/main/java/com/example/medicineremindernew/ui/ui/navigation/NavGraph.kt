@@ -3,6 +3,7 @@ package com.example.medicineremindernew.ui.ui.navigation
 //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
 import ObatScreen
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -28,41 +29,19 @@ fun NavGraph(
     navController: NavHostController,
     obatViewModel: ObatViewModel,
     lansiaViewModel: LansiaViewModel,
-    reminderViewModel: ReminderViewModel
-) {
-    NavHost(navController, startDestination = "home") { // ✅ Awali dari login
-        // ✅ LOGIN SCREEN
-//        composable("login") {
-//            LoginScreen(
-//                viewModel = authViewModel,
-//                onLoginSuccess = {
-//                    navController.navigate(BottomNavItem.Home.route) {
-//                        popUpTo("login") { inclusive = true } // Hapus login dari backstack
-//                    }
-//                },
-//                onNavigateToRegister = {
-//                    navController.navigate("register")
-//                }
-//            )
-//        }
+    reminderViewModel: ReminderViewModel,
+    modifier: Modifier = Modifier
 
-//        // ✅ REGISTER SCREEN
-//        composable("register") {
-//            RegisterScreen(
-//                viewModel = authViewModel,
-//                onLoginSuccess = {
-//                    navController.navigate(BottomNavItem.Home.route) {
-//                        popUpTo("register") { inclusive = true }
-//                    }
-//                }
-//            )
-//        }
+) {
+    NavHost(navController, startDestination = "home",modifier = modifier) {
 
         // ✅ HOME (Reminder)
         composable(BottomNavItem.Home.route) {
             HomeScreen(
                 navController = navController,
-                reminderViewModel = reminderViewModel
+                reminderViewModel = reminderViewModel,
+                lansiaViewModel = lansiaViewModel,
+                obatViewModel = obatViewModel
             )
         }
 

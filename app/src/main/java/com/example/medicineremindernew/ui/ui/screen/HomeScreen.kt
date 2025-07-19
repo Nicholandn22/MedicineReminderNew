@@ -31,13 +31,23 @@ import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.theme.Hijau
+import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
 
 @Composable
-fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewModel) {
+fun HomeScreen(
+    navController: NavController,
+    reminderViewModel: ReminderViewModel,
+    lansiaViewModel: LansiaViewModel,
+    obatViewModel: ObatViewModel
+) {
     val reminders by reminderViewModel.reminderList.collectAsState()
     val reminderTerdekat = reminders.sortedWith(compareBy({ it.tanggal }, { it.waktu })).firstOrNull()
+
+    val lansiaList by lansiaViewModel.lansiaList.collectAsState()
+    val obatList by obatViewModel.obatList.collectAsState()
 
     Box(
         modifier = Modifier
@@ -90,6 +100,17 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                         )
 
                         if (reminderTerdekat != null) {
+                            val lansiaName = lansiaList.find { it.id == reminderTerdekat.lansiaId }?.nama ?: "Tidak Ditemukan"
+                            val obatName = obatList.find { it.id == reminderTerdekat.obatId }?.nama ?: "Tidak Ditemukan"
+
+                            Text(
+                                text = "$lansiaName - $obatName",
+                                color = Color.Black,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 5.dp)
+                            )
+
                             Text(
                                 text = "${reminderTerdekat.waktu} - ${reminderTerdekat.tanggal}",
                                 color = Color(0xFF666666),
@@ -135,8 +156,11 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
 
                 // ✅ List Semua Reminder
                 reminders.forEach { reminder ->
+                    val lansiaName = lansiaList.find { it.id == reminder.lansiaId }?.nama ?: "Tidak Ditemukan"
+                    val obatName = obatList.find { it.id == reminder.obatId }?.nama ?: "Tidak Ditemukan"
+
                     ReminderItem(
-                        title = "Lansia ID: ${reminder.lansiaId} - Obat ID: ${reminder.id}",
+                        title = "Lansia: $lansiaName - Obat: $obatName",
                         time = "${reminder.tanggal} - ${reminder.waktu}",
                         onClick = {
                             navController.navigate("detail_reminder/${reminder.id}")
@@ -159,6 +183,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
         )
     }
 }
+
 
 
 @Composable
