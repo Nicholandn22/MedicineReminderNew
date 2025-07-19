@@ -4,41 +4,52 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LansiaViewModel(private val repository: LansiaRepository) : ViewModel() {
-//    val lansiaList: StateFlow<List<Lansia>> = repository.getAllLansia.stateIn(
-//        scope = viewModelScope,
-//        started = SharingStarted.WhileSubscribed(5000),
-//        initialValue = emptyList()
-//    )
 
+    private val _lansiaList = MutableStateFlow<List<Lansia>>(emptyList())
+    val lansiaList: StateFlow<List<Lansia>> = _lansiaList
 
+    private val _lansiaDetail = MutableStateFlow<Lansia?>(null)
+    val lansiaDetail: StateFlow<Lansia?> = _lansiaDetail
 
-    val getAllLansia: Flow<List<Lansia>> = repository.getAllLansia
-
-
-
-    fun insert(lansia: Lansia) = viewModelScope.launch {
-        repository.insert(lansia)
-    }
-
-    fun delete(lansia: Lansia) = viewModelScope.launch {
-        repository.delete(lansia)
-    }
-
-    fun update(lansia: Lansia) {
-        viewModelScope.launch {
-            repository.update(lansia)
+    init {
+        repository.getAllLansia { lansiaList ->
+            _lansiaList.value = lansiaList
         }
     }
 
 
-
-    fun getLansiaById(id: Int): Flow<Lansia?> {
-        return repository.getLansiaById(id)
+    fun loadLansia() {
+        repository.getAllLansia { list ->
+            _lansiaList.value = list
+        }
     }
 
+    fun getLansiaById(id: String) {
+        viewModelScope.launch {
+            _lansiaDetail.value = repository.getLansiaById(id)
+        }
+    }
+
+    fun updateLansia(lansia: Lansia, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = repository.updateLansiaSuspend(lansia)
+            onResult(success)
+        }
+    }
+
+    fun addLansia(lansia: Lansia, onResult: (Boolean) -> Unit) {
+        repository.addLansia(lansia, onResult)
+    }
+
+    fun deleteLansia(id: String) {
+        viewModelScope.launch {
+            repository.deleteLansia(id)
+        }
+    }
 
 }

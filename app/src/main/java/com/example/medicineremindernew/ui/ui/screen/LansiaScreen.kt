@@ -31,6 +31,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -44,12 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.sql.Date
 import java.util.Calendar
@@ -57,20 +58,9 @@ import java.util.Calendar
 @Composable
 fun LansiaScreen(
     navController: NavController,
-    lansiaViewModel1: LansiaViewModel,
-//    context: LansiaViewModel = LocalContext.current
+    lansiaViewModel: LansiaViewModel
 ) {
-
-    val context = LocalContext.current
-    val application = context.applicationContext as Application
-    val db = remember { ObatDatabase.getDatabase(application) }
-    val repository = remember { LansiaRepository(db.lansiaDao()) }
-    val viewModelFactory = remember { LansiaViewModelFactory(repository) }
-
-    val lansiaViewModel: LansiaViewModel = viewModel(
-        factory = LansiaViewModelFactory(repository)
-    )
-    val lansiaList = lansiaViewModel.getAllLansia.collectAsState(initial = emptyList()).value
+    val lansiaList by lansiaViewModel.lansiaList.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
@@ -108,35 +98,32 @@ fun LansiaScreen(
                     )
                 } else {
                     lansiaList.forEach { lansia ->
-                        val usia = hitungUsiaDariTanggalLahir(java.sql.Date(lansia.lahir.time))
+                        val usia = hitungUsiaDariTanggalLahir(lansia.lahir)
                         LansiaItem(
                             lansia = lansia,
                             usia = usia,
                             onDeleteClick = {
-                                lansiaViewModel.delete(lansia)
+                                lansiaViewModel.deleteLansia(lansia.id)
                                 coroutineScope.launch {
                                     snackbarHostState.showSnackbar("Lansia berhasil dihapus")
                                 }
                             },
                             onItemClick = {
                                 navController.navigate("detail_lansia/${lansia.id}")
-
-
                             }
-
                         )
                     }
                 }
             }
         }
 
-        // Tombol floating Add
+        // ✅ Tombol floating Add
         AddLansia(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 100.dp),
             onClick = {
-                navController.navigate("AddLansia")
+                navController.navigate("addlansia")
             }
         )
 
@@ -167,23 +154,15 @@ fun LansiaItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Informasi Lansia (kiri)
         Column {
-            Text(
-                text = lansia.name,
-                fontSize = 20.sp,
-                color = Color.Black
-            )
+            Text(text = lansia.nama, fontSize = 20.sp, color = Color.Black)
             Row {
                 Text("Usia : $usia", fontSize = 16.sp, color = Color.DarkGray)
                 Text(" | Golongan Darah : ${lansia.goldar}", fontSize = 16.sp, color = Color.DarkGray)
             }
         }
 
-        // Tombol Hapus (kanan)
-        IconButton(
-            onClick = onDeleteClick
-        ) {
+        IconButton(onClick = onDeleteClick) {
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Hapus",
@@ -194,59 +173,26 @@ fun LansiaItem(
     }
 }
 
-
-fun hitungUsiaDariTanggalLahir(date: Date): Int {
+fun hitungUsiaDariTanggalLahir(lahir: Timestamp?): Int {
+    if (lahir == null) return 0
     val dob = Calendar.getInstance()
-    dob.time = date
-
+    dob.time = lahir.toDate()
     val today = Calendar.getInstance()
-
     var age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR)
-
     if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
         age--
     }
-
     return age
 }
 
-
-//@Composable
-//fun AddLansia(
-//    modifier: Modifier = Modifier,
-//    onClick: () -> Unit
-//) {
-//    ExtendedFloatingActionButton(
-//        onClick = onClick,
-//        modifier = modifier,
-//        containerColor = OrenMuda,
-//        contentColor = Color.White,
-//        text = { Text("") },
-//        icon = {
-//            Icon(
-//                imageVector = Icons.Default.Add,
-//                contentDescription = "Tambah"
-//            )
-//        }
-//    )
-//}
-
 @Composable
-fun AddLansia(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
+fun AddLansia(modifier: Modifier = Modifier, onClick: () -> Unit) {
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
         containerColor = OrenMuda,
         contentColor = Color.White
     ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "Tambah",
-            modifier = Modifier.size(30.dp)
-        )
+        Icon(imageVector = Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp))
     }
 }
-

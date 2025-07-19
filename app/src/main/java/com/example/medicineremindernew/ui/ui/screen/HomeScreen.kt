@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.OrenMuda
 import com.example.medicineremindernew.ui.ui.theme.Hijau
@@ -37,14 +36,6 @@ import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
 
 @Composable
 fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewModel) {
-    val context = LocalContext.current
-    val application = context.applicationContext as Application
-    val db = remember { ObatDatabase.getDatabase(application) }
-
-    val reminderViewModel: ReminderViewModel = viewModel(
-        factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))
-    )
-
     val reminders by reminderViewModel.reminderList.collectAsState()
     val reminderTerdekat = reminders.sortedWith(compareBy({ it.tanggal }, { it.waktu })).firstOrNull()
 
@@ -53,13 +44,6 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
             .fillMaxSize()
             .background(Color(0xFFF3570F))
     ) {
-        LaunchedEffect(reminders) {
-            Log.d("ReminderDebug", "Reminder yang tampil: ${reminders.size}")
-            reminders.forEach {
-                Log.d("ReminderDebug", "Reminder -> Tanggal: ${it.tanggal}, Waktu: ${it.waktu}")
-            }
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,6 +67,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                     .fillMaxHeight()
                     .verticalScroll(scrollState)
             ) {
+                // ✅ Card Reminder Terdekat
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -94,7 +79,6 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(Color.White)
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Text(
@@ -112,6 +96,32 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
                             )
+
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                IconButton(onClick = {
+                                    reminderViewModel.deleteReminder(reminderTerdekat.id)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Hapus",
+                                        tint = Color.Red
+                                    )
+                                }
+
+                                IconButton(onClick = {
+                                    navController.navigate("detail_reminder/${reminderTerdekat.id}")
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Edit",
+                                        tint = OrenMuda
+                                    )
+                                }
+                            }
                         } else {
                             Text(
                                 text = "Tidak ada reminder terdekat",
@@ -120,78 +130,19 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
                                 modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
                             )
                         }
-
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            if (reminderTerdekat != null) {
-                                IconButton(onClick = { reminderViewModel.delete(reminderTerdekat) }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .border(1.dp, Color.Red, CircleShape)
-                                            .padding(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Hapus",
-                                            tint = Color.Red,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                }
-
-                                IconButton(onClick = {
-                                    navController.navigate("detail_reminder/${reminderTerdekat.id}")
-                                }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .border(1.dp, OrenMuda, CircleShape)
-                                            .padding(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = "Ubah",
-                                            tint = OrenMuda,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                }
-
-                                IconButton(onClick = {
-                                    reminderViewModel.delete(reminderTerdekat)
-                                }) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .border(1.dp, Hijau, CircleShape)
-                                            .padding(6.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Selesai",
-                                            tint = Hijau,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
 
+                // ✅ List Semua Reminder
                 reminders.forEach { reminder ->
                     ReminderItem(
-                        title = "Reminder Lansia ${reminder.lansiaId} - Obat ${reminder.obatId}",
+                        title = "Lansia ID: ${reminder.lansiaId} - Obat ID: ${reminder.id}",
                         time = "${reminder.tanggal} - ${reminder.waktu}",
                         onClick = {
                             navController.navigate("detail_reminder/${reminder.id}")
                         },
                         onDelete = {
-                            reminderViewModel.delete(reminder)
+                            reminderViewModel.deleteReminder(reminder.id)
                         }
                     )
                 }
@@ -208,6 +159,7 @@ fun HomeScreen(navController: NavController, reminderViewModel: ReminderViewMode
         )
     }
 }
+
 
 @Composable
 fun ReminderItem(

@@ -7,15 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import com.example.medicineremindernew.R.drawable.sign_out
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,102 +15,68 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import androidx.room.Room
-import com.example.medicineremindernew.ui.data.local.ObatDatabase
+import com.example.medicineremindernew.R.drawable.sign_out
 import com.example.medicineremindernew.ui.data.local.SessionManager
+import com.example.medicineremindernew.ui.data.repository.FirestoreRepository
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.navigation.NavGraph
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
-import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.AuthViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
-
+import com.example.medicineremindernew.ui.ui.viewmodel.*
+import com.google.firebase.FirebaseApp
 
 class MainActivity : AppCompatActivity() {
+
+    // ✅ Repository utama (Firestore base)
+    private val firestoreRepository = FirestoreRepository()
+
+    // ✅ Repository untuk tiap data
+    private val lansiaRepository by lazy { LansiaRepository(firestoreRepository) }
+    private val obatRepository by lazy { ObatRepository(firestoreRepository) }
+    private val reminderRepository by lazy { ReminderRepository(firestoreRepository) }
+
+    // ✅ ViewModels dengan Factory
+    private val lansiaViewModel: LansiaViewModel by viewModels {
+        LansiaViewModelFactory(lansiaRepository)
+    }
+
+    private val obatViewModel: ObatViewModel by viewModels {
+        ObatViewModelFactory(obatRepository)
+    }
+
+    private val reminderViewModel: ReminderViewModel by viewModels {
+        ReminderViewModelFactory(reminderRepository)
+    }
+
+//    private val authViewModel: AuthViewModel by viewModels {
+//        AuthViewModelFactory(application)
+//    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val sessionManager = SessionManager(this)
-        val userEmail = sessionManager.getEmail()
-
-        // Cek izin seperti sebelumnya...
-        // ...
-
-        val database = Room.databaseBuilder(
-            applicationContext,
-            ObatDatabase::class.java,
-            "obat_database"
-        ).fallbackToDestructiveMigration().build()
-
-        val obatRepository = ObatRepository(database.obatDao())
-        val lansiaRepository = LansiaRepository(database.lansiaDao())
-        val reminderRepository = ReminderRepository(database.reminderDao())
-
-        val obatViewModel = ObatViewModel(obatRepository)
-        val lansiaViewModel = LansiaViewModel(lansiaRepository)
-        val reminderViewModel = ReminderViewModel(reminderRepository)
-
-        val authViewModelFactory = AuthViewModelFactory(application)
-        val authViewModel: AuthViewModel by viewModels { authViewModelFactory }
-
-        // ✅ Jika ada session user, langsung anggap login
-        if (userEmail != null) {
-            authViewModel.setLoginSuccessFromSession(userEmail)
-        }
+        FirebaseApp.initializeApp(this) // ✅ Penting!
 
         setContent {
             MedicineReminderNewTheme {
                 val navController = rememberNavController()
-                val loginSuccess by authViewModel.loginSuccess.collectAsState()
 
-                if (loginSuccess) {
-                    Scaffold(
-                        // ini utk logout atau kemmbali
-                        topBar = {
-                            TopAppBar(
-                                title = { Text("Medicine Reminder") },
-                                navigationIcon = {
-                                    IconButton(onClick = {
-                                        authViewModel.logout(this@MainActivity)
-
-                                        // Navigasi ke login
-                                        navController.navigate("login") {
-                                            popUpTo(0) { inclusive = true } // Hapus semua dari backstack
-                                        }
-                                    }) {
-                                        Icon(
-                                            painter = painterResource(sign_out),
-//                                            imageVector = Icons.Default.ArrowBack,
-                                            contentDescription = "Logout",
-                                            tint = Color.Red,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                }
-                            )
-                        },
-                        bottomBar = { BottomNavigationBar(navController) }) {
-                        NavGraph(
-                            navController = navController,
-                            obatViewModel = obatViewModel,
-                            lansiaViewModel = lansiaViewModel,
-                            reminderViewModel = reminderViewModel,
-                            authViewModel = authViewModel
+                Scaffold(
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Medicine Reminder") }
                         )
-                    }
-                } else {
+                    },
+                    bottomBar = { BottomNavigationBar(navController) }
+                ) {
                     NavGraph(
                         navController = navController,
                         obatViewModel = obatViewModel,
                         lansiaViewModel = lansiaViewModel,
-                        reminderViewModel = reminderViewModel,
-                        authViewModel = authViewModel
+                        reminderViewModel = reminderViewModel
+//                        authViewModel = null // ✅ Kalau tidak dipakai lagi
                     )
                 }
             }
@@ -126,3 +84,4 @@ class MainActivity : AppCompatActivity() {
     }
 
 }
+

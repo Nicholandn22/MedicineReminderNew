@@ -4,10 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 
-class LansiaViewModelFactory(
-    private val repository: LansiaRepository
-) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
+class LansiaViewModelFactory(private val repository: LansiaRepository) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(LansiaViewModel::class.java)) {
             return LansiaViewModel(repository) as T
@@ -15,4 +12,3 @@ class LansiaViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-

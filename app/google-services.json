@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:59058627958:android:a6bf5fe71a1a6291084657",
+        "mobilesdk_app_id": "1:59058627958:android:ea636dc3861a9f53084657",
         "android_client_info": {
-          "package_name": "com.example.medicineremindernew.ui"
+          "package_name": "com.example.medicineremindernew"
         }
       },
       "oauth_client": [],

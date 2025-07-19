@@ -2,6 +2,7 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.Application
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +34,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,11 +49,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.back_white
-import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
@@ -69,6 +71,12 @@ import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+
+
+
 
 
 @Composable
@@ -78,33 +86,25 @@ fun AddReminderScreen(
     onBackClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
     onClearClick: () -> Unit = {},
-    obatViewModel: ObatViewModel,
-    lansiaViewModel: LansiaViewModel,
-    reminderViewModel: ReminderViewModel
+    obatViewModel: ObatViewModel = viewModel(),
+    lansiaViewModel: LansiaViewModel = viewModel(),
+    reminderViewModel: ReminderViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val application = context.applicationContext as Application
-    val db = remember { ObatDatabase.getDatabase(application) }
-
-    val reminderViewModel: ReminderViewModel = viewModel(
-        factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))
-    )
-
     val coroutineScope = rememberCoroutineScope()
 
-    val obatViewModel: ObatViewModel = viewModel(
-        factory = ObatViewModelFactory(ObatRepository(db.obatDao()))
-    )
+    // ✅ Ambil data dari Firestore via ViewModel
+    val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle()
+    val obatList by obatViewModel.obatList.collectAsStateWithLifecycle()
 
-    val lansiaViewModel: LansiaViewModel = viewModel(
-        factory = LansiaViewModelFactory(LansiaRepository(db.lansiaDao()))
-    )
+    // ✅ Panggil load data saat pertama kali
+    LaunchedEffect(Unit) {
+//        lansiaViewModel.loadLansia()
+//        obatViewModel.loadObat()
+    }
 
-    val lansiaList = lansiaViewModel.getAllLansia.collectAsState(initial = emptyList()).value
-    val obatList = obatViewModel.allObat.collectAsState(initial = emptyList()).value
-
-    var selectedLansia by remember { mutableStateOf<Int?>(null) }
-    var selectedObat by remember { mutableStateOf<Int?>(null) }
+    var selectedLansia by remember { mutableStateOf<String?>(null) }
+    var selectedObat by remember { mutableStateOf<String?>(null) }
     var tanggal by remember { mutableStateOf("") }
     var waktu by remember { mutableStateOf("") }
 
@@ -123,7 +123,7 @@ fun AddReminderScreen(
                 .background(Color(0x0FFFFFFF))
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header
+            // ✅ Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -142,10 +142,9 @@ fun AddReminderScreen(
                 Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp, modifier = Modifier.padding(top = 15.dp))
             }
 
-            // Section: Pengingat
+            // ✅ Section: Pilih Tanggal & Waktu
             SectionTitle("Pengingat")
             CardSection {
-                val context = LocalContext.current
                 val calendar = remember { Calendar.getInstance() }
 
                 val datePickerDialog = remember {
@@ -190,10 +189,10 @@ fun AddReminderScreen(
                     onClick = { timePickerDialog.show() },
                     modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xBDBDBD),
-                    contentColor = Color(0xFFFF6F00)
-                ),
-                shape = RoundedCornerShape(30.dp)
+                        containerColor = Color(0xBDBDBD),
+                        contentColor = Color(0xFFFF6F00)
+                    ),
+                    shape = RoundedCornerShape(30.dp)
                 ) {
                     Text(text = if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
                 }
@@ -213,11 +212,9 @@ fun AddReminderScreen(
                     selectedNadaDering = it
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-
-
             }
 
-            // Section: Pasien
+            // ✅ Section Lansia
             SectionWithAddButton("Pasien", navController = navController)
             CardSection {
                 if (lansiaList.isEmpty()) {
@@ -225,16 +222,15 @@ fun AddReminderScreen(
                 } else {
                     lansiaList.forEach { lansia ->
                         ReminderButton(
-                            text = lansia.name,
+                            text = lansia.nama,
                             onClick = { selectedLansia = lansia.id },
                             isSelected = selectedLansia == lansia.id
                         )
-
                     }
                 }
             }
 
-            // Section: Obat
+            // ✅ Section Obat
             SectionWithAddButton("List Obat", navController = navController)
             CardSection {
                 if (obatList.isEmpty()) {
@@ -246,12 +242,11 @@ fun AddReminderScreen(
                             onClick = { selectedObat = obat.id },
                             isSelected = selectedObat == obat.id
                         )
-
                     }
                 }
             }
 
-            // Buttons Row
+            // ✅ Buttons Save & Clear
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -262,25 +257,42 @@ fun AddReminderScreen(
                 Button(
                     onClick = {
                         if (selectedLansia != null && selectedObat != null && tanggal.isNotEmpty() && waktu.isNotEmpty()) {
-                            val formatterDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val formatterTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+                            val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
                             val reminder = Reminder(
                                 obatId = selectedObat!!,
                                 lansiaId = selectedLansia!!,
-                                tanggal = java.sql.Date(formatterDate.parse(tanggal)!!.time),
-                                waktu = Time(formatterTime.parse(waktu)!!.time),
+                                tanggal = tanggal,       // Simpan tanggal sebagai String
+                                waktu = waktu,           // Simpan waktu sebagai String
                                 pengulangan = selectedPengulangan
+                                // userId hilangkan karena model Anda tidak punya field ini
                             )
 
-                            // Insert dan jadwalkan alarm
-                            reminderViewModel.insertAndSchedule(reminder, context) {
+                            // ✅ Simpan ke Firestore via ViewModel
+                            reminderViewModel.addReminder(reminder) { success ->
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Reminder berhasil disimpan dan alarm dijadwalkan")
-                                }
-                                onSaveClick()
-                                navController.popBackStack() // 👈 ini akan kembali ke halaman sebelumnya
+                                    if (success) {
+                                        // ✅ Jadwalkan alarm setelah reminder berhasil disimpan
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            val alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+                                            if (!alarmManager.canScheduleExactAlarms()) {
+                                                val intent = android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                                                intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                                context.startActivity(intent)
+                                                return@launch
+                                            }
+                                        }
 
+                                        // ✅ Panggil fungsi untuk set alarm
+                                        com.example.medicineremindernew.ui.alarm.scheduleAlarm(context, reminder)
+
+                                        snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm dijadwalkan")
+                                        navController.popBackStack()
+                                    }
+                                    else {
+                                        snackbarHostState.showSnackbar("Gagal menyimpan reminder")
+                                    }
+                                }
                             }
                         } else {
                             coroutineScope.launch {
@@ -296,9 +308,10 @@ fun AddReminderScreen(
                         .weight(1f)
                         .padding(end = 8.dp)
                         .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(35.dp)),
-                ){
+                ) {
                     Text("Save")
                 }
+
 
                 // Tombol Clear
                 Button(
@@ -336,6 +349,7 @@ fun AddReminderScreen(
         }
     }
 }
+
 
 // ====================== Helper Composables ======================
 
@@ -423,38 +437,21 @@ fun DropdownMenuField(
     onOptionSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-
     Box {
-        Button(
-            onClick = { expanded = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xBDBDBD), // abu-abu
-                contentColor = Color(0xFFFF6F00)    // orange terang
-            ),
-            shape = RoundedCornerShape(30.dp)
-        ) {
-            Text(selectedOption)
+        OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(selectedOption.ifEmpty { "Pilih" })
         }
-
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            options.forEach {
-                DropdownMenuItem(
-                    text = { Text(it) },
-                    onClick = {
-                        onOptionSelected(it)
-                        expanded = false
-                    }
-                )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(text = { Text(option) }, onClick = {
+                    onOptionSelected(option)
+                    expanded = false
+                })
             }
         }
     }
 }
+
 
 @Composable
 fun ReminderButton(

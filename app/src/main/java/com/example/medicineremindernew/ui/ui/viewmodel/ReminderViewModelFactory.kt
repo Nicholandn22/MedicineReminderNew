@@ -1,12 +1,11 @@
 package com.example.medicineremindernew.ui.ui.viewmodel
 
+// ReminderViewModelFactory.kt
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 
-class ReminderViewModelFactory(
-    private val repository: ReminderRepository
-) : ViewModelProvider.Factory {
+class ReminderViewModelFactory(private val repository: ReminderRepository) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ReminderViewModel::class.java)) {
@@ -15,6 +14,7 @@ class ReminderViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
 
 
 

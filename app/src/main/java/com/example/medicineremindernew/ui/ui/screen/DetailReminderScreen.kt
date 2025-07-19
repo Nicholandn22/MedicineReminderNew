@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R
-import com.example.medicineremindernew.ui.data.local.ObatDatabase
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
@@ -34,110 +33,147 @@ import java.util.*
 
 @Composable
 fun DetailReminderScreen(
-    reminderId: Int,
+    reminderId: String,
     navController: NavController,
-    modifier: Modifier = Modifier,
+    reminderViewModel: ReminderViewModel,
+    lansiaViewModel: LansiaViewModel,
+    obatViewModel: ObatViewModel,
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {}
-) {
-    val context = LocalContext.current
-    val application = context.applicationContext as Application
-    val db = remember { ObatDatabase.getDatabase(application) }
-
-    val reminderViewModel: ReminderViewModel = viewModel(
-        factory = ReminderViewModelFactory(ReminderRepository(db.reminderDao()))
-    )
-    val obatViewModel: ObatViewModel = viewModel(
-        factory = ObatViewModelFactory(ObatRepository(db.obatDao()))
-    )
-    val lansiaViewModel: LansiaViewModel = viewModel(
-        factory = LansiaViewModelFactory(LansiaRepository(db.lansiaDao()))
-    )
-
-    val coroutineScope = rememberCoroutineScope()
-    val lansiaList = lansiaViewModel.getAllLansia.collectAsState(initial = emptyList()).value
-    val obatList = obatViewModel.allObat.collectAsState(initial = emptyList()).value
-    val reminder by reminderViewModel.getReminderById(reminderId).collectAsState(initial = null)
-
-    var selectedLansia by remember { mutableStateOf<Int?>(null) }
-    var selectedObat by remember { mutableStateOf<Int?>(null) }
-    var tanggal by remember { mutableStateOf("") }
-    var waktu by remember { mutableStateOf("") }
-    val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
-    val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
-    var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
-    var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
+)
+ {
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(reminder) {
-        reminder?.let {
-            selectedLansia = it.lansiaId
-            selectedObat = it.obatId
-            tanggal = it.tanggal.toString()
-            waktu = it.waktu.toString().substring(0, 5)
-            selectedPengulangan = it.pengulangan
-        }
-    }
+    // Ambil data dari ViewModel
+    val reminder by reminderViewModel.reminderDetail.collectAsState(initial = null)
+    val lansiaList by lansiaViewModel.lansiaList.collectAsState(initial = emptyList())
+    val obatList by obatViewModel.obatList.collectAsState(initial = emptyList())
 
-    if (reminder != null) {
-        AddReminderScreenContent(
-            modifier = modifier,
-            selectedLansia = selectedLansia,
-            onLansiaSelect = { selectedLansia = it },
-            selectedObat = selectedObat,
-            onObatSelect = { selectedObat = it },
-            tanggal = tanggal,
-            onTanggalChange = { tanggal = it },
-            waktu = waktu,
-            onWaktuChange = { waktu = it },
-            selectedPengulangan = selectedPengulangan,
-            onPengulanganChange = { selectedPengulangan = it },
-            selectedNadaDering = selectedNadaDering,
-            onNadaDeringChange = { selectedNadaDering = it },
-            lansiaList = lansiaList,
-            obatList = obatList,
-            snackbarHostState = snackbarHostState,
-            onBackClick = onBackClick,
-            onSaveClick = {
-                if (selectedLansia != null && selectedObat != null && tanggal.isNotEmpty() && waktu.isNotEmpty()) {
-                    val formatterDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                    val formatterTime = SimpleDateFormat("HH:mm", Locale.getDefault())
-                    val updatedReminder = reminder!!.copy(
-                        lansiaId = selectedLansia!!,
-                        obatId = selectedObat!!,
-                        tanggal = java.sql.Date(formatterDate.parse(tanggal)!!.time),
-                        waktu = Time(formatterTime.parse(waktu)!!.time),
-                        pengulangan = selectedPengulangan
-                    )
-                    reminderViewModel.updateAndSchedule(updatedReminder, context) {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Reminder berhasil diperbarui")
-                        }
-                        onUpdateClick()
-                        navController.navigate("login")
-                    }
-                } else {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("Harap lengkapi semua data")
-                    }
-                }
-            },
-            navController = navController
-        )
-    } else {
+
+    // Load data ketika screen muncul
+     LaunchedEffect(reminderId) {
+         reminderViewModel.getReminderById(reminderId)
+         // Tidak perlu panggil loadLansia dan loadObat, karena real-time Firestore otomatis update
+     }
+
+
+     if (reminder == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
+        return
+    }
+
+    // State untuk input
+    var selectedLansia by remember { mutableStateOf(reminder?.lansiaId ?: "") }
+    var selectedObat by remember { mutableStateOf(reminder?.obatId ?: "") }
+    var tanggal by remember { mutableStateOf(reminder?.tanggal ?: "") }
+    var waktu by remember { mutableStateOf(reminder?.waktu ?: "") }
+    var pengulangan by remember { mutableStateOf(reminder?.pengulangan ?: "") }
+
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text("Edit Reminder", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Pilih Lansia
+        Text("Pilih Lansia", fontWeight = FontWeight.Bold)
+        DropdownMenuField(
+            options = lansiaList.map { it.nama },
+            selectedOption = lansiaList.find { it.id == selectedLansia }?.nama ?: "",
+            onOptionSelected = { nama ->
+                selectedLansia = lansiaList.find { it.nama == nama }?.id ?: ""
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Pilih Obat
+        Text("Pilih Obat", fontWeight = FontWeight.Bold)
+        DropdownMenuField(
+            options = obatList.map { it.nama },
+            selectedOption = obatList.find { it.id == selectedObat }?.nama ?: "",
+            onOptionSelected = { nama ->
+                selectedObat = obatList.find { it.nama == nama }?.id ?: ""
+            }
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = tanggal,
+            onValueChange = { tanggal = it },
+            label = { Text("Tanggal") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = waktu,
+            onValueChange = { waktu = it },
+            label = { Text("Waktu") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = pengulangan,
+            onValueChange = { pengulangan = it },
+            label = { Text("Pengulangan") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedButton(
+            onClick = {
+                val updatedReminder = reminder!!.copy(
+                    lansiaId = selectedLansia,
+                    obatId = selectedObat,
+                    tanggal = tanggal,
+                    waktu = waktu,
+                    pengulangan = pengulangan
+                )
+
+                reminderViewModel.updateReminder(updatedReminder) { success ->
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            if (success) "Data berhasil diperbarui" else "Gagal memperbarui data"
+                        )
+                        if (success) onBackClick()
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
+            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda))
+        ) {
+            Text("Update Reminder")
+        }
+
+        SnackbarHost(snackbarHostState, modifier = Modifier.padding(16.dp))
     }
 }
+
+
 
 @Composable
 fun AddReminderScreenContent(
     modifier: Modifier = Modifier,
-    selectedLansia: Int?,
-    onLansiaSelect: (Int) -> Unit,
-    selectedObat: Int?,
-    onObatSelect: (Int) -> Unit,
+    selectedLansia: String,
+    onLansiaSelect: (String) -> Unit,
+    selectedObat: String,
+    onObatSelect: (String) -> Unit,
+
     tanggal: String,
     onTanggalChange: (String) -> Unit,
     waktu: String,
@@ -242,7 +278,7 @@ fun AddReminderScreenContent(
         CardSection {
             if (lansiaList.isEmpty()) Text("Belum ada data lansia")
             else lansiaList.forEach {
-                ReminderButton(it.name, { onLansiaSelect(it.id) }, selectedLansia == it.id)
+                ReminderButton(it.nama, { onLansiaSelect(it.id) }, selectedLansia == it.id)
             }
         }
 
@@ -271,3 +307,6 @@ fun AddReminderScreenContent(
         SnackbarHost(snackbarHostState, modifier = Modifier.fillMaxWidth().padding(50.dp))
     }
 }
+
+
+

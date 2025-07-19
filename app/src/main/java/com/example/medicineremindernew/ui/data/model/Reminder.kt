@@ -1,16 +1,20 @@
 package com.example.medicineremindernew.ui.data.model
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-import java.sql.Date
-import java.sql.Time
 
-@Entity(tableName = "reminder_table")
+
+import com.google.firebase.Timestamp
+import java.util.Date
+
+
 data class Reminder(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val obatId: Int,
-    val lansiaId: Int,
-    val waktu: Time,
-    val tanggal: Date,
-    val pengulangan : String
+    val id: String = "",            // Firestore ID
+    val lansiaId: String = "",      // ID Lansia
+    val obatId: String = "",        // ID Obat
+    val waktu: String = "",         // "08:00"
+    val tanggal: String = "",       // "2025-07-14"
+    val pengulangan: String = ""    // "Harian", "Mingguan"
 )
+
+
+
+

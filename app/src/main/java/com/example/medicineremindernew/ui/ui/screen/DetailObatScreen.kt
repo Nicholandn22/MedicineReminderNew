@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -45,27 +46,30 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun DetailObatScreen(
-    obatId: Int,
+    obatId: String,
     viewModel: ObatViewModel,
     onBackClick: () -> Unit
 ) {
-    val obat by viewModel.getObatById(obatId).collectAsStateWithLifecycle(initialValue = null)
+    val obat by viewModel.obatDetail.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    var namaObat by remember { mutableStateOf("") }
-    var jenisObat by remember { mutableStateOf("Tablet") }
-    var satuanDosis by remember { mutableStateOf("mg") }
-    var notes by remember { mutableStateOf("") }
-
-    LaunchedEffect(obat) {
-        obat?.let {
-            namaObat = it.nama
-            jenisObat = it.jenis
-            satuanDosis = it.dosis
-            notes = it.keterangan ?: ""
-        }
+    // Load data saat pertama kali
+    LaunchedEffect(obatId) {
+        viewModel.getObatById(obatId)
     }
+
+    if (obat == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    var namaObat by remember { mutableStateOf(obat!!.nama) }
+    var jenisObat by remember { mutableStateOf(obat!!.jenis) }
+    var satuanDosis by remember { mutableStateOf(obat!!.dosis) }
+    var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
 
     Column(
         modifier = Modifier
@@ -105,17 +109,14 @@ fun DetailObatScreen(
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-//                Text("Nama Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = namaObat,
                     onValueChange = { namaObat = it },
-                    placeholder = { Text("Nama Obat") },
-                    label = { Text("Masukkan Nama Obat") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    singleLine = true
+                    label = { Text("Nama Obat") },
+                    modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Jenis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
@@ -124,7 +125,7 @@ fun DetailObatScreen(
                     onOptionSelected = { jenisObat = it }
                 )
 
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
@@ -133,38 +134,32 @@ fun DetailObatScreen(
                     onOptionSelected = { satuanDosis = it }
                 )
 
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-//                Text("Notes", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    placeholder = { Text("Catatan T ambahan") },
-                    label = { Text("Masukkan Catatan Tambahan") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(bottom = 2.dp),
-                    singleLine = true
+                    label = { Text("Catatan Tambahan") },
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
 
-        // TOMBOL UPDATE
         OutlinedButton(
             onClick = {
-                obat?.let {
-                    val updated = it.copy(
-                        nama = namaObat,
-                        jenis = jenisObat,
-                        dosis = satuanDosis,
-                        keterangan = notes
-                    )
-                    viewModel.updateObat(updated)
+                val updated = obat!!.copy(
+                    nama = namaObat,
+                    jenis = jenisObat,
+                    dosis = satuanDosis,
+                    catatan = notes
+                )
+                viewModel.updateObat(updated) { success ->
                     scope.launch {
-                        snackbarHostState.showSnackbar("Data berhasil diperbarui")
+                        snackbarHostState.showSnackbar(
+                            if (success) "Data berhasil diperbarui" else "Gagal memperbarui data"
+                        )
+                        if (success) onBackClick()
                     }
-                    onBackClick()
                 }
             },
             modifier = Modifier
@@ -178,12 +173,6 @@ fun DetailObatScreen(
             Text("Update")
         }
 
-        // SNACKBAR
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
+        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(16.dp))
     }
 }
