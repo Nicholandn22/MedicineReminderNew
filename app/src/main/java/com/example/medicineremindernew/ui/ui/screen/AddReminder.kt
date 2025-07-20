@@ -74,9 +74,7 @@ import java.util.Locale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-
-
-
+import java.util.UUID
 
 
 @Composable
@@ -283,9 +281,17 @@ fun AddReminderScreen(
                                             }
                                         }
 
-                                        // ✅ Panggil fungsi untuk set alarm
-                                        com.example.medicineremindernew.ui.alarm.scheduleAlarm(context, reminder)
+                                        val dateTimeString = "$tanggal $waktu"
+                                        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                                        val date = sdf.parse(dateTimeString)
+                                        val timeInMillis = date?.time ?: 0L
 
+                                        // ✅ Panggil fungsi untuk set alarm
+                                        com.example.medicineremindernew.ui.alarm.scheduleAlarm(
+                                            context,
+                                            reminder.id.ifEmpty { UUID.randomUUID().toString() }, // ID unik kalau kosong
+                                            timeInMillis
+                                        )
                                         snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm dijadwalkan")
                                         navController.popBackStack()
                                     }

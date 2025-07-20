@@ -2,21 +2,21 @@ package com.example.medicineremindernew.ui
 
 import BottomNavigationBar
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.rememberNavController
-import com.example.medicineremindernew.R.drawable.sign_out
-import com.example.medicineremindernew.ui.data.local.SessionManager
 import com.example.medicineremindernew.ui.data.repository.FirestoreRepository
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
@@ -49,15 +49,14 @@ class MainActivity : AppCompatActivity() {
         ReminderViewModelFactory(reminderRepository)
     }
 
-//    private val authViewModel: AuthViewModel by viewModels {
-//        AuthViewModelFactory(application)
-//    }
-
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this) // ✅ Penting!
+
+        // ✅ Pastikan alarm tidak mati karena Battery Optimization
+        requestIgnoreBatteryOptimization()
 
         setContent {
             MedicineReminderNewTheme {
@@ -66,22 +65,55 @@ class MainActivity : AppCompatActivity() {
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("Medicine Reminder") }
+                            title = { Text("Medicine Reminder") },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                titleContentColor = MaterialTheme.colorScheme.onPrimary
+                            )
                         )
                     },
-                    bottomBar = { BottomNavigationBar(navController) }
-                ) {
+                    bottomBar = {
+                        BottomNavigationBar(navController)
+                    }
+                ) { innerPadding ->
                     NavGraph(
                         navController = navController,
                         obatViewModel = obatViewModel,
                         lansiaViewModel = lansiaViewModel,
-                        reminderViewModel = reminderViewModel
-//                        authViewModel = null // ✅ Kalau tidak dipakai lagi
+                        reminderViewModel = reminderViewModel,
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
 
-}
+    /**
+     * ✅ Minta user agar mengizinkan aplikasi mengabaikan battery optimization.
+     * Ini penting agar AlarmManager tetap berjalan di background, terutama di Android 6+.
+     */
+    private fun requestIgnoreBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                startActivity(intent)
+            }
+        }
+    }
 
+    private fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "alarm_channel",
+                "Alarm Reminder",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Channel untuk alarm pengingat"
+            }
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
+}
