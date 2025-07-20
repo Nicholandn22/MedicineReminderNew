@@ -2,7 +2,14 @@ package com.example.medicineremindernew.ui
 
 import BottomNavigationBar
 import android.annotation.SuppressLint
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -48,6 +55,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this) // ✅ Penting!
 
+        // ✅ Pastikan alarm tidak mati karena Battery Optimization
+        requestIgnoreBatteryOptimization()
+
         setContent {
             MedicineReminderNewTheme {
                 val navController = rememberNavController()
@@ -77,4 +87,33 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    /**
+     * ✅ Minta user agar mengizinkan aplikasi mengabaikan battery optimization.
+     * Ini penting agar AlarmManager tetap berjalan di background, terutama di Android 6+.
+     */
+    private fun requestIgnoreBatteryOptimization() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                startActivity(intent)
+            }
+        }
+    }
+
+    private fun createNotificationChannel(context: Context) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "alarm_channel",
+                "Alarm Reminder",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Channel untuk alarm pengingat"
+            }
+            val manager = context.getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
+        }
+    }
+
 }

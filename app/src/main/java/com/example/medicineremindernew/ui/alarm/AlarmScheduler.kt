@@ -1,6 +1,8 @@
 package com.example.medicineremindernew.ui.alarm
 
 import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -12,70 +14,58 @@ import com.example.medicineremindernew.ui.data.model.Reminder
 import java.text.SimpleDateFormat
 import java.util.*
 
-fun canScheduleExactAlarm(context: Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        alarmManager.canScheduleExactAlarms()
-    } else true
-}
+fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
+    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-fun scheduleAlarm(context: Context, reminder: Reminder) {
-    if (!canScheduleExactAlarm(context)) {
-        Toast.makeText(context, "Aplikasi tidak diizinkan menjadwalkan alarm tepat waktu", Toast.LENGTH_LONG).show()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    // ✅ Cek izin exact alarm di Android 12+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (!alarmManager.canScheduleExactAlarms()) {
+            Toast.makeText(context, "Aktifkan izin Exact Alarm di Pengaturan", Toast.LENGTH_LONG).show()
+
+            // ✅ Buka halaman pengaturan Exact Alarm
             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                data = android.net.Uri.parse("package:${context.packageName}")
             }
             context.startActivity(intent)
+            return
         }
-        return
     }
 
-    val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     val intent = Intent(context, AlarmReceiver::class.java).apply {
-        putExtra("reminderId", reminder.id)
+        action = "com.example.medicineremindernew.ALARM"
+        putExtra("reminderId", reminderId)
     }
 
     val pendingIntent = PendingIntent.getBroadcast(
         context,
-        reminder.id.hashCode(),
+        reminderId.hashCode(),
         intent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
-    val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    val date = dateFormat.parse(reminder.tanggal)
+    // ✅ Gunakan alarm presisi
+    alarmManager.setExactAndAllowWhileIdle(
+        AlarmManager.RTC_WAKEUP,
+        timeInMillis,
+        pendingIntent
+    )
 
-    val calendar = Calendar.getInstance().apply {
-        time = date ?: Date()
-        val timeParts = reminder.waktu.split(":")
-        set(Calendar.HOUR_OF_DAY, timeParts[0].toInt())
-        set(Calendar.MINUTE, timeParts[1].toInt())
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }
-
-    val triggerTime = calendar.timeInMillis
-    if (triggerTime <= System.currentTimeMillis()) {
-        Log.e("AlarmScheduler", "Waktu sudah lewat! Alarm tidak diatur.")
-        return
-    }
-
-    Log.d("AlarmScheduler", "Menjadwalkan alarm ID=${reminder.id} pada ${reminder.tanggal} ${reminder.waktu}")
-
-    if (reminder.pengulangan.lowercase() == "harian") {
-        alarmManager.setRepeating(
-            AlarmManager.RTC_WAKEUP,
-            triggerTime,
-            AlarmManager.INTERVAL_DAY,
-            pendingIntent
-        )
-    } else {
-        alarmManager.setAlarmClock(
-            AlarmManager.AlarmClockInfo(triggerTime, pendingIntent),
-            pendingIntent
-        )
+    Log.d("AlarmScheduler", "Menjadwalkan alarm $reminderId pada ${Date(timeInMillis)}")
+}
 
 
+
+private fun createNotificationChannel(context: Context) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+            "alarm_channel",
+            "Alarm Reminder",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Channel untuk alarm pengingat"
+        }
+        val manager = context.getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
     }
 }
+
