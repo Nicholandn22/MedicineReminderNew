@@ -47,7 +47,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruTua
+import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
 import com.google.firebase.Timestamp
@@ -64,10 +65,13 @@ fun LansiaScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
+    val warnaKrem = Krem.copy(alpha = 1.0f)
+    val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFC5007))
+            .background(warnaKrem)
     ) {
         Column(
             modifier = Modifier
@@ -75,14 +79,14 @@ fun LansiaScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Lansia Page",
+                text = "Daftar Lansia",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 30.dp, bottom = 20.dp),
                 textAlign = TextAlign.Center,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = warnaBiru
             )
 
             Column(
@@ -94,7 +98,7 @@ fun LansiaScreen(
                     Text(
                         text = "Belum ada data lansia",
                         modifier = Modifier.padding(16.dp),
-                        color = Color.White
+                        color = warnaBiru
                     )
                 } else {
                     lansiaList.forEach { lansia ->
@@ -190,7 +194,7 @@ fun AddLansia(modifier: Modifier = Modifier, onClick: () -> Unit) {
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = OrenMuda,
+        containerColor = BiruTua.copy(alpha = 1.0f),
         contentColor = Color.White
     ) {
         Icon(imageVector = Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp))

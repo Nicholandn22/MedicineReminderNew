@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Obat
-import com.example.medicineremindernew.ui.ui.theme.AbuMenu
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import kotlinx.coroutines.launch
 
@@ -40,40 +40,25 @@ fun AddObatScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
+        // ✅ Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
-                .background(OrenMuda),
+                .height(80.dp)
+                .padding(16.dp)
+                .background(BiruAgakTua.copy(alpha = 1.0f)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
-            ) {
+            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
                 Icon(
                     painter = painterResource(id = back_white),
                     contentDescription = "Back",
                     tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(15.dp)
                 )
             }
-            Text(text = "Tambah Obat", color = Color.White, fontSize = 20.sp)
+            Text("Tambah Obat", color = Color.White, fontSize = 20.sp)
         }
-
-        // Subheader
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AbuMenu)
-                .padding(16.dp)
-        ) {
-            Text("Data Obat", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
-
         // Form Card
         Card(
             modifier = Modifier
@@ -133,7 +118,7 @@ fun AddObatScreen(
                 .padding(vertical = 16.dp, horizontal = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val orange = OrenMuda
+            val biru = BiruMuda.copy(alpha = 1.0f)
 
             OutlinedButton(
                 onClick = {
@@ -168,9 +153,9 @@ fun AddObatScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orange),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = biru),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = SolidColor(orange)
+                    brush = SolidColor(biru)
                 )
             ) {
                 Text("Save")
@@ -186,9 +171,9 @@ fun AddObatScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orange),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = biru),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = SolidColor(orange)
+                    brush = SolidColor(biru)
                 )
             ) {
                 Text("Clear")

@@ -1,6 +1,7 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -21,6 +23,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
@@ -38,11 +42,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.medicineremindernew.R.drawable.back_white
+import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
@@ -87,7 +95,7 @@ fun DetailLansiaScreen(
     val golonganOptions = listOf("A", "B", "AB", "O")
     val genderOptions = listOf("Laki-laki", "Perempuan")
     val context = LocalContext.current
-    val orangeColor = Color(0xFFFF6600)
+    val blueColor = BiruMuda.copy(alpha = 1.0f)
 
     val datePickerDialog = remember {
         val calendar = Calendar.getInstance()
@@ -108,8 +116,26 @@ fun DetailLansiaScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 60.dp)
     ) {
+        // ✅ Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .padding(16.dp)
+                .background(BiruAgakTua.copy(alpha = 1.0f)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
+                Icon(
+                    painter = painterResource(id = back_white),
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(15.dp)
+                )
+            }
+            Text("Update Lansia", color = Color.White, fontSize = 20.sp)
+        }
         Card(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -191,7 +217,7 @@ fun DetailLansiaScreen(
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
                 ) {
                     Text(SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(tanggalLahir))
                 }
@@ -229,7 +255,7 @@ fun DetailLansiaScreen(
                     }
                 },
                 modifier = Modifier.weight(1f).padding(end = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
             ) {
                 Text("Update")
             }
@@ -237,7 +263,7 @@ fun DetailLansiaScreen(
             OutlinedButton(
                 onClick = onBackClick,
                 modifier = Modifier.weight(1f).padding(start = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
             ) {
                 Text("Cancel")
             }

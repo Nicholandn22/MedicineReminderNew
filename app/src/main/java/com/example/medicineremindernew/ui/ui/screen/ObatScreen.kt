@@ -38,7 +38,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruTua
+import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
 
@@ -49,10 +50,13 @@ fun ObatScreen(
 ) {
     val obatList by obatViewModel.obatList.collectAsState(initial = emptyList())
 
+    val warnaKrem = Krem.copy(alpha = 1.0f)
+    val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFC5007))
+            .background(warnaKrem)
     ) {
         Column(
             modifier = Modifier
@@ -60,14 +64,14 @@ fun ObatScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Obat Page",
+                text = "Daftar Obat",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 30.dp, bottom = 20.dp),
                 textAlign = TextAlign.Center,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = warnaBiru
             )
 
             Column(
@@ -78,7 +82,7 @@ fun ObatScreen(
                 if (obatList.isEmpty()) {
                     Text(
                         text = "Belum ada data obat",
-                        color = Color.White,
+                        color = warnaBiru,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(16.dp)
                     )
@@ -101,7 +105,7 @@ fun ObatScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 100.dp),
-            containerColor = OrenMuda,
+            containerColor = warnaBiru,
             contentColor = Color.White
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp))
@@ -127,7 +131,7 @@ fun ObatItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = obat.nama, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(text = obat.nama, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Text(text = "Jenis: ${obat.jenis}", fontSize = 16.sp, color = Color.DarkGray)
             Text(text = "Dosis: ${obat.dosis}", fontSize = 16.sp, color = Color.DarkGray)
             Text(text = "Keterangan: ${obat.catatan}", fontSize = 16.sp, color = Color.DarkGray)
@@ -148,7 +152,7 @@ fun AddObat(
     FloatingActionButton(
         onClick = onClick,
         modifier = modifier,
-        containerColor = OrenMuda,
+        containerColor = BiruTua.copy(alpha = 1.0f),
         contentColor = Color.White
     ) {
         Icon(
