@@ -1,8 +1,10 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,7 +42,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.medicineremindernew.R
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.R.drawable.back_white
+import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
+import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import kotlinx.coroutines.launch
 
@@ -53,6 +58,7 @@ fun DetailObatScreen(
     val obat by viewModel.obatDetail.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val blueColor = BiruMuda.copy(alpha = 1.0f)
 
     // Load data saat pertama kali
     LaunchedEffect(obatId) {
@@ -76,28 +82,24 @@ fun DetailObatScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // HEADER
+        // ✅ Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
-                .background(OrenMuda),
+                .height(80.dp)
+                .padding(16.dp)
+                .background(BiruAgakTua.copy(alpha = 1.0f)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp)
-            ) {
+            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
                 Icon(
-                    painter = painterResource(id = R.drawable.back_white),
+                    painter = painterResource(id = back_white),
                     contentDescription = "Back",
                     tint = Color.White,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(15.dp)
                 )
             }
-            Text(text = "Edit Obat", color = Color.White, fontSize = 20.sp)
+            Text("Update Obat", color = Color.White, fontSize = 20.sp)
         }
 
         // FORM
@@ -145,34 +147,41 @@ fun DetailObatScreen(
             }
         }
 
-        OutlinedButton(
-            onClick = {
-                val updated = obat!!.copy(
-                    nama = namaObat,
-                    jenis = jenisObat,
-                    dosis = satuanDosis,
-                    catatan = notes
-                )
-                viewModel.updateObat(updated) { success ->
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            if (success) "Data berhasil diperbarui" else "Gagal memperbarui data"
-                        )
-                        if (success) onBackClick()
-                    }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
-            border = ButtonDefaults.outlinedButtonBorder.copy(
-                brush = SolidColor(OrenMuda)
-            )
+        // ✅ Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text("Update")
+            OutlinedButton(
+                onClick = {
+                    val updated = obat!!.copy(
+                        nama = namaObat,
+                        jenis = jenisObat,
+                        dosis = satuanDosis,
+                        catatan = notes
+                    )
+                    viewModel.updateObat(updated) { success ->
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                if (success) "Data berhasil diperbarui" else "Gagal memperbarui data"
+                            )
+                            if (success) onBackClick()
+                        }
+                    }
+                },
+                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
+            ) {
+                Text("Update")
+            }
+            OutlinedButton(
+                onClick = onBackClick,
+                modifier = Modifier.weight(1f).padding(start = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
+            ) {
+                Text("Cancel")
+            }
         }
-
         SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(16.dp))
     }
 }

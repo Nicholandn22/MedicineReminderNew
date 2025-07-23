@@ -1,19 +1,25 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -38,7 +44,7 @@ fun AddLansiaScreen(
     var tanggalLahir by remember { mutableStateOf<Date?>(null) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
-    val orangeColor = Color(0xFFFF6600)
+    val blueColor = BiruMuda.copy(alpha = 1.0f)
 
     val calendar = Calendar.getInstance()
     val datePickerDialog = DatePickerDialog(
@@ -56,8 +62,26 @@ fun AddLansiaScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 60.dp)
     ) {
+        // ✅ Header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(80.dp)
+                .padding(16.dp)
+                .background(BiruAgakTua.copy(alpha = 1.0f)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
+                Icon(
+                    painter = painterResource(id = back_white),
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.size(15.dp)
+                )
+            }
+            Text("Tambah Lansia", color = Color.White, fontSize = 20.sp)
+        }
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -113,9 +137,9 @@ fun AddLansiaScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
+                        brush = androidx.compose.ui.graphics.SolidColor(blueColor)
                     )
                 ) {
                     Text(
@@ -174,9 +198,9 @@ fun AddLansiaScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
+                    brush = androidx.compose.ui.graphics.SolidColor(blueColor)
                 )
             ) {
                 Text("Save")
@@ -194,9 +218,9 @@ fun AddLansiaScreen(
                 modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = orangeColor),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = androidx.compose.ui.graphics.SolidColor(orangeColor)
+                    brush = androidx.compose.ui.graphics.SolidColor(blueColor)
                 )
             ) {
                 Text("Clear")

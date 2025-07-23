@@ -79,7 +79,12 @@ fun NavGraph(
             arguments = listOf(navArgument("lansiaId") { type = NavType.StringType })
         ) { backStackEntry ->
             val lansiaId = backStackEntry.arguments?.getString("lansiaId") ?: return@composable
-            DetailLansiaScreen(lansiaId = lansiaId, viewModel = lansiaViewModel, navController = navController)
+            DetailLansiaScreen(
+                lansiaId = lansiaId,
+                viewModel = lansiaViewModel,
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
         }
 
         composable("detail_obat/{obatId}") { backStackEntry ->

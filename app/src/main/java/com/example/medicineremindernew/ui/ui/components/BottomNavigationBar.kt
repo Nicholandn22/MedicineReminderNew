@@ -12,7 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruTua
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
@@ -27,7 +28,7 @@ fun BottomNavigationBar(navController: NavController) {
 
     NavigationBar(
         modifier = Modifier, // Transparansi 50%
-        containerColor = Color.White,
+        containerColor = BiruTua.copy(alpha = 0.7f),
         tonalElevation = 7.dp
     ) {
         items.forEach { item ->
@@ -37,13 +38,13 @@ fun BottomNavigationBar(navController: NavController) {
                     Icon(
                         item.icon,
                         contentDescription = item.title,
-                        tint = if (isSelected) OrenMuda else Color.Gray
+                        tint = if (isSelected) Color.White else Color.Gray
                     )
                 },
                 label = {
                     Text(
                         text = item.title,
-                        color = if (isSelected) OrenMuda else Color.Gray
+                        color = if (isSelected) Color.White else Color.Gray
                     )
                 },
                 selected = isSelected,
@@ -59,7 +60,7 @@ fun BottomNavigationBar(navController: NavController) {
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = OrenMuda.copy(alpha = 0.7f), // indikator juga transparan
+                    indicatorColor = BiruMuda.copy(alpha = 0.7f), // indikator juga transparan
                     selectedIconColor = Color.White,
                     selectedTextColor = Color.White
                 )

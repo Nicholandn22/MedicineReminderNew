@@ -16,12 +16,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.rememberNavController
 import com.example.medicineremindernew.ui.data.repository.FirestoreRepository
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.navigation.NavGraph
+import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 import com.example.medicineremindernew.ui.ui.viewmodel.*
 import com.google.firebase.FirebaseApp
@@ -67,8 +69,8 @@ class MainActivity : AppCompatActivity() {
                         TopAppBar(
                             title = { Text("Medicine Reminder") },
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                titleContentColor = MaterialTheme.colorScheme.onPrimary
+                                containerColor = BiruTua.copy(alpha = 1.0f),
+                                titleContentColor = Color.White
                             )
                         )
                     },

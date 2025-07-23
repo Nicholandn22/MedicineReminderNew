@@ -24,7 +24,7 @@ import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
-import com.example.medicineremindernew.ui.ui.theme.OrenMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.*
 import kotlinx.coroutines.launch
 import java.sql.Time
@@ -154,8 +154,8 @@ fun DetailReminderScreen(
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
-            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda))
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+            border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f)))
         ) {
             Text("Update Reminder")
         }
@@ -246,8 +246,8 @@ fun AddReminderScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
-                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda))
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f)))
             ) {
                 Text(if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
             }
@@ -257,8 +257,8 @@ fun AddReminderScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 8.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
-                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda))
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f)))
             ) {
                 Text(if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
             }
@@ -296,8 +296,8 @@ fun AddReminderScreenContent(
         ) {
             OutlinedButton(
                 onClick = onSaveClick,
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = OrenMuda),
-                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(OrenMuda)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f))),
                 modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
             ) {
                 Text("Simpan")

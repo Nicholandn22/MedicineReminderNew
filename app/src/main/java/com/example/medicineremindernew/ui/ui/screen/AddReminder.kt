@@ -59,7 +59,6 @@ import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.AbuMenu
-import com.example.medicineremindernew.ui.ui.theme.PutihKolom
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
@@ -72,6 +71,10 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
+import com.example.medicineremindernew.ui.ui.theme.BiruTua
+import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
@@ -114,22 +117,21 @@ fun AddReminderScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = Modifier.padding(16.dp)) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0x0FFFFFFF))
                 .verticalScroll(rememberScrollState())
         ) {
             // ✅ Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
-                    .background(Color(0xFFFC5007)),
+                    .height(50.dp)
+                    .background(BiruAgakTua.copy(alpha = 1.0f)),
                 contentAlignment = Alignment.Center
             ) {
-                IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart).padding(top = 25.dp)) {
+                IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
                     Icon(
                         painter = painterResource(id = back_white),
                         contentDescription = "Back",
@@ -137,8 +139,10 @@ fun AddReminderScreen(
                         modifier = Modifier.size(15.dp)
                     )
                 }
-                Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp, modifier = Modifier.padding(top = 15.dp))
+                Text("Tambah Pengingat", color = Color.White, fontSize = 20.sp)
             }
+
+            val biru = BiruMuda.copy(alpha = 1.0f)
 
             // ✅ Section: Pilih Tanggal & Waktu
             SectionTitle("Pengingat")
@@ -159,10 +163,10 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = { datePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
+                    modifier = Modifier.fillMaxWidth().border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xBDBDBD),
-                        contentColor = Color(0xFFFF6F00)
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
+                        contentColor = biru
                     ),
                     shape = RoundedCornerShape(30.dp)
                 ) {
@@ -185,10 +189,10 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = { timePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(30.dp)),
+                    modifier = Modifier.fillMaxWidth().border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xBDBDBD),
-                        contentColor = Color(0xFFFF6F00)
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
+                        contentColor = biru
                     ),
                     shape = RoundedCornerShape(30.dp)
                 ) {
@@ -307,17 +311,16 @@ fun AddReminderScreen(
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0x0FFFFFFF),
-                        contentColor = Color(0xFFFF6F00)
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
+                        contentColor = biru
                     ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp)
-                        .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(35.dp)),
+                        .border(1.dp, biru, shape = RoundedCornerShape(35.dp)),
                 ) {
                     Text("Save")
                 }
-
 
                 // Tombol Clear
                 Button(
@@ -334,13 +337,13 @@ fun AddReminderScreen(
                         onClearClick()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0x0FFFFFFF),
-                        contentColor = Color(0xFFFF6F00)
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
+                        contentColor = biru
                     ),
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp)
-                        .border(1.dp, Color(0xFFFF6F00), shape = RoundedCornerShape(35.dp)),
+                        .border(1.dp, biru, shape = RoundedCornerShape(35.dp)),
                 ) {
                     Text("Clear")
                 }
@@ -394,29 +397,26 @@ fun SectionWithAddButton(
             text = title,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black
+            color = Color.White
         )
         Button(
             onClick = { navController.navigate(route) },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = Color.Black
+                containerColor = BiruAgakTua.copy(alpha = 1.0f),
+                contentColor = Color.White
             ),
             shape = RoundedCornerShape(12.dp),
-            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
         ) {
-            Spacer(modifier = Modifier.width(8.dp))
             Icon(
                 painter = painterResource(id = R.drawable.plus_black),
                 contentDescription = "Tambah $title",
                 modifier = Modifier.size(18.dp),
-                tint = Color.Black
+                tint = Color.White
             )
         }
     }
 }
-
-
 
 @Composable
 fun CardSection(content: @Composable ColumnScope.() -> Unit) {
@@ -445,7 +445,7 @@ fun DropdownMenuField(
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-            Text(selectedOption.ifEmpty { "Pilih" })
+            Text(selectedOption.ifEmpty { "Pilih" }, color = BiruMuda.copy(alpha = 1.0f))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { option ->
@@ -458,15 +458,14 @@ fun DropdownMenuField(
     }
 }
 
-
 @Composable
 fun ReminderButton(
     text: String,
     onClick: () -> Unit,
     isSelected: Boolean
 ) {
-    val backgroundColor = if (isSelected) Color(0xFFFF6F00) else PutihKolom // Oren
-    val contentColor = if (isSelected) Color.White else Color.Black
+    val backgroundColor = if (isSelected) BiruMuda.copy(alpha = 1.0f) else BiruMuda.copy(alpha = 0.0f)
+    val contentColor = if (isSelected) Color.Black else Color.White
 
     Button(
         onClick = onClick,
@@ -489,7 +488,7 @@ fun ReminderButton(
                     painter = painterResource(id = android.R.drawable.checkbox_on_background),
                     contentDescription = "Selected",
                     modifier = Modifier.size(18.dp),
-                    tint = Color.White
+                    tint = Color.Unspecified // ✅ ini biar pakai warna asli
                 )
             }
         }
