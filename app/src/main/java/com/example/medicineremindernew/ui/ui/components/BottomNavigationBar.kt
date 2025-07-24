@@ -28,7 +28,7 @@ fun BottomNavigationBar(navController: NavController) {
 
     NavigationBar(
         modifier = Modifier, // Transparansi 50%
-        containerColor = BiruTua.copy(alpha = 0.7f),
+        containerColor = BiruTua.copy(alpha = 1.0f),
         tonalElevation = 7.dp
     ) {
         items.forEach { item ->
