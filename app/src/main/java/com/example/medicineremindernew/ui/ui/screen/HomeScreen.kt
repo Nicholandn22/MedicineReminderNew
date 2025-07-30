@@ -54,6 +54,10 @@ fun HomeScreen(
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
 
+    // State untuk dialog konfirmasi delete
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var reminderToDelete by remember { mutableStateOf<String?>(null) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -129,7 +133,8 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 IconButton(onClick = {
-                                    reminderViewModel.deleteReminder(reminderTerdekat.id)
+                                    reminderToDelete = reminderTerdekat.id
+                                    showDeleteDialog = true
                                 }) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -171,7 +176,8 @@ fun HomeScreen(
                             navController.navigate("detail_reminder/${reminder.id}")
                         },
                         onDelete = {
-                            reminderViewModel.deleteReminder(reminder.id)
+                            reminderToDelete = reminder.id
+                            showDeleteDialog = true
                         }
                     )
                 }
@@ -186,10 +192,53 @@ fun HomeScreen(
                 navController.navigate("add_reminder")
             }
         )
+
+        // Dialog konfirmasi delete
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDeleteDialog = false
+                    reminderToDelete = null
+                },
+                title = {
+                    Text(
+                        text = "Konfirmasi Hapus",
+                        fontWeight = FontWeight.Bold,
+                        color = BiruMuda.copy(alpha = 1.0f)
+                    )
+                },
+                text = {
+                    Text("Apakah Anda yakin ingin menghapus reminder ini?")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            reminderToDelete?.let { id ->
+                                reminderViewModel.deleteReminder(id)
+                            }
+                            showDeleteDialog = false
+                            reminderToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text("Ya")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteDialog = false
+                            reminderToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f))
+                    ) {
+                        Text("Tidak")
+                    }
+                }
+            )
+        }
     }
 }
-
-
 
 @Composable
 fun ReminderItem(

@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -29,11 +30,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
@@ -67,6 +72,10 @@ fun LansiaScreen(
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
+    // State untuk dialog konfirmasi delete
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var lansiaToDelete by remember { mutableStateOf<Lansia?>(null) }
 
     Box(
         modifier = Modifier
@@ -107,10 +116,8 @@ fun LansiaScreen(
                             lansia = lansia,
                             usia = usia,
                             onDeleteClick = {
-                                lansiaViewModel.deleteLansia(lansia.id)
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Lansia berhasil dihapus")
-                                }
+                                lansiaToDelete = lansia
+                                showDeleteDialog = true
                             },
                             onItemClick = {
                                 navController.navigate("detail_lansia/${lansia.id}")
@@ -137,6 +144,54 @@ fun LansiaScreen(
                 .align(Alignment.BottomCenter)
                 .padding(16.dp)
         )
+
+        // Dialog konfirmasi delete
+        if (showDeleteDialog && lansiaToDelete != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDeleteDialog = false
+                    lansiaToDelete = null
+                },
+                title = {
+                    Text(
+                        text = "Konfirmasi Hapus",
+                        fontWeight = FontWeight.Bold,
+                        color = BiruMuda.copy(alpha = 1.0f)
+                    )
+                },
+                text = {
+                    Text("Apakah Anda yakin ingin menghapus data lansia \"${lansiaToDelete?.nama}\"?")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            lansiaToDelete?.let { lansia ->
+                                lansiaViewModel.deleteLansia(lansia.id)
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Lansia berhasil dihapus")
+                                }
+                            }
+                            showDeleteDialog = false
+                            lansiaToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text("Ya")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteDialog = false
+                            lansiaToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f))
+                    ) {
+                        Text("Tidak")
+                    }
+                }
+            )
+        }
     }
 }
 
