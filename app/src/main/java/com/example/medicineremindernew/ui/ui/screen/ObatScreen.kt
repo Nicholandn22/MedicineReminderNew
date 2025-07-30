@@ -1,4 +1,3 @@
-
 import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,14 +16,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
@@ -52,6 +57,10 @@ fun ObatScreen(
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
+    // State untuk dialog konfirmasi delete
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var obatToDelete by remember { mutableStateOf<Obat?>(null) }
 
     Box(
         modifier = Modifier
@@ -90,7 +99,10 @@ fun ObatScreen(
                     obatList.forEach { obat ->
                         ObatItem(
                             obat = obat,
-                            onDeleteClick = { obatViewModel.deleteObat(obat.id) },
+                            onDeleteClick = {
+                                obatToDelete = obat
+                                showDeleteDialog = true
+                            },
                             onItemClick = {
                                 navController.navigate("detail_obat/${obat.id}")
                             }
@@ -109,6 +121,51 @@ fun ObatScreen(
             contentColor = Color.White
         ) {
             Icon(imageVector = Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp))
+        }
+
+        // Dialog konfirmasi delete
+        if (showDeleteDialog && obatToDelete != null) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDeleteDialog = false
+                    obatToDelete = null
+                },
+                title = {
+                    Text(
+                        text = "Konfirmasi Hapus",
+                        fontWeight = FontWeight.Bold,
+                        color = BiruMuda.copy(alpha = 1.0f)
+                    )
+                },
+                text = {
+                    Text("Apakah Anda yakin ingin menghapus data obat \"${obatToDelete?.nama}\"?")
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            obatToDelete?.let { obat ->
+                                obatViewModel.deleteObat(obat.id)
+                            }
+                            showDeleteDialog = false
+                            obatToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text("Ya")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteDialog = false
+                            obatToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f))
+                    ) {
+                        Text("Tidak")
+                    }
+                }
+            )
         }
     }
 }
@@ -143,7 +200,6 @@ fun ObatItem(
     }
 }
 
-
 @Composable
 fun AddObat(
     modifier: Modifier = Modifier,
@@ -162,4 +218,3 @@ fun AddObat(
         )
     }
 }
-
