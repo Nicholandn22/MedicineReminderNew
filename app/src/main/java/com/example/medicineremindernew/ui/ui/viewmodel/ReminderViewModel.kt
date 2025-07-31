@@ -1,7 +1,14 @@
 package com.example.medicineremindernew.ui.ui.viewmodel
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medicineremindernew.ui.alarm.AlarmReceiver
+import com.example.medicineremindernew.ui.alarm.cancelAlarm
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +24,7 @@ class ReminderViewModel(private val repository: ReminderRepository) : ViewModel(
     val reminderDetail: StateFlow<Reminder?> = _reminderDetail
 
     init {
-        loadReminders() // 🔥 Ini dia yang kamu butuhkan
+        loadReminders()
     }
 
     fun loadReminders() {
@@ -51,11 +58,24 @@ class ReminderViewModel(private val repository: ReminderRepository) : ViewModel(
         }
     }
 
-
-    fun deleteReminder(id: String) {
+    fun deleteReminder(context: Context, id: String) {
         viewModelScope.launch {
-            repository.deleteReminder(id)
+            cancelAlarm(context, id) // ⬅️ Batalkan alarm dulu
+            repository.deleteReminder(id) // ⬅️ Hapus dari Firestore
             loadReminders()
+            Log.d("ReminderViewModel", "Reminder $id dihapus beserta alarmnya")
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
 }
