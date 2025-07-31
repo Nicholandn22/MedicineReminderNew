@@ -1,18 +1,14 @@
 package com.example.medicineremindernew.ui.ui.screen
 
-import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -21,22 +17,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.ui.data.repository.ReminderRepository
-import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeScreen(
@@ -46,15 +39,30 @@ fun HomeScreen(
     obatViewModel: ObatViewModel
 ) {
     val reminders by reminderViewModel.reminderList.collectAsState()
-    val reminderTerdekat = reminders.sortedWith(compareBy({ it.tanggal }, { it.waktu })).firstOrNull()
-
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
     val obatList by obatViewModel.obatList.collectAsState()
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
 
-    // State untuk dialog konfirmasi delete
+    // Filter reminder yang belum lewat dari waktu sekarang
+    val now = remember { LocalDateTime.now() }
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+    val filteredReminders = reminders.filter {
+        try {
+            val dateTime = LocalDateTime.parse("${it.tanggal} ${it.waktu}", formatter)
+            dateTime.isAfter(now) || dateTime.isEqual(now)
+        } catch (e: Exception) {
+            Log.e("ReminderParse", "Gagal parsing: ${it.tanggal} ${it.waktu}")
+            true // tampilkan jika gagal parsing supaya tidak crash
+        }
+    }
+
+    val reminderTerdekat = filteredReminders
+        .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
+        .firstOrNull()
+
     var showDeleteDialog by remember { mutableStateOf(false) }
     var reminderToDelete by remember { mutableStateOf<String?>(null) }
 
@@ -164,8 +172,8 @@ fun HomeScreen(
                     }
                 }
 
-                // ✅ List Semua Reminder
-                reminders.forEach { reminder ->
+                // ✅ List Semua Reminder yang belum lewat
+                filteredReminders.forEach { reminder ->
                     val lansiaName = lansiaList.find { it.id == reminder.lansiaId }?.nama ?: "Tidak Ditemukan"
                     val obatName = obatList.find { it.id == reminder.obatId }?.nama ?: "Tidak Ditemukan"
 
@@ -193,7 +201,6 @@ fun HomeScreen(
             }
         )
 
-        // Dialog konfirmasi delete
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = {
