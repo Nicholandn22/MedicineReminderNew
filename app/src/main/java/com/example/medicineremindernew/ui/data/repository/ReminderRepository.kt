@@ -44,7 +44,7 @@ class ReminderRepository(private val firestoreRepository: FirestoreRepository) {
 
     suspend fun getReminderById(id: String): Reminder? {
         return try {
-            val snapshot = db.document(id).get().await()
+            val snapshot = collection.document(id).get().await()
             snapshot.toObject(Reminder::class.java)
         } catch (e: Exception) {
             null
