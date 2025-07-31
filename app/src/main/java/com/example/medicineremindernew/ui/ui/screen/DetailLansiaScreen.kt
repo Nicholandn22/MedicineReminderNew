@@ -214,6 +214,7 @@ fun DetailLansiaScreen(
                 )
 
                 // ✅ Tanggal Lahir
+                Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
                     modifier = Modifier.fillMaxWidth(),

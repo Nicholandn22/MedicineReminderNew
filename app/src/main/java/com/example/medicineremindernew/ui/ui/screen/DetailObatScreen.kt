@@ -144,6 +144,7 @@ fun DetailObatScreen(
                     label = { Text("Catatan Tambahan") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(15.dp))
             }
         }
 

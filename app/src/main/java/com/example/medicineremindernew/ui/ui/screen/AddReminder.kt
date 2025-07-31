@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -199,7 +200,7 @@ fun AddReminderScreen(
                     Text(text = if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -252,7 +253,7 @@ fun AddReminderScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .absolutePadding(left = 0.dp, top = 40.dp, right = 0.dp, bottom = 0.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 // Tombol Save
