@@ -21,7 +21,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val reminderId = intent?.getStringExtra("reminderId") ?: "Unknown"
 
-        // ✅ Putar suara alarm
         try {
             val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             val ringtone = RingtoneManager.getRingtone(context, ringtoneUri)
@@ -40,10 +39,14 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(reminderId.hashCode(), notification)
+
+        val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("reminderId", reminderId)
+        }
+        context.startActivity(popupIntent)
     }
 
-
-    // ✅ Jadikan fungsi ini internal/public agar bisa digunakan di sini
     private fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(

@@ -61,6 +61,9 @@ import kotlinx.coroutines.launch
 import java.sql.Date
 import java.util.Calendar
 
+// nitip buat preview
+//import androidx.compose.material3.Button
+
 @Composable
 fun LansiaScreen(
     navController: NavController,
@@ -125,6 +128,14 @@ fun LansiaScreen(
                         )
                     }
                 }
+
+//                // nitip buat preview
+//                Button(onClick = {
+//                    navController.navigate("preview_popup")
+//                }) {
+//                    Text("Lihat Desain Popup")
+//                }
+
             }
         }
 
