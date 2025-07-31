@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,8 @@ import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.example.medicineremindernew.ui.alarm.cancelAlarm
+
 
 @Composable
 fun HomeScreen(
@@ -41,6 +44,7 @@ fun HomeScreen(
     val reminders by reminderViewModel.reminderList.collectAsState()
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
     val obatList by obatViewModel.obatList.collectAsState()
+    val context = LocalContext.current // ✅ Ambil di sini sekali saja
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
@@ -227,13 +231,13 @@ fun HomeScreen(
                     TextButton(
                         onClick = {
                             reminderToDelete?.let { id ->
-                                reminderViewModel.deleteReminder(id)
+                                reminderViewModel.deleteReminder(context, id) // ⬅️ ini akan hapus reminder + alarm
                             }
                             showDeleteDialog = false
                             reminderToDelete = null
-                        },
-                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
-                    ) {
+                        }
+                    )
+                    {
                         Text("Ya")
                     }
                 },

@@ -10,6 +10,9 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.medicineremindernew.R
+import android.app.AlarmManager
+import android.app.PendingIntent
+
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
@@ -54,4 +57,8 @@ class AlarmReceiver : BroadcastReceiver() {
             manager.createNotificationChannel(channel)
         }
     }
+
+
+
+
 }
