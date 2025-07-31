@@ -108,6 +108,7 @@ fun AddObatScreen(
                         .padding(bottom = 2.dp),
                     singleLine = true
                 )
+                Spacer(modifier = Modifier.height(15.dp))
             }
         }
 
