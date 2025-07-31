@@ -49,15 +49,21 @@ fun HomeScreen(
     val now = remember { LocalDateTime.now() }
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
-    val filteredReminders = reminders.filter {
-        try {
-            val dateTime = LocalDateTime.parse("${it.tanggal} ${it.waktu}", formatter)
-            dateTime.isAfter(now) || dateTime.isEqual(now)
-        } catch (e: Exception) {
-            Log.e("ReminderParse", "Gagal parsing: ${it.tanggal} ${it.waktu}")
-            true // tampilkan jika gagal parsing supaya tidak crash
+    val filteredReminders = reminders
+        .mapNotNull { reminder ->
+            try {
+                val dateTime = LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)
+                Pair(reminder, dateTime)
+            } catch (e: Exception) {
+                Log.e("ReminderParse", "Gagal parsing: ${reminder.tanggal} ${reminder.waktu}")
+                null
+            }
         }
-    }
+        .filter { (_, dateTime) ->
+            dateTime.isAfter(now) || dateTime.isEqual(now)
+        }
+        .sortedBy { (_, dateTime) -> dateTime } // 🔥 Urutkan dari waktu terdekat ke waktu terlama
+        .map { (reminder, _) -> reminder } // ambil kembali objek Reminder saja
 
     val reminderTerdekat = filteredReminders
         .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
