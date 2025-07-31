@@ -235,9 +235,9 @@ fun HomeScreen(
                             }
                             showDeleteDialog = false
                             reminderToDelete = null
-                        }
-                    )
-                    {
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
+                    ) {
                         Text("Ya")
                     }
                 },
