@@ -16,6 +16,10 @@ class ReminderViewModel(private val repository: ReminderRepository) : ViewModel(
     private val _reminderDetail = MutableStateFlow<Reminder?>(null)
     val reminderDetail: StateFlow<Reminder?> = _reminderDetail
 
+    init {
+        loadReminders() // 🔥 Ini dia yang kamu butuhkan
+    }
+
     fun loadReminders() {
         viewModelScope.launch {
             _reminderList.value = repository.getAllReminders()
