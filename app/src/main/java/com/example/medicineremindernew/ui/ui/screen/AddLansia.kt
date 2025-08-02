@@ -41,9 +41,11 @@ fun AddLansiaScreen(
     var penyakit by remember { mutableStateOf("") }
     var nomorWali by remember { mutableStateOf("") }
     var golonganDarah by remember { mutableStateOf("A") }
+    var gender by remember { mutableStateOf("L") }
     var tanggalLahir by remember { mutableStateOf<Date?>(null) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
+    val genderOptions = listOf("Laki-Laki", "Perempuan")
     val blueColor = BiruMuda.copy(alpha = 1.0f)
 
     val calendar = Calendar.getInstance()
@@ -109,6 +111,16 @@ fun AddLansiaScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
+                Text("Jenis Kelamin", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                DropdownMenuField(
+                    options = genderOptions,
+                    selectedOption = gender,
+                    onOptionSelected = { selected ->
+                        gender = if (selected == "Laki-Laki") "L" else "P"
+                    }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
                 OutlinedTextField(
                     value = penyakit,
                     onValueChange = { penyakit = it },
@@ -167,7 +179,7 @@ fun AddLansiaScreen(
                         val lansia = Lansia(
                             nama = namaLansia,
                             goldar = golonganDarah,
-                            gender = "L", // Default
+                            gender = gender,
                             lahir = Timestamp(tanggalLahir!!), // ✅ Konversi ke Firestore Timestamp
                             nomorwali = nomorWali.toInt(),
                             penyakit = penyakit
