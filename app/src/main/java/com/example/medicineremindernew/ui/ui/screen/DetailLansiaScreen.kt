@@ -93,7 +93,7 @@ fun DetailLansiaScreen(
     var expandedGender by remember { mutableStateOf(false) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
-    val genderOptions = listOf("Laki-laki", "Perempuan")
+    val genderOptions = listOf("Laki-Laki", "Perempuan")
     val context = LocalContext.current
     val blueColor = BiruMuda.copy(alpha = 1.0f)
 
@@ -188,7 +188,7 @@ fun DetailLansiaScreen(
                     ExposedDropdownMenu(expanded = expandedGender, onDismissRequest = { expandedGender = false }) {
                         genderOptions.forEach { option ->
                             DropdownMenuItem(text = { Text(option) }, onClick = {
-                                gender = option
+                                gender = if (option == "Laki-Laki") "L" else "P"
                                 expandedGender = false
                             })
                         }
