@@ -3,6 +3,7 @@ package com.example.medicineremindernew.ui.alarm
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,12 +20,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
+import com.example.medicineremindernew.ui.alarm.cancelAlarm
 
 class AlarmPopupActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("AlarmPopup", "onCreate: AlarmPopupActivity dimulai")
 
         // Menampilkan popup di atas layar kunci
         window.addFlags(
@@ -32,18 +35,48 @@ class AlarmPopupActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
 
+//        val reminderId = intent.getStringExtra("reminderId") ?: "Unknown"
         val reminderId = intent.getStringExtra("reminderId") ?: "Unknown"
+        Log.d("AlarmPopup", "Reminder ID: $reminderId")
 
         // Putar suara alarm
-        val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        ringtone = RingtoneManager.getRingtone(this, alarmUri)
-        ringtone?.play()
+//        val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+//        ringtone = RingtoneManager.getRingtone(this, alarmUri)
+//        ringtone?.play()
+
+        try {
+            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ringtone = RingtoneManager.getRingtone(this, alarmUri)
+            ringtone?.play()
+            Log.d("AlarmPopup", "Ringtone mulai diputar")
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Gagal memutar ringtone: ${e.message}")
+        }
 
         setContent {
             MedicineReminderNewTheme {
                 AlarmPopupScreen(
+                    reminderId = reminderId,
                     onDismiss = {
-                        ringtone?.stop()
+//                        ringtone?.stop()
+//                        cancelAlarm(this, reminderId) // <-- Mematikan alarm dari AlarmManager
+//                        finish()
+                        Log.d("AlarmPopup", "Tombol 'Matikan Alarm' ditekan")
+
+                        if (ringtone != null) {
+                            if (ringtone!!.isPlaying) {
+                                Log.d("AlarmPopup", "Ringtone sedang berbunyi, akan dihentikan.")
+                                ringtone?.stop()
+                            } else {
+                                Log.d("AlarmPopup", "Ringtone tidak sedang berbunyi.")
+                            }
+                        } else {
+                            Log.d("AlarmPopup", "Ringtone null")
+                        }
+
+                        cancelAlarm(this, reminderId)
+                        Log.d("AlarmPopup", "AlarmManager dibatalkan")
+
                         finish()
                     }
                 )
@@ -52,17 +85,29 @@ class AlarmPopupActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        ringtone?.stop()
+//        ringtone?.stop()
+//        super.onDestroy()
+        try {
+            ringtone?.stop()
+            Log.d("AlarmPopup", "Ringtone dihentikan di onDestroy()")
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Gagal menghentikan ringtone di onDestroy(): ${e.message}")
+        }
         super.onDestroy()
     }
 }
 
 @Composable
-fun AlarmPopupScreen(onDismiss: () -> Unit) {
+fun AlarmPopupScreen(
+    reminderId: String,
+    onDismiss: () -> Unit
+) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFAF3E0)),
+//            .fillMaxSize()
+            .wrapContentSize()
+            .padding(24.dp),
+//            .background(Color(0xFFFAF3E0)),
         contentAlignment = Alignment.Center
     ) {
         Column(

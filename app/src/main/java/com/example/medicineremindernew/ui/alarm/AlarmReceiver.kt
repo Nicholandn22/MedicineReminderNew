@@ -21,13 +21,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val reminderId = intent?.getStringExtra("reminderId") ?: "Unknown"
 
-        try {
-            val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            val ringtone = RingtoneManager.getRingtone(context, ringtoneUri)
-            ringtone.play()
-        } catch (e: Exception) {
-            Log.e("AlarmReceiver", "Gagal memutar alarm: ${e.message}")
-        }
+//        try {
+//            val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+//            val ringtone = RingtoneManager.getRingtone(context, ringtoneUri)
+//            ringtone.play()
+//        } catch (e: Exception) {
+//            Log.e("AlarmReceiver", "Gagal memutar alarm: ${e.message}")
+//        }
 
         val notification = NotificationCompat.Builder(context, "alarm_channel")
             .setSmallIcon(R.drawable.pill)
