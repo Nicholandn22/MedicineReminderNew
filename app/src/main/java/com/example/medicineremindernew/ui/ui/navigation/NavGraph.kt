@@ -1,4 +1,5 @@
     package com.example.medicineremindernew.ui.ui.navigation
+    import com.example.medicineremindernew.ui.ui.screen.AlarmPopupPreviewScreen
 
     //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
     import ObatScreen
@@ -70,6 +71,11 @@
                 )
             }
 
+//            // nitip buat preview
+//            composable("preview_popup") {
+//                AlarmPopupPreviewScreen()
+//            }
+
             // ✅ Lainnya
             composable(BottomNavItem.Lansia.route) { LansiaScreen(navController, lansiaViewModel) }
             composable(BottomNavItem.Obat.route) { ObatScreen(navController, obatViewModel) }
@@ -117,9 +123,6 @@
                     onUpdateClick = { navController.popBackStack() }
                 )
             }
-
-
-
 
             // Tambah ini jika kamu punya screen khusus untuk daftar obat/lansia:
             composable("lansia") {
