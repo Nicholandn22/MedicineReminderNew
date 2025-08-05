@@ -1,7 +1,6 @@
 // AddReminderScreen.kt
 package com.example.medicineremindernew.ui.ui.screen
 
-import android.app.Application
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,7 +33,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,34 +47,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Reminder
-import com.example.medicineremindernew.ui.data.repository.LansiaRepository
-import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.AbuMenu
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
 import kotlinx.coroutines.launch
-import java.sql.Time
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
-import com.example.medicineremindernew.ui.ui.theme.BiruTua
-import com.example.medicineremindernew.ui.ui.theme.Krem
-import com.google.firebase.Timestamp
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
 
@@ -88,22 +75,15 @@ fun AddReminderScreen(
     onBackClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
     onClearClick: () -> Unit = {},
-    obatViewModel: ObatViewModel = viewModel(),
-    lansiaViewModel: LansiaViewModel = viewModel(),
-    reminderViewModel: ReminderViewModel = viewModel()
+    lansiaList: StateFlow<List<Lansia>>,
+    obatList: StateFlow<List<Obat>>,
+    reminderViewModel: HybridReminderViewModel,
+    obatViewModel: HybridObatViewModel,
+    lansiaViewModel: HybridLansiaViewModel
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-
-    // ✅ Ambil data dari Firestore via ViewModel
-    val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle()
-    val obatList by obatViewModel.obatList.collectAsStateWithLifecycle()
-
-    // ✅ Panggil load data saat pertama kali
-    LaunchedEffect(Unit) {
-//        lansiaViewModel.loadLansia()
-//        obatViewModel.loadObat()
-    }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var selectedLansia by remember { mutableStateOf<String?>(null) }
     var selectedObat by remember { mutableStateOf<String?>(null) }
@@ -116,7 +96,8 @@ fun AddReminderScreen(
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
     var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val lansiaListState = lansiaList.collectAsState()
+    val obatListState = obatList.collectAsState()
 
     Box(modifier = Modifier.padding(16.dp)) {
         Column(
@@ -220,10 +201,10 @@ fun AddReminderScreen(
             // ✅ Section Lansia
             SectionWithAddButton("Pasien", navController = navController)
             CardSection {
-                if (lansiaList.isEmpty()) {
+                if (lansiaListState.value.isEmpty()) {
                     Text("Belum ada data lansia")
                 } else {
-                    lansiaList.forEach { lansia ->
+                    lansiaListState.value.forEach { lansia ->
                         ReminderButton(
                             text = lansia.nama,
                             onClick = { selectedLansia = lansia.id },
@@ -236,10 +217,10 @@ fun AddReminderScreen(
             // ✅ Section Obat
             SectionWithAddButton("List Obat", navController = navController)
             CardSection {
-                if (obatList.isEmpty()) {
+                if (obatListState.value.isEmpty()) {
                     Text("Belum ada data obat")
                 } else {
-                    obatList.forEach { obat ->
+                    obatListState.value.forEach { obat ->
                         ReminderButton(
                             text = obat.nama,
                             onClick = { selectedObat = obat.id },

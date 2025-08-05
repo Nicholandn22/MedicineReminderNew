@@ -28,7 +28,7 @@ class ReminderRepository(private val firestoreRepository: FirestoreRepository) {
 
     suspend fun updateReminder(reminder: Reminder): Boolean {
         return try {
-            db.document(reminder.id).set(reminder).await()
+            collection.document(reminder.id).set(reminder).await()
             true
         } catch (e: Exception) {
             false

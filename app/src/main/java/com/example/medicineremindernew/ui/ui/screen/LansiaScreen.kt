@@ -1,20 +1,16 @@
 package com.example.medicineremindernew.ui.ui.screen
 
-import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +22,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -42,23 +37,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Lansia
-import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
-import java.sql.Date
 import java.util.Calendar
 
 // nitip buat preview
@@ -67,7 +57,7 @@ import java.util.Calendar
 @Composable
 fun LansiaScreen(
     navController: NavController,
-    lansiaViewModel: LansiaViewModel
+    lansiaViewModel: HybridLansiaViewModel
 ) {
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -177,9 +167,14 @@ fun LansiaScreen(
                     TextButton(
                         onClick = {
                             lansiaToDelete?.let { lansia ->
-                                lansiaViewModel.deleteLansia(lansia.id)
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Lansia berhasil dihapus")
+                                lansiaViewModel.deleteLansia(lansia.id) { success ->
+                                    coroutineScope.launch {
+                                        if (success) {
+                                            snackbarHostState.showSnackbar("Lansia berhasil dihapus")
+                                        } else {
+                                            snackbarHostState.showSnackbar("Gagal menghapus lansia")
+                                        }
+                                    }
                                 }
                             }
                             showDeleteDialog = false

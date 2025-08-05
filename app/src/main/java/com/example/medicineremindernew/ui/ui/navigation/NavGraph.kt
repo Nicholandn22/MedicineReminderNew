@@ -1,5 +1,4 @@
     package com.example.medicineremindernew.ui.ui.navigation
-    import com.example.medicineremindernew.ui.ui.screen.AlarmPopupPreviewScreen
 
     //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
     import ObatScreen
@@ -10,6 +9,9 @@
     import androidx.navigation.compose.NavHost
     import androidx.navigation.compose.composable
     import androidx.navigation.navArgument
+    import com.example.medicineremindernew.ui.data.repository.HybridLansiaRepository
+    import com.example.medicineremindernew.ui.data.repository.HybridObatRepository
+    import com.example.medicineremindernew.ui.data.repository.HybridReminderRepository
     import com.example.medicineremindernew.ui.ui.screen.AddLansiaScreen
     import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
     import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
@@ -18,20 +20,24 @@
     import com.example.medicineremindernew.ui.ui.screen.DetailReminderScreen
     import com.example.medicineremindernew.ui.ui.screen.HomeScreen
     import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
+    import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
+    import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
+    import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
+
     //import com.example.medicineremindernew.ui.ui.screen.LoginScreen
     //import com.example.medicineremindernew.ui.ui.screen.RegisterScreen
-    import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-    import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
-    import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
 
 
     @Composable
     fun NavGraph(
         navController: NavHostController,
-        obatViewModel: ObatViewModel,
-        lansiaViewModel: LansiaViewModel,
-        reminderViewModel: ReminderViewModel,
-        modifier: Modifier = Modifier
+        obatViewModel: HybridObatViewModel,
+        lansiaViewModel: HybridLansiaViewModel,
+        reminderViewModel: HybridReminderViewModel,
+        modifier: Modifier = Modifier,
+        hybridReminderRepository: HybridReminderRepository,
+        hybridLansiaRepository: HybridLansiaRepository,
+        hybridObatRepository: HybridObatRepository
 
     ) {
         NavHost(navController, startDestination = "home",modifier = modifier) {
@@ -50,12 +56,15 @@
             composable("add_reminder") {
                 AddReminderScreen(
                     onBackClick = { navController.popBackStack() },
-                    navController = navController, // ✅ Kirim navController ke sini
+                    navController = navController,
                     obatViewModel = obatViewModel,
                     lansiaViewModel = lansiaViewModel,
-                    reminderViewModel = reminderViewModel
+                    reminderViewModel = reminderViewModel,
+                    obatList = obatViewModel.obatList,
+                    lansiaList = lansiaViewModel.lansiaList
                 )
             }
+
 
             composable("addObat") {
                 AddObatScreen(

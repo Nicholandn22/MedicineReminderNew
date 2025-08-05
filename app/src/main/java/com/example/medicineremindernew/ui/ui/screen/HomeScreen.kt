@@ -1,6 +1,8 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,20 +28,20 @@ import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import com.example.medicineremindernew.ui.alarm.cancelAlarm
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
     navController: NavController,
-    reminderViewModel: ReminderViewModel,
-    lansiaViewModel: LansiaViewModel,
-    obatViewModel: ObatViewModel
+    reminderViewModel: HybridReminderViewModel,
+    lansiaViewModel: HybridLansiaViewModel,
+    obatViewModel: HybridObatViewModel
 ) {
     val reminders by reminderViewModel.reminderList.collectAsState()
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
@@ -231,7 +233,14 @@ fun HomeScreen(
                     TextButton(
                         onClick = {
                             reminderToDelete?.let { id ->
-                                reminderViewModel.deleteReminder(context, id) // ⬅️ ini akan hapus reminder + alarm
+                                reminderViewModel.deleteReminder(id) { success ->
+                                    if (success) {
+                                        Log.d("HomeScreen", "Reminder berhasil dihapus")
+                                        // Opsional: tampilkan snackbar atau efek lain
+                                    } else {
+                                        Log.e("HomeScreen", "Gagal menghapus reminder")
+                                    }
+                                }
                             }
                             showDeleteDialog = false
                             reminderToDelete = null

@@ -1,8 +1,8 @@
 package com.example.medicineremindernew.ui.ui.screen
 
-import android.app.Application
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,39 +13,34 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.model.Obat
-import com.example.medicineremindernew.ui.data.repository.LansiaRepository
-import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
+import com.example.medicineremindernew.ui.alarm.scheduleAlarm
+import com.example.medicineremindernew.ui.alarm.cancelAlarm
 import com.example.medicineremindernew.ui.ui.viewmodel.*
 import kotlinx.coroutines.launch
-import java.sql.Time
-import java.text.SimpleDateFormat
-import java.time.format.TextStyle
 import java.util.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailReminderScreen(
     reminderId: String,
     navController: NavController,
-    reminderViewModel: ReminderViewModel,
-    lansiaViewModel: LansiaViewModel,
-    obatViewModel: ObatViewModel,
+    reminderViewModel: HybridReminderViewModel,
+    lansiaViewModel: HybridLansiaViewModel,
+    obatViewModel: HybridObatViewModel,
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {}
 ) {

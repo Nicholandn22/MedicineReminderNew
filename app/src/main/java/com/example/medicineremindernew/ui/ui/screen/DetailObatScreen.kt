@@ -35,24 +35,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
-import com.example.medicineremindernew.ui.ui.theme.Krem
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun DetailObatScreen(
     obatId: String,
-    viewModel: ObatViewModel,
+    viewModel: HybridObatViewModel,
     onBackClick: () -> Unit
 ) {
     val obat by viewModel.obatDetail.collectAsStateWithLifecycle()
