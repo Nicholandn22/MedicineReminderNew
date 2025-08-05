@@ -21,9 +21,9 @@ class ReminderRepository(private val firestoreRepository: FirestoreRepository) {
     }
 
     suspend fun addReminder(reminder: Reminder) {
-        val newDoc = collection.document()
-        val data = reminder.copy(id = newDoc.id)
-        newDoc.set(data).await()
+        collection.document(reminder.id)  // ✅ Pakai ID dari reminder (UUID yang kamu buat)
+            .set(reminder)
+            .await()
     }
 
     suspend fun updateReminder(reminder: Reminder): Boolean {

@@ -244,6 +244,7 @@ fun AddReminderScreen(
                             val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
                             val reminder = Reminder(
+                                id = UUID.randomUUID().toString(),  // ✅ ID hanya generate sekali disini!
                                 obatId = selectedObat!!,
                                 lansiaId = selectedLansia!!,
                                 tanggal = tanggal,       // Simpan tanggal sebagai String
@@ -275,7 +276,7 @@ fun AddReminderScreen(
                                         // ✅ Panggil fungsi untuk set alarm
                                         com.example.medicineremindernew.ui.alarm.scheduleAlarm(
                                             context,
-                                            reminder.id.ifEmpty { UUID.randomUUID().toString() }, // ID unik kalau kosong
+                                            reminder.id,  // ✅ Udah pasti ada nilainya
                                             timeInMillis
                                         )
                                         snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm dijadwalkan")
