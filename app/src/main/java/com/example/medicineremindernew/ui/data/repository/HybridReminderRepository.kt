@@ -18,17 +18,25 @@ class HybridReminderRepository(
     private val reminderRepository: ReminderRepository,
     private val localDao: LocalReminderDao,
     private val networkUtils: NetworkUtils,
-    private val context: Context, // ✅ tambah ini
+    private val context: Context
 ) {
 
     suspend fun addReminder(reminder: Reminder): Boolean {
         return try {
-            if (networkUtils.isNetworkAvailable()) {
-                reminderRepository.addReminder(reminder)
-                localDao.insertReminder(reminder.toLocalEntity(isSynced = true))
+            val fixedReminder = if (reminder.id.isEmpty()) {
+                reminder.copy(id = java.util.UUID.randomUUID().toString())  // ✅ Generate UUID jika kosong
             } else {
-                localDao.insertReminder(reminder.toLocalEntity(isSynced = false))
+                reminder
             }
+
+            if (networkUtils.isNetworkAvailable()) {
+                // ✅ Paksa Firestore pakai fixedReminder.id sebagai Document ID
+                reminderRepository.addReminder(fixedReminder)
+                localDao.insertReminder(fixedReminder.toLocalEntity(isSynced = true))
+            } else {
+                localDao.insertReminder(fixedReminder.toLocalEntity(isSynced = false))
+            }
+
             true
         } catch (e: Exception) {
             Log.e("HybridReminderRepo", "Add failed: ${e.message}")
@@ -42,14 +50,12 @@ class HybridReminderRepository(
             Log.d("HybridReminderRepo", "=== STARTING UPDATE FOR ${reminder.id} ===")
             Log.d("HybridReminderRepo", "New time: ${reminder.tanggal} ${reminder.waktu}")
 
-            // ✅ STEP 1: Double cancel - cancel sebelum dan sesudah update data
-            Log.d("HybridReminderRepo", "STEP 1: First cancellation...")
+            // STEP 1: Cancel alarm lama
             cancelAlarm(context, reminder.id)
 
-            // ✅ STEP 2: Update data di database
-            Log.d("HybridReminderRepo", "STEP 2: Updating database...")
+            // STEP 2: Update data di Firestore & Local DB
             if (networkUtils.isNetworkAvailable()) {
-                reminderRepository.updateReminder(reminder)
+                reminderRepository.updateReminder(reminder)  // ✅ Update Firestore Document pakai reminder.id
                 localDao.updateReminder(reminder.toLocalEntity(isSynced = true))
             } else {
                 val localData = localDao.getAllReminders().find { it.id == reminder.id }
@@ -58,16 +64,13 @@ class HybridReminderRepository(
                 }
             }
 
-            // ✅ STEP 3: Second cancel - untuk memastikan tidak ada yang tertinggal
-            Log.d("HybridReminderRepo", "STEP 3: Second cancellation (safety)...")
+            // STEP 3: Safety cancel (optional tapi biarin aja bro, bagus preventif)
             cancelAlarm(context, reminder.id)
 
-            // ✅ STEP 4: Tunggu lebih lama
-            Log.d("HybridReminderRepo", "STEP 4: Waiting for complete cancellation...")
-            kotlinx.coroutines.delay(1000) // Delay 1 detik
+            // STEP 4: Delay sedikit biar cancel settle
+            kotlinx.coroutines.delay(500)
 
-            // ✅ STEP 5: Schedule alarm baru
-            Log.d("HybridReminderRepo", "STEP 5: Scheduling new alarm...")
+            // STEP 5: Schedule alarm baru
             val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
             val localDateTime = java.time.LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)
             val timeMillis = localDateTime
@@ -93,11 +96,12 @@ class HybridReminderRepository(
 
     suspend fun deleteReminder(id: String): Boolean {
         return try {
+            // ✅ Delete di Firestore pakai ID Reminder (UUID)
             if (networkUtils.isNetworkAvailable()) {
                 reminderRepository.deleteReminder(id)
                 localDao.deleteReminder(id)
             } else {
-                localDao.deleteReminder(id) // Tetap dihapus di lokal saat offline
+                localDao.deleteReminder(id)
             }
             true
         } catch (e: Exception) {
@@ -109,7 +113,7 @@ class HybridReminderRepository(
     suspend fun getAllReminders(): List<Reminder> {
         return if (networkUtils.isNetworkAvailable()) {
             try {
-                reminderRepository.getAllReminders()  // ✅ langsung panggil fungsi suspend
+                reminderRepository.getAllReminders()
             } catch (e: Exception) {
                 Log.e("HybridReminderRepo", "Get remote failed: ${e.message}")
                 getLocalReminders()
@@ -129,9 +133,8 @@ class HybridReminderRepository(
         val unsynced = localDao.getUnsyncedReminders()
         unsynced.forEach { entity ->
             val reminder = entity.toDomainModel()
-
             try {
-                reminderRepository.addReminder(reminder)
+                reminderRepository.addReminder(reminder)  // ✅ Ensure Firestore doc ID = reminder.id
                 localDao.markAsSynced(entity.id)
             } catch (e: Exception) {
                 Log.e("HybridReminderRepo", "Sync failed for ${entity.id}: ${e.message}")
@@ -139,7 +142,7 @@ class HybridReminderRepository(
         }
     }
 
-    // Extension function untuk mapping
+    // Mapping Extensions
     private fun Reminder.toLocalEntity(isSynced: Boolean): LocalReminderEntity {
         return LocalReminderEntity(
             id = this.id,
@@ -163,3 +166,4 @@ class HybridReminderRepository(
         )
     }
 }
+
