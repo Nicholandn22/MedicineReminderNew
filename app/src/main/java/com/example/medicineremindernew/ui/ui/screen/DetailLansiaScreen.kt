@@ -51,7 +51,7 @@ import androidx.navigation.NavHostController
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -63,7 +63,7 @@ import java.util.Locale
 @Composable
 fun DetailLansiaScreen(
     lansiaId: String,
-    viewModel: LansiaViewModel,
+    viewModel: HybridLansiaViewModel,
     navController: NavHostController,
     onBackClick: () -> Unit = {}
 ) {

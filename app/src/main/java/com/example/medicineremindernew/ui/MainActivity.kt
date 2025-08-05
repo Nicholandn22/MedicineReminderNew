@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -17,8 +18,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
+import com.example.medicineremindernew.ui.data.local.LocalDatabase
+import com.example.medicineremindernew.ui.data.network.NetworkUtils
 import com.example.medicineremindernew.ui.data.repository.FirestoreRepository
+import com.example.medicineremindernew.ui.data.repository.HybridLansiaRepository
+import com.example.medicineremindernew.ui.data.repository.HybridObatRepository
+import com.example.medicineremindernew.ui.data.repository.HybridReminderRepository
 import com.example.medicineremindernew.ui.data.repository.LansiaRepository
 import com.example.medicineremindernew.ui.data.repository.ObatRepository
 import com.example.medicineremindernew.ui.data.repository.ReminderRepository
@@ -27,8 +34,17 @@ import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 import com.example.medicineremindernew.ui.ui.viewmodel.*
 import com.google.firebase.FirebaseApp
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
+    // ✅ Local Database
+    private lateinit var localDatabase: LocalDatabase
+    private lateinit var networkUtils: NetworkUtils
+
+    // ✅ Hybrid Repositories
+    private lateinit var hybridReminderRepository: HybridReminderRepository
+    private lateinit var hybridLansiaRepository: HybridLansiaRepository
+    private lateinit var hybridObatRepository: HybridObatRepository
 
     // ✅ Repository utama (Firestore base)
     private val firestoreRepository = FirestoreRepository()
@@ -51,11 +67,59 @@ class MainActivity : AppCompatActivity() {
         ReminderViewModelFactory(reminderRepository)
     }
 
+    private val hybridObatViewModel: HybridObatViewModel by viewModels {
+        HybridObatViewModelFactory(hybridObatRepository)
+    }
+
+    private val hybridLansiaViewModel: HybridLansiaViewModel by viewModels {
+        HybridLansiaViewModelFactory(hybridLansiaRepository)
+    }
+
+    private val hybridReminderViewModel: HybridReminderViewModel by viewModels {
+        HybridReminderViewModelFactory(hybridReminderRepository)
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this) // ✅ Penting!
+
+        // ✅ Inisialisasi local database & network utils
+        localDatabase = LocalDatabase.getDatabase(this)
+        networkUtils = NetworkUtils(this)
+
+        // ✅ Inisialisasi hybrid repositories
+        hybridReminderRepository = HybridReminderRepository(
+            context = this, // ✅ pass Context dari MainActivity
+            reminderRepository = reminderRepository,
+            localDao = localDatabase.reminderDao(),
+            networkUtils = networkUtils
+        )
+
+        hybridLansiaRepository = HybridLansiaRepository(
+            lansiaRepository,
+            localDatabase.lansiaDao(),
+            networkUtils
+        )
+
+        hybridObatRepository = HybridObatRepository(
+            obatRepository,
+            localDatabase.obatDao(),
+            networkUtils
+        )
+
+        // ✅ Observer perubahan koneksi untuk auto-sync
+        lifecycleScope.launch {
+            networkUtils.observeNetworkChanges().collect { isConnected ->
+                if (isConnected) {
+                    Log.d("MainActivity", "Internet tersedia, mulai sinkronisasi...")
+                    syncAllPendingData()
+                } else {
+                    Log.d("MainActivity", "Internet tidak tersedia, mode offline")
+                }
+            }
+        }
 
         // ✅ Pastikan alarm tidak mati karena Battery Optimization
         requestIgnoreBatteryOptimization()
@@ -80,13 +144,31 @@ class MainActivity : AppCompatActivity() {
                 ) { innerPadding ->
                     NavGraph(
                         navController = navController,
-                        obatViewModel = obatViewModel,
-                        lansiaViewModel = lansiaViewModel,
-                        reminderViewModel = reminderViewModel,
+                        obatViewModel = hybridObatViewModel,
+                        lansiaViewModel = hybridLansiaViewModel,
+                        reminderViewModel = hybridReminderViewModel,
+                        hybridReminderRepository = hybridReminderRepository,
+                        hybridLansiaRepository = hybridLansiaRepository,
+                        hybridObatRepository = hybridObatRepository,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * ✅ Sinkronisasi semua data yang pending
+     */
+    private suspend fun syncAllPendingData() {
+        try {
+            hybridReminderRepository.syncPendingData()
+            hybridLansiaRepository.syncPendingData()
+            hybridObatRepository.syncPendingData()
+
+            Log.d("MainActivity", "Sinkronisasi selesai")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error saat sinkronisasi", e)
         }
     }
 

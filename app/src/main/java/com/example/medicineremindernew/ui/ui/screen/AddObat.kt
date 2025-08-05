@@ -19,12 +19,13 @@ import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 @Composable
 fun AddObatScreen(
-    viewModel: ObatViewModel,
+    viewModel: HybridObatViewModel,
     onBackClick: () -> Unit = {}
 ) {
     var namaObat by remember { mutableStateOf("") }
@@ -129,6 +130,7 @@ fun AddObatScreen(
                         }
                     } else {
                         val newObat = Obat(
+                            id = UUID.randomUUID().toString(), // ✅ Tambahkan ini
                             nama = namaObat,
                             jenis = jenisObat,
                             dosis = satuanDosis,

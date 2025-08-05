@@ -20,6 +20,7 @@ import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -29,7 +30,7 @@ import com.google.firebase.Timestamp
 
 @Composable
 fun AddLansiaScreen(
-    viewModel: LansiaViewModel,
+    viewModel: HybridLansiaViewModel,
     onBackClick: () -> Unit = {},
     onCancelClick: () -> Unit = {}
 ) {
@@ -177,6 +178,7 @@ fun AddLansiaScreen(
                         tanggalLahir != null
                     ) {
                         val lansia = Lansia(
+                            id = UUID.randomUUID().toString(), // ✅ Tambahkan ini
                             nama = namaLansia,
                             goldar = golonganDarah,
                             gender = gender,
