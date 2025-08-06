@@ -96,7 +96,10 @@ class HybridReminderRepository(
 
     suspend fun deleteReminder(id: String): Boolean {
         return try {
-            // ✅ Delete di Firestore pakai ID Reminder (UUID)
+            // STEP 1: Cancel alarm dulu
+            cancelAlarm(context, id)
+
+            // STEP 2: Delete di Firestore & Local DB
             if (networkUtils.isNetworkAvailable()) {
                 reminderRepository.deleteReminder(id)
                 localDao.deleteReminder(id)
