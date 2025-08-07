@@ -5,30 +5,24 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.RingtoneManager
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.medicineremindernew.R
-import android.app.AlarmManager
-import android.app.PendingIntent
-
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.FirebaseApp
+import com.google.firebase.firestore.FieldValue
 
 class AlarmReceiver : BroadcastReceiver() {
+
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d("AlarmReceiver", "Alarm diterima!")
         createNotificationChannel(context)
 
+        // Ambil reminder ID dari Intent
         val reminderId = intent?.getStringExtra("reminderId") ?: "Unknown"
 
-//        try {
-//            val ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-//            val ringtone = RingtoneManager.getRingtone(context, ringtoneUri)
-//            ringtone.play()
-//        } catch (e: Exception) {
-//            Log.e("AlarmReceiver", "Gagal memutar alarm: ${e.message}")
-//        }
-
+        // 🔔 Tampilkan notifikasi
         val notification = NotificationCompat.Builder(context, "alarm_channel")
             .setSmallIcon(R.drawable.pill)
             .setContentTitle("Pengingat Obat")
@@ -40,11 +34,15 @@ class AlarmReceiver : BroadcastReceiver() {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(reminderId.hashCode(), notification)
 
+        // 🧠 Buka popup activity
         val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("reminderId", reminderId)
         }
         context.startActivity(popupIntent)
+
+        // ✅ Trigger Firestore untuk ESP8266
+        triggerActiveAlarm(reminderId)
     }
 
     private fun createNotificationChannel(context: Context) {
@@ -61,7 +59,28 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
+    private fun triggerActiveAlarm(reminderId: String) {
+        try {
+            val db = FirebaseFirestore.getInstance()
 
+            val activeAlarmData = hashMapOf(
+                "reminderId" to reminderId,
+                "trigger" to true,
+                "timestamp" to FieldValue.serverTimestamp()
+            )
 
+            db.collection("active_alarm")
+                .document("current")
+                .set(activeAlarmData)
+                .addOnSuccessListener {
+                    Log.d("AlarmReceiver", "active_alarm triggered for reminderId: $reminderId")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("AlarmReceiver", "Gagal menulis active_alarm: ${e.message}")
+                }
 
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Exception saat trigger active_alarm: ${e.message}")
+        }
+    }
 }
