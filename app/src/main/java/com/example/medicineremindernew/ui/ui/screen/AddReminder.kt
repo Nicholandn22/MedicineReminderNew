@@ -111,10 +111,10 @@ fun AddReminderScreen(
     var waktu by remember { mutableStateOf("") }
 
     val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
-    val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
+//    val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
 
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
-    var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
+//    var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -209,12 +209,12 @@ fun AddReminderScreen(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-                DropdownMenuField(nadaDeringOptions, selectedNadaDering) {
-                    selectedNadaDering = it
-                }
-                Spacer(modifier = Modifier.height(4.dp))
+//                Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
+//                Spacer(modifier = Modifier.height(4.dp))
+//                DropdownMenuField(nadaDeringOptions, selectedNadaDering) {
+//                    selectedNadaDering = it
+//                }
+//                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // ✅ Section Lansia
@@ -331,7 +331,7 @@ fun AddReminderScreen(
                         tanggal = ""
                         waktu = ""
                         selectedPengulangan = pengulanganOptions.first()
-                        selectedNadaDering = nadaDeringOptions.first()
+//                        selectedNadaDering = nadaDeringOptions.first()
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Form telah direset")
                         }
