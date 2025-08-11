@@ -1,5 +1,11 @@
 package com.example.medicineremindernew.ui.alarm
 
+import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
+// import com.example.medicineremindernew.ui.alarm.cancelAlarm
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.os.Bundle
@@ -13,14 +19,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
-import com.example.medicineremindernew.ui.alarm.cancelAlarm
+import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.data.model.Obat
+import com.example.medicineremindernew.ui.data.model.Reminder
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class AlarmPopupActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
@@ -36,7 +47,7 @@ class AlarmPopupActivity : ComponentActivity() {
         )
 
 //        val reminderId = intent.getStringExtra("reminderId") ?: "Unknown"
-        val reminderId = intent.getStringExtra("reminderId") ?: "Unknown"
+        val reminderId = intent.getStringExtra("reminderId") ?: ""
         Log.d("AlarmPopup", "Reminder ID: $reminderId")
 
         // Putar suara alarm
@@ -76,7 +87,6 @@ class AlarmPopupActivity : ComponentActivity() {
 
                         cancelAlarm(this, reminderId)
                         Log.d("AlarmPopup", "AlarmManager dibatalkan")
-
                         finish()
                     }
                 )
@@ -102,6 +112,40 @@ fun AlarmPopupScreen(
     reminderId: String,
     onDismiss: () -> Unit
 ) {
+    val db = FirebaseFirestore.getInstance()
+
+    var reminder by remember { mutableStateOf<Reminder?>(null) }
+    var obat by remember { mutableStateOf<Obat?>(null) }
+    var lansia by remember { mutableStateOf<Lansia?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(reminderId) {
+        Log.d("AlarmPopup", "Memulai fetch reminder dengan ID: $reminderId")
+        try {
+            val reminderSnap = db.collection("reminders").document(reminderId).get().await()
+            Log.d("AlarmPopup", "Snapshot reminder berhasil diambil: ${reminderSnap.exists()}")
+
+            if (reminderSnap.exists()) {
+                val fetchedReminder = reminderSnap.toObject(Reminder::class.java)
+                reminder = fetchedReminder
+
+                if (fetchedReminder != null) {
+                    val obatSnap = db.collection("obat").document(fetchedReminder.obatId).get().await()
+                    obat = obatSnap.toObject(Obat::class.java)
+
+                    val lansiaSnap = db.collection("lansia").document(fetchedReminder.lansiaId).get().await()
+                    lansia = lansiaSnap.toObject(Lansia::class.java)
+                }
+            } else {
+                Log.e("AlarmPopup", "Reminder dengan ID $reminderId tidak ditemukan di Firestore")
+            }
+        } catch (e: Exception){
+            Log.e("AlarmPopup", "Gagal mengambil data: ${e.message}")
+        } finally {
+            isLoading = false
+        }
+    }
+
     Box(
         modifier = Modifier
 //            .fillMaxSize()
@@ -125,7 +169,36 @@ fun AlarmPopupScreen(
         ) {
             Text("Saatnya Minum Obat!", fontSize = 22.sp, color = Color(0xFF011A27))
             Spacer(modifier = Modifier.height(12.dp))
-            Text("Obat: Paracetamol\nDosis: 2 tablet", fontSize = 16.sp, color = Color(0xFF011A27))
+//            Text("Obat: Paracetamol\nDosis: 2 tablet", fontSize = 16.sp, color = Color(0xFF011A27))
+//            Spacer(modifier = Modifier.height(24.dp))
+
+            when {
+                isLoading -> {
+                    CircularProgressIndicator()
+                }
+                reminder != null && obat != null -> {
+                    Text(
+                        text = "Lansia: ${lansia?.nama}\nObat: ${obat?.nama}",
+                        fontSize = 16.sp,
+                        color = Color(0xFF011A27)
+                    )
+                }
+                else -> {
+                    Text("Data reminder tidak tersedia", color = Color.Red)
+                }
+            }
+
+//            if (reminder != null && obat != null){
+////                Text(
+////                    text = "Obat: ${obat?.nama}\nDosis: ${obat?.dosis}",
+////                    fontSize = 16.sp,
+////                    color = Color(0xFF011A27)
+////                )
+//                Text("Data reminder tidak tersedia", color = Color.Red)
+//            } else {
+//                CircularProgressIndicator()
+//            }
+
             Spacer(modifier = Modifier.height(24.dp))
             Button(
                 onClick = onDismiss,
