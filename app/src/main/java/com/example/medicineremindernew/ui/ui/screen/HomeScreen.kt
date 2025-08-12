@@ -129,8 +129,13 @@ fun HomeScreen(
                         )
 
                         if (reminderTerdekat != null) {
-                            val lansiaName = lansiaList.find { it.id == reminderTerdekat.lansiaId }?.nama ?: "Tidak Ditemukan"
-                            val obatName = obatList.find { it.id == reminderTerdekat.obatId }?.nama ?: "Tidak Ditemukan"
+                            val lansiaName = lansiaList
+                                .filter { it.id in reminderTerdekat.lansiaIds }
+                                .joinToString(", ") { it.nama }
+                            val obatName = obatList
+                                .filter { it.id in reminderTerdekat.obatIds }
+                                .joinToString(", ") { it.nama }
+
 
                             Text(
                                 text = "$lansiaName - $obatName",
@@ -184,10 +189,15 @@ fun HomeScreen(
                     }
                 }
 
-                // ✅ List Semua Reminder yang belum lewat
-                filteredReminders.forEach { reminder ->
-                    val lansiaName = lansiaList.find { it.id == reminder.lansiaId }?.nama ?: "Tidak Ditemukan"
-                    val obatName = obatList.find { it.id == reminder.obatId }?.nama ?: "Tidak Ditemukan"
+                // ✅ List Semua Reminder
+                reminders.forEach { reminder ->
+                    val lansiaName = lansiaList
+                        .filter { it.id in reminder.lansiaIds }
+                        .joinToString(", ") { it.nama }
+                    val obatName = obatList
+                        .filter { it.id in reminder.obatIds }
+                        .joinToString(", ") { it.nama }
+
 
                     ReminderItem(
                         title = "Lansia: $lansiaName - Obat: $obatName",
@@ -265,6 +275,8 @@ fun HomeScreen(
         }
     }
 }
+
+
 
 @Composable
 fun ReminderItem(

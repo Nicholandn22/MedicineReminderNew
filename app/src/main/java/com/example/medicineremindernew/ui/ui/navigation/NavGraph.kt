@@ -2,6 +2,8 @@
 
     //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
     import ObatScreen
+    import android.os.Build
+    import androidx.annotation.RequiresApi
     import androidx.compose.runtime.Composable
     import androidx.compose.ui.Modifier
     import androidx.navigation.NavHostController
@@ -28,6 +30,7 @@
     //import com.example.medicineremindernew.ui.ui.screen.RegisterScreen
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Composable
     fun NavGraph(
         navController: NavHostController,
@@ -60,8 +63,8 @@
                     obatViewModel = obatViewModel,
                     lansiaViewModel = lansiaViewModel,
                     reminderViewModel = reminderViewModel,
-                    obatList = obatViewModel.obatList,
-                    lansiaList = lansiaViewModel.lansiaList
+//                    obatList = obatViewModel.obatList,
+//                    lansiaList = lansiaViewModel.lansiaList
                 )
             }
 

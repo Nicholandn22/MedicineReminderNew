@@ -115,8 +115,8 @@ fun AlarmPopupScreen(
     val db = FirebaseFirestore.getInstance()
 
     var reminder by remember { mutableStateOf<Reminder?>(null) }
-    var obat by remember { mutableStateOf<Obat?>(null) }
-    var lansia by remember { mutableStateOf<Lansia?>(null) }
+    var obatList by remember { mutableStateOf<List<Obat>>(emptyList()) }
+    var lansiaList by remember { mutableStateOf<List<Lansia>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(reminderId) {
@@ -130,11 +130,28 @@ fun AlarmPopupScreen(
                 reminder = fetchedReminder
 
                 if (fetchedReminder != null) {
-                    val obatSnap = db.collection("obat").document(fetchedReminder.obatId).get().await()
-                    obat = obatSnap.toObject(Obat::class.java)
+                    // Fetch multiple obat berdasarkan obatIds
+                    val obatTempList = mutableListOf<Obat>()
+                    fetchedReminder.obatIds.forEach { obatId ->
+                        try {
+                            val obatSnap = db.collection("obat").document(obatId).get().await()
+                            obatSnap.toObject(Obat::class.java)?.let { obatTempList.add(it) }
+                        } catch (e: Exception) {
+                            Log.e("AlarmPopup", "Gagal mengambil obat dengan ID $obatId: ${e.message}")
+                        }
+                    }
+                    obatList = obatTempList
 
-                    val lansiaSnap = db.collection("lansia").document(fetchedReminder.lansiaId).get().await()
-                    lansia = lansiaSnap.toObject(Lansia::class.java)
+                    val lansiaTempList = mutableListOf<Lansia>()
+                    fetchedReminder.lansiaIds.forEach { lansiaId ->
+                        try {
+                            val lansiaSnap = db.collection("lansia").document(lansiaId).get().await()
+                            lansiaSnap.toObject(Lansia::class.java)?.let { lansiaTempList.add(it) }
+                        } catch (e: Exception) {
+                            Log.e("AlarmPopup", "Gagal mengambil lansia dengan ID $lansiaId: ${e.message}")
+                        }
+                    }
+                    lansiaList = lansiaTempList
                 }
             } else {
                 Log.e("AlarmPopup", "Reminder dengan ID $reminderId tidak ditemukan di Firestore")
@@ -176,9 +193,9 @@ fun AlarmPopupScreen(
                 isLoading -> {
                     CircularProgressIndicator()
                 }
-                reminder != null && obat != null -> {
+                reminder != null && obatList.isNotEmpty() && lansiaList.isNotEmpty() -> {
                     Text(
-                        text = "Lansia: ${lansia?.nama}\nObat: ${obat?.nama}",
+                        text = "Pasien: ${lansiaList.joinToString(", ") { it.nama }}",
                         fontSize = 16.sp,
                         color = Color(0xFF011A27)
                     )
