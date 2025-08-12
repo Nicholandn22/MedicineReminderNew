@@ -74,6 +74,9 @@ class AlarmPopupActivity : ComponentActivity() {
 //                        finish()
                         Log.d("AlarmPopup", "Tombol 'Matikan Alarm' ditekan")
 
+                        // 🔹 Update Firestore: statusIoT = "OFF"
+                        matikanIoT(reminderId)
+
                         if (ringtone != null) {
                             if (ringtone!!.isPlaying) {
                                 Log.d("AlarmPopup", "Ringtone sedang berbunyi, akan dihentikan.")
@@ -92,6 +95,24 @@ class AlarmPopupActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    // 🔹 Fungsi update Firestore
+    private fun matikanIoT(reminderId: String) {
+        if (reminderId == "Unknown") {
+            Log.e("Firestore", "Reminder ID tidak valid")
+            return
+        }
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("reminders").document(reminderId)
+            .update("statusIoT", "OFF")
+            .addOnSuccessListener {
+                Log.d("Firestore", "statusIoT diupdate ke OFF untuk reminder $reminderId")
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Gagal update statusIoT", e)
+            }
     }
 
     override fun onDestroy() {
