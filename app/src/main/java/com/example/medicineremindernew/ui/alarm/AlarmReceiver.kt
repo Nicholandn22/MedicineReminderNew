@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui.alarm
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -19,8 +20,15 @@ class AlarmReceiver : BroadcastReceiver() {
         Log.d("AlarmReceiver", "Alarm diterima!")
         createNotificationChannel(context)
 
-        // Ambil reminder ID dari Intent
-        val reminderId = intent?.getStringExtra("reminderId") ?: "Unknown"
+        // ✅ TAMBAHAN: Ambil data untuk recurring alarm
+        val reminderId = intent?.getStringExtra("reminderId") ?:
+        intent?.getStringExtra("reminder_id") ?: "Unknown" // Support kedua format
+
+        val recurrenceType = intent?.getStringExtra("recurrence_type")
+        val intervalMillis = intent?.getLongExtra("interval_millis", 0L) ?: 0L
+        val isRecurring = intent?.getBooleanExtra("is_recurring", false) ?: false
+
+        Log.d("AlarmReceiver", "Reminder ID: $reminderId, Recurring: $isRecurring, Type: $recurrenceType")
 
         // 🔔 Tampilkan notifikasi
         val notification = NotificationCompat.Builder(context, "alarm_channel")
@@ -39,10 +47,17 @@ class AlarmReceiver : BroadcastReceiver() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putExtra("reminderId", reminderId)
         }
+
+
         context.startActivity(popupIntent)
 
         // ✅ Trigger Firestore untuk ESP8266
         triggerActiveAlarm(reminderId)
+
+        // ✅ TAMBAHAN: Jadwalkan alarm berikutnya jika ini recurring alarm
+        if (isRecurring && intervalMillis > 0 && !recurrenceType.isNullOrEmpty()) {
+            scheduleNextRecurringAlarm(context, reminderId, intervalMillis, recurrenceType)
+        }
     }
 
     private fun createNotificationChannel(context: Context) {
@@ -81,6 +96,57 @@ class AlarmReceiver : BroadcastReceiver() {
 
         } catch (e: Exception) {
             Log.e("AlarmReceiver", "Exception saat trigger active_alarm: ${e.message}")
+        }
+    }
+
+    // ✅ FUNGSI BARU: Jadwalkan alarm berikutnya untuk recurring
+    @SuppressLint("ScheduleExactAlarm")
+    private fun scheduleNextRecurringAlarm(
+        context: Context,
+        reminderId: String,
+        intervalMillis: Long,
+        recurrenceType: String
+    ) {
+        try {
+            val nextTimeInMillis = System.currentTimeMillis() + intervalMillis
+
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+
+            val nextIntent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("reminderId", reminderId) // Gunakan format yang sama dengan kode Anda
+                putExtra("reminder_id", reminderId) // Backup untuk kompatibilitas
+                putExtra("recurrence_type", recurrenceType)
+                putExtra("interval_millis", intervalMillis)
+                putExtra("is_recurring", true)
+            }
+
+            val pendingIntent = android.app.PendingIntent.getBroadcast(
+                context,
+                reminderId.hashCode(),
+                nextIntent,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+            )
+
+            // ✅ Jadwalkan alarm exact berikutnya
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    nextTimeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    android.app.AlarmManager.RTC_WAKEUP,
+                    nextTimeInMillis,
+                    pendingIntent
+                )
+            }
+
+            Log.d("AlarmReceiver", "Next recurring alarm scheduled for: ${java.util.Date(nextTimeInMillis)}")
+            Log.d("AlarmReceiver", "Recurrence type: $recurrenceType, Interval: ${intervalMillis / (1000 * 60 * 60)} hours")
+
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Failed to schedule next recurring alarm", e)
         }
     }
 }

@@ -310,14 +310,15 @@ fun AddReminderScreen(
                                                     }
                                                 }
 
-                                                // ✅ Jadwalkan alarm untuk reminder ini
-                                                com.example.medicineremindernew.ui.alarm.scheduleAlarm(
-                                                    context,
-                                                    reminderId,
-                                                    timeInMillis
+                                                // ✅ Jadwalkan alarm berulang menggunakan AlarmUtils
+                                                com.example.medicineremindernew.ui.alarm.AlarmUtils.scheduleRecurringReminder(
+                                                    context = context,
+                                                    reminderId = reminderId,
+                                                    timeInMillis = timeInMillis,
+                                                    recurrenceType = selectedPengulangan
                                                 )
 
-                                                snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm dijadwalkan")
+                                                snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm berulang dijadwalkan")
                                                 navController.popBackStack()
                                             }
                                         } else {
