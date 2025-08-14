@@ -149,8 +149,8 @@ class HybridReminderRepository(
     private fun Reminder.toLocalEntity(isSynced: Boolean): LocalReminderEntity {
         return LocalReminderEntity(
             id = this.id,
-            obatId = this.obatId,
-            lansiaId = this.lansiaId,
+            obatId = this.obatIds.joinToString(","),
+            lansiaId = this.lansiaIds.joinToString(","),
             tanggal = this.tanggal,
             waktu = this.waktu,
             pengulangan = this.pengulangan,
@@ -161,8 +161,8 @@ class HybridReminderRepository(
     private fun LocalReminderEntity.toDomainModel(): Reminder {
         return Reminder(
             id = this.id,
-            obatId = this.obatId,
-            lansiaId = this.lansiaId,
+            obatIds = this.obatId.split(","),
+            lansiaIds = this.lansiaId.split(","),
             tanggal = this.tanggal,
             waktu = this.waktu,
             pengulangan = this.pengulangan

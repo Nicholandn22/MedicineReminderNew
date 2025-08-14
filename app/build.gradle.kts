@@ -52,6 +52,7 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-firestore:24.10.0")
 //    implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.databinding.adapters)
 

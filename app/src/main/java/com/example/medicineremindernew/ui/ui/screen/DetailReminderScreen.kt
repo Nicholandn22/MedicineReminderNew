@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.app.Application
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -19,17 +20,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.model.Obat
+import com.example.medicineremindernew.ui.data.repository.LansiaRepository
+import com.example.medicineremindernew.ui.data.repository.ObatRepository
+import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
-import com.example.medicineremindernew.ui.alarm.scheduleAlarm
-import com.example.medicineremindernew.ui.alarm.cancelAlarm
 import com.example.medicineremindernew.ui.ui.viewmodel.*
 import kotlinx.coroutines.launch
+import java.sql.Time
+import java.text.SimpleDateFormat
 import java.util.*
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -38,12 +43,13 @@ import java.util.*
 fun DetailReminderScreen(
     reminderId: String,
     navController: NavController,
-    reminderViewModel: HybridReminderViewModel,
-    lansiaViewModel: HybridLansiaViewModel,
+    reminderViewModel: HybridReminderViewModel, // ✅ Ubah ke Hybrid
+    lansiaViewModel: HybridLansiaViewModel,     // ✅ Ubah ke Hybrid
     obatViewModel: HybridObatViewModel,
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {}
-) {
+)
+ {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -56,10 +62,10 @@ fun DetailReminderScreen(
     val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
 
     // Load data ketika screen muncul
-    LaunchedEffect(reminderId) {
-        reminderViewModel.getReminderById(reminderId)
-        // Tidak perlu panggil loadLansia dan loadObat, karena real-time Firestore otomatis update
-    }
+     LaunchedEffect(reminderId) {
+         reminderViewModel.getReminderById(reminderId)
+         // Tidak perlu panggil loadLansia dan loadObat, karena real-time Firestore otomatis update
+     }
 
     // Variabel buat ngedit tgl
     val calendar = remember { Calendar.getInstance() }
@@ -73,8 +79,8 @@ fun DetailReminderScreen(
     }
 
     // State untuk input
-    var selectedLansia by remember { mutableStateOf(reminder?.lansiaId ?: "") }
-    var selectedObat by remember { mutableStateOf(reminder?.obatId ?: "") }
+    var selectedLansia by remember { mutableStateOf(reminder?.lansiaIds ?: emptyList()) }
+    var selectedObat by remember { mutableStateOf(reminder?.obatIds ?: emptyList()) }
     var tanggal by remember { mutableStateOf(reminder?.tanggal ?: "") }
     var waktu by remember { mutableStateOf(reminder?.waktu ?: "") }
     var pengulangan by remember { mutableStateOf(reminder?.pengulangan ?: "") }
@@ -130,43 +136,69 @@ fun DetailReminderScreen(
             Text("Update Pengingat", color = Color.White, fontSize = 20.sp)
         }
 
+        // Daftar Lansia dengan Checkbox (multi select)
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // Edit Lansia
                 Text("Pilih Lansia", fontWeight = FontWeight.Bold)
-                DropdownMenuField(
-                    options = lansiaList.map { it.nama },
-                    selectedOption = lansiaList.find { it.id == selectedLansia }?.nama ?: "",
-                    onOptionSelected = { nama ->
-                        selectedLansia = lansiaList.find { it.nama == nama }?.id ?: ""
-                    }
-                )
+                lansiaList.forEach { lansia ->
+                    ReminderButton(
+                        text = lansia.nama,
+                        onClick = {
+                            selectedLansia = if (selectedLansia.contains(lansia.id)) {
+                                selectedLansia - lansia.id
+                            } else {
+                                selectedLansia + lansia.id
+                            }
+                        },
+                        isSelected = selectedLansia.contains(lansia.id)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Edit Obat
+        // Daftar Obat dengan Checkbox (multi select)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text("Pilih Obat", fontWeight = FontWeight.Bold)
-                DropdownMenuField(
-                    options = obatList.map { it.nama },
-                    selectedOption = obatList.find { it.id == selectedObat }?.nama ?: "",
-                    onOptionSelected = { nama ->
-                        selectedObat = obatList.find { it.nama == nama }?.id ?: ""
-                    }
-                )
+                obatList.forEach { obat ->
+                    ReminderButton(
+                        text = obat.nama,
+                        onClick = {
+                            selectedObat = if (selectedObat.contains(obat.id)) {
+                                selectedObat - obat.id
+                            } else {
+                                selectedObat + obat.id
+                            }
+                        },
+                        isSelected = selectedObat.contains(obat.id)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Edit Tanggal
-//                OutlinedTextField(
-//                    value = tanggal,
-//                    onValueChange = { tanggal = it },
-//                    label = { Text("Tanggal") },
-//                    modifier = Modifier.fillMaxWidth()
-//                )
+        // Edit Tanggal
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -185,16 +217,9 @@ fun DetailReminderScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Edit Waktu
-//                OutlinedTextField(
-//                    value = waktu,
-//                    onValueChange = { waktu = it },
-//                    label = { Text("Waktu") },
-//                    modifier = Modifier.fillMaxWidth()
-//                )
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -213,16 +238,8 @@ fun DetailReminderScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Edit Pengulangan
-//                OutlinedTextField(
-//                    value = pengulangan,
-//                    onValueChange = { pengulangan = it },
-//                    label = { Text("Pengulangan") },
-//                    modifier = Modifier.fillMaxWidth()
-//                )
                 Text("Pengulangan", fontWeight = FontWeight.Bold)
                 DropdownMenuField(
                     options = pengulanganOptions,
@@ -230,7 +247,7 @@ fun DetailReminderScreen(
                     onOptionSelected = { pengulangan = it }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
         // ✅ Buttons
@@ -241,8 +258,8 @@ fun DetailReminderScreen(
             OutlinedButton(
                 onClick = {
                     val updatedReminder = reminder!!.copy(
-                        lansiaId = selectedLansia,
-                        obatId = selectedObat,
+                        lansiaIds = selectedLansia,
+                        obatIds = selectedObat,
                         tanggal = tanggal,
                         waktu = waktu,
                         pengulangan = pengulangan
@@ -270,172 +287,153 @@ fun DetailReminderScreen(
                 Text("Cancel")
             }
         }
-        SnackbarHost(snackbarHostState, modifier = Modifier.padding(16.dp))
+        SnackbarHost(snackbarHostState, modifier = Modifier.padding(8.dp))
     }
 }
 
 
 
-    @Composable
-    fun AddReminderScreenContent(
-        modifier: Modifier = Modifier,
-        selectedLansia: String,
-        onLansiaSelect: (String) -> Unit,
-        selectedObat: String,
-        onObatSelect: (String) -> Unit,
+@Composable
+fun AddReminderScreenContent(
+    modifier: Modifier = Modifier,
+    selectedLansia: String,
+    onLansiaSelect: (String) -> Unit,
+    selectedObat: String,
+    onObatSelect: (String) -> Unit,
 
-        tanggal: String,
-        onTanggalChange: (String) -> Unit,
-        waktu: String,
-        onWaktuChange: (String) -> Unit,
-        selectedPengulangan: String,
-        onPengulanganChange: (String) -> Unit,
-        selectedNadaDering: String,
-        onNadaDeringChange: (String) -> Unit,
-        lansiaList: List<Lansia>,
-        obatList: List<Obat>,
-        snackbarHostState: SnackbarHostState,
-        onBackClick: () -> Unit,
-        onSaveClick: () -> Unit,
-        navController: NavController
-    ) {
-        val context = LocalContext.current
-        val calendar = remember { Calendar.getInstance() }
+    tanggal: String,
+    onTanggalChange: (String) -> Unit,
+    waktu: String,
+    onWaktuChange: (String) -> Unit,
+    selectedPengulangan: String,
+    onPengulanganChange: (String) -> Unit,
+    selectedNadaDering: String,
+    onNadaDeringChange: (String) -> Unit,
+    lansiaList: List<Lansia>,
+    obatList: List<Obat>,
+    snackbarHostState: SnackbarHostState,
+    onBackClick: () -> Unit,
+    onSaveClick: () -> Unit,
+    navController: NavController
+) {
+    val context = LocalContext.current
+    val calendar = remember { Calendar.getInstance() }
 
-        val datePickerDialog = remember {
-            android.app.DatePickerDialog(
-                context,
-                { _, year, month, dayOfMonth ->
-                    onTanggalChange(String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth))
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-            )
-        }
-
-        val timePickerDialog = remember {
-            android.app.TimePickerDialog(
-                context,
-                { _, hourOfDay, minute ->
-                    onWaktuChange(String.format("%02d:%02d", hourOfDay, minute))
-                },
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                true
-            )
-        }
-
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.add_file),
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier.padding(16.dp).size(32.dp)
-                    )
-                }
-                Text("Pengingat", color = Color.White, fontSize = 20.sp)
-            }
-
-            SectionTitle("Pengingat")
-            CardSection {
-                OutlinedButton(
-                    onClick = { datePickerDialog.show() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = SolidColor(
-                            BiruMuda.copy(
-                                alpha = 1.0f
-                            )
-                        )
-                    )
-                ) {
-                    Text(if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
-                }
-
-                OutlinedButton(
-                    onClick = { timePickerDialog.show() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = SolidColor(
-                            BiruMuda.copy(
-                                alpha = 1.0f
-                            )
-                        )
-                    )
-                ) {
-                    Text(if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
-                }
-
-                Text("Pengulangan", fontWeight = FontWeight.Bold)
-                DropdownMenuField(listOf("Harian", "Mingguan", "Bulanan"), selectedPengulangan) {
-                    onPengulanganChange(it)
-                }
-
-                Text("Nada Dering", fontWeight = FontWeight.Bold)
-                DropdownMenuField(listOf("Nada 1", "Nada 2", "Nada 3"), selectedNadaDering) {
-                    onNadaDeringChange(it)
-                }
-            }
-
-            SectionWithAddButton("Pasien", navController)
-            CardSection {
-                if (lansiaList.isEmpty()) Text("Belum ada data lansia")
-                else lansiaList.forEach {
-                    ReminderButton(it.nama, { onLansiaSelect(it.id) }, selectedLansia == it.id)
-                }
-            }
-
-            SectionWithAddButton("List Obat", navController)
-            CardSection {
-                if (obatList.isEmpty()) Text("Belum ada data obat")
-                else obatList.forEach {
-                    ReminderButton(it.nama, { onObatSelect(it.id) }, selectedObat == it.id)
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                OutlinedButton(
-                    onClick = onSaveClick,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = SolidColor(
-                            BiruMuda.copy(
-                                alpha = 1.0f
-                            )
-                        )
-                    ),
-                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
-                ) {
-                    Text("Simpan")
-                }
-            }
-
-            SnackbarHost(snackbarHostState, modifier = Modifier.fillMaxWidth().padding(50.dp))
-        }
+    val datePickerDialog = remember {
+        android.app.DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                onTanggalChange(String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
     }
 
+    val timePickerDialog = remember {
+        android.app.TimePickerDialog(
+            context,
+            { _, hourOfDay, minute ->
+                onWaktuChange(String.format("%02d:%02d", hourOfDay, minute))
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        )
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .background(Color.White),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
+                Icon(
+                    painter = painterResource(id = R.drawable.add_file),
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier.padding(16.dp).size(32.dp)
+                )
+            }
+            Text("Pengingat", color = Color.White, fontSize = 20.sp)
+        }
+
+        SectionTitle("Pengingat")
+        CardSection {
+            OutlinedButton(
+                onClick = { datePickerDialog.show() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f)))
+            ) {
+                Text(if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
+            }
+
+            OutlinedButton(
+                onClick = { timePickerDialog.show() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f)))
+            ) {
+                Text(if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
+            }
+
+            Text("Pengulangan", fontWeight = FontWeight.Bold)
+            DropdownMenuField(listOf("Harian", "Mingguan", "Bulanan"), selectedPengulangan) {
+                onPengulanganChange(it)
+            }
+
+            Text("Nada Dering", fontWeight = FontWeight.Bold)
+            DropdownMenuField(listOf("Nada 1", "Nada 2", "Nada 3"), selectedNadaDering) {
+                onNadaDeringChange(it)
+            }
+        }
+
+        SectionWithAddButton("Pasien", navController)
+        CardSection {
+            if (lansiaList.isEmpty()) Text("Belum ada data lansia")
+            else lansiaList.forEach {
+                ReminderButton(it.nama, { onLansiaSelect(it.id) }, selectedLansia == it.id)
+            }
+        }
+
+        SectionWithAddButton("List Obat", navController)
+        CardSection {
+            if (obatList.isEmpty()) Text("Belum ada data obat")
+            else obatList.forEach {
+                ReminderButton(it.nama, { onObatSelect(it.id) }, selectedObat == it.id)
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(
+                onClick = onSaveClick,
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f)),
+                border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(BiruMuda.copy(alpha = 1.0f))),
+                modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+            ) {
+                Text("Simpan")
+            }
+        }
+
+        SnackbarHost(snackbarHostState, modifier = Modifier.fillMaxWidth().padding(50.dp))
+    }
+}
 
 
 
