@@ -93,9 +93,6 @@ fun AddReminderScreen(
     obatViewModel: HybridObatViewModel = viewModel(), // ✅ Ubah ke Hybrid
     lansiaViewModel: HybridLansiaViewModel = viewModel(), // ✅ Ubah ke Hybrid
     reminderViewModel: HybridReminderViewModel = viewModel()
-//    obatViewModel: ObatViewModel = viewModel(),
-//    lansiaViewModel: LansiaViewModel = viewModel(),
-//    reminderViewModel: ReminderViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -205,7 +202,7 @@ fun AddReminderScreen(
                     Text(text = if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(text = "Pengulangan", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(4.dp))
@@ -265,12 +262,13 @@ fun AddReminderScreen(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
 
             // ✅ Buttons Save & Clear
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .padding(vertical = 16.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
                 // Tombol Save
