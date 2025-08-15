@@ -4,9 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -104,6 +106,8 @@ fun ObatScreen(
                         )
                     }
                 }
+                // Tambahkan jarak ekstra di bawah
+                Spacer(modifier = Modifier.height(50.dp))
             }
         }
 
@@ -184,9 +188,9 @@ fun ObatItem(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = obat.nama, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            Text(text = "Jenis: ${obat.jenis}", fontSize = 16.sp, color = Color.DarkGray)
-            Text(text = "Dosis: ${obat.dosis}", fontSize = 16.sp, color = Color.DarkGray)
-            Text(text = "Keterangan: ${obat.catatan}", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = "Jenis : ${obat.jenis}", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = "Dosis : ${obat.dosis}", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = "Keterangan : ${obat.catatan}", fontSize = 16.sp, color = Color.DarkGray)
         }
 
         IconButton(onClick = onDeleteClick) {

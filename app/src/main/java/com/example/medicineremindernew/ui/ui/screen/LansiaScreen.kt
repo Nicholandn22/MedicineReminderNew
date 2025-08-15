@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -118,6 +120,8 @@ fun LansiaScreen(
                         )
                     }
                 }
+                // Tambahkan jarak ekstra di bawah
+                Spacer(modifier = Modifier.height(50.dp))
 
 //                // nitip buat preview
 //                Button(onClick = {
@@ -220,10 +224,18 @@ fun LansiaItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column {
-            Text(text = lansia.nama, fontSize = 20.sp, color = Color.Black)
-            Row {
-                Text("Usia : $usia", fontSize = 16.sp, color = Color.DarkGray)
-                Text(" | Golongan Darah : ${lansia.goldar}", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = lansia.nama, fontSize = 20.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+            Column {
+                Text(
+                    text = "Usia : $usia",
+                    fontSize = 16.sp,
+                    color = Color.DarkGray
+                )
+                Text(
+                    text = "Penyakit : ${lansia.penyakit}",
+                    fontSize = 16.sp,
+                    color = Color.DarkGray
+                )
             }
         }
 

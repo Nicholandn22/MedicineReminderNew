@@ -20,8 +20,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -136,12 +140,17 @@ fun HomeScreen(
                                 .filter { it.id in reminderTerdekat.obatIds }
                                 .joinToString(", ") { it.nama }
 
-
                             Text(
-                                text = "$lansiaName - $obatName",
+                                text = "$lansiaName",
                                 color = Color.Black,
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 5.dp)
+                            )
+
+                            Text(
+                                text = "$obatName",
+                                color = Color.Black,
+                                fontSize = 16.sp,
                                 modifier = Modifier.padding(top = 5.dp)
                             )
 
@@ -200,7 +209,18 @@ fun HomeScreen(
 
 
                     ReminderItem(
-                        title = "Lansia: $lansiaName - Obat: $obatName",
+                        lansia = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Lansia : ")
+                            }
+                            append(lansiaName)
+                        },
+                        obat = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Obat : ")
+                            }
+                            append(obatName)
+                        },
                         time = "${reminder.tanggal} - ${reminder.waktu}",
                         onClick = {
                             navController.navigate("detail_reminder/${reminder.id}")
@@ -211,6 +231,8 @@ fun HomeScreen(
                         }
                     )
                 }
+                // Tambahkan jarak ekstra di bawah
+                Spacer(modifier = Modifier.height(50.dp))
             }
         }
 
@@ -280,7 +302,8 @@ fun HomeScreen(
 
 @Composable
 fun ReminderItem(
-    title: String,
+    lansia: AnnotatedString,
+    obat: AnnotatedString,
     time: String,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -297,9 +320,14 @@ fun ReminderItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontSize = 20.sp, color = Color.Black)
             Row {
-                Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray)
+                Text(text = lansia, fontSize = 20.sp, color = Color.Black)
+            }
+            Row {
+                Text(text = obat, fontSize = 20.sp, color = Color.Black)
+            }
+            Row {
+                Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
                 Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
             }
         }
