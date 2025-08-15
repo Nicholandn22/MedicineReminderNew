@@ -110,6 +110,9 @@ fun HomeScreen(
                     .fillMaxHeight()
                     .verticalScroll(scrollState)
             ) {
+                // Tambahkan jarak ekstra di atas
+                Spacer(modifier = Modifier.height(5.dp))
+
                 // ✅ Card Reminder Terdekat
                 Card(
                     modifier = Modifier
