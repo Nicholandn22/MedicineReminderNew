@@ -82,7 +82,7 @@ fun AddObatScreen(
 
                 Text("Jenis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
-                    options = listOf("Tablet", "Sirup", "Salep"),
+                    options = listOf("Tablet", "Sirup", "Salep", "Tetes", "Kapsul"),
                     selectedOption = jenisObat,
                     onOptionSelected = { jenisObat = it }
                 )
