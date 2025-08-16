@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -20,7 +21,12 @@ import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 @Composable
@@ -32,9 +38,24 @@ fun AddObatScreen(
     var jenisObat by remember { mutableStateOf("Tablet") }
     var satuanDosis by remember { mutableStateOf("mg") }
     var notes by remember { mutableStateOf("") }
+    var pertamaKonsumsi by remember { mutableStateOf<Date?>(null) }
 
+    val blueColor = BiruMuda.copy(alpha = 1.0f)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = android.app.DatePickerDialog(
+        context,
+        { _, year, month, day ->
+            calendar.set(year, month, day)
+            pertamaKonsumsi = calendar.time
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     Column(
         modifier = Modifier
@@ -98,6 +119,26 @@ fun AddObatScreen(
 
                 Spacer(modifier = Modifier.height(15.dp))
 
+                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = { datePickerDialog.show() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(
+                        brush = androidx.compose.ui.graphics.SolidColor(blueColor)
+                    )
+                ) {
+                    Text(
+                        pertamaKonsumsi?.let {
+                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(it)
+                        } ?: "Tanggal Pertama Konsumsi"
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
+
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
@@ -134,6 +175,7 @@ fun AddObatScreen(
                             nama = namaObat,
                             jenis = jenisObat,
                             dosis = satuanDosis,
+                            pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) },
                             catatan = notes
                         )
 
