@@ -203,7 +203,8 @@ fun AlarmPopupScreen(
                 )
                 .background(Color.White)
                 .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+//            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
             Text("Saatnya Minum Obat!", fontSize = 22.sp, color = Color(0xFF011A27))
             Spacer(modifier = Modifier.height(12.dp))
@@ -214,12 +215,41 @@ fun AlarmPopupScreen(
                 isLoading -> {
                     CircularProgressIndicator()
                 }
-                reminder != null && obatList.isNotEmpty() && lansiaList.isNotEmpty() -> {
-                    Text(
-                        text = "Pasien: ${lansiaList.joinToString(", ") { it.nama }}",
-                        fontSize = 16.sp,
-                        color = Color(0xFF011A27)
-                    )
+//                reminder != null && obatList.isNotEmpty() && lansiaList.isNotEmpty() -> {
+//                    Text(
+//                        text = "Pasien: ${lansiaList.joinToString(", ") { it.nama }}",
+//                        fontSize = 16.sp,
+//                        color = Color(0xFF011A27)
+//                    )
+//                }
+//                else -> {
+//                    Text("Data reminder tidak tersedia", color = Color.Red)
+//                }
+                reminder != null -> {
+                    if (lansiaList.isNotEmpty()){
+                        Text(
+                            text = "Lansia:\n${lansiaList.joinToString(", "){ it.nama }}",
+                            fontSize = 18.sp,
+                            color = Color(0xFF011A27)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    if (obatList.isNotEmpty()){
+                        obatList.forEach{
+                            obat -> Text(
+                                    text = "Obat: ${obat.nama}",
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF011A27)
+                                )
+                            Text(
+                                text = "Dosis: ${obat.dosis}",
+                                fontSize = 14.sp,
+                                color = Color(0xFF011A27)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                        }
+                    }
                 }
                 else -> {
                     Text("Data reminder tidak tersedia", color = Color.Red)
