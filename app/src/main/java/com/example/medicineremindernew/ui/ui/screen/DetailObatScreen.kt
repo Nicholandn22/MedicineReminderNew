@@ -73,6 +73,7 @@ fun DetailObatScreen(
     var namaObat by remember { mutableStateOf(obat!!.nama) }
     var jenisObat by remember { mutableStateOf(obat!!.jenis) }
     var satuanDosis by remember { mutableStateOf(obat!!.dosis) }
+    var waktuMinum by remember { mutableStateOf(obat!!.waktuMinum) }
     var stok by remember { mutableStateOf(obat!!.stok.toString()) }
     var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
 
@@ -130,9 +131,18 @@ fun DetailObatScreen(
 
                 Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
-                    options = listOf("mg", "ml", "IU"),
+                    options = listOf("mg", "ml", "IU", "Lainnya"),
                     selectedOption = satuanDosis,
                     onOptionSelected = { satuanDosis = it }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Waktu Minum", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                DropdownMenuField(
+                    options = listOf("Sebelum Makan", "Sesudah Makan"),
+                    selectedOption = waktuMinum,
+                    onOptionSelected = { waktuMinum = it }
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -169,6 +179,7 @@ fun DetailObatScreen(
                         nama = namaObat,
                         jenis = jenisObat,
                         dosis = satuanDosis,
+                        waktuMinum = waktuMinum,
                         catatan = notes,
                         stok = stok.toIntOrNull() ?: 0 // ✅ update stok
 
