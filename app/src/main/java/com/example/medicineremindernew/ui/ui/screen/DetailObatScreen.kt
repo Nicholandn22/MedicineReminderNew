@@ -57,6 +57,7 @@ fun DetailObatScreen(
     val scope = rememberCoroutineScope()
     val blueColor = BiruMuda.copy(alpha = 1.0f)
 
+
     // Load data saat pertama kali
     LaunchedEffect(obatId) {
         viewModel.getObatById(obatId)
@@ -72,6 +73,7 @@ fun DetailObatScreen(
     var namaObat by remember { mutableStateOf(obat!!.nama) }
     var jenisObat by remember { mutableStateOf(obat!!.jenis) }
     var satuanDosis by remember { mutableStateOf(obat!!.dosis) }
+    var stok by remember { mutableStateOf(obat!!.stok.toString()) }
     var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
 
     Column(
@@ -136,6 +138,17 @@ fun DetailObatScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
+                    value = stok,
+                    onValueChange = { if (it.all { c -> c.isDigit() }) stok = it },
+                    label = { Text("Stok Obat") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
                     label = { Text("Catatan Tambahan") },
@@ -156,7 +169,10 @@ fun DetailObatScreen(
                         nama = namaObat,
                         jenis = jenisObat,
                         dosis = satuanDosis,
-                        catatan = notes
+                        catatan = notes,
+                        stok = stok.toIntOrNull() ?: 0 // ✅ update stok
+
+
                     )
                     viewModel.updateObat(updated) { success ->
                         scope.launch {
