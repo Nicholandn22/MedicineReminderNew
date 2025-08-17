@@ -107,6 +107,8 @@
             composable(BottomNavItem.Obat.route) { ObatScreen(navController, obatViewModel) }
 
             composable(BottomNavItem.Riwayat.route) { RiwayatScreen() }
+            composable(BottomNavItem.Kunjungan.route) {  }
+
 
 
             composable(

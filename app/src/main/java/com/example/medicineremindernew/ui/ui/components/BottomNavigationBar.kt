@@ -21,6 +21,7 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem.Home,
         BottomNavItem.Lansia,
         BottomNavItem.Obat,
+        BottomNavItem.Kunjungan,
         BottomNavItem.Riwayat
     )
 
