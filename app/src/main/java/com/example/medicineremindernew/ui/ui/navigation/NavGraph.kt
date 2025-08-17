@@ -2,6 +2,7 @@
 
     //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
     import ObatScreen
+    import RiwayatScreen
     import android.os.Build
     import androidx.annotation.RequiresApi
     import androidx.compose.runtime.Composable
@@ -55,6 +56,8 @@
                 )
             }
 
+
+
             // ✅ Tambahan lain
             composable("add_reminder") {
                 AddReminderScreen(
@@ -102,6 +105,9 @@
 
 
             composable(BottomNavItem.Obat.route) { ObatScreen(navController, obatViewModel) }
+
+            composable(BottomNavItem.Riwayat.route) { RiwayatScreen() }
+
 
             composable(
                 "detail_lansia/{lansiaId}",
@@ -154,9 +160,9 @@
 //            composable("lansia") {
 //                LansiaScreen(navController, lansiaViewModel)
 //            }
-            composable("obat") {
-                ObatScreen(navController, obatViewModel)
-            }
+//            composable("obat") {
+//                ObatScreen(navController, obatViewModel)
+//            }
         }
     }
 
