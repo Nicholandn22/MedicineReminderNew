@@ -38,7 +38,6 @@ import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
@@ -50,15 +49,16 @@ fun HomeScreen(
     val reminders by reminderViewModel.reminderList.collectAsState()
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
     val obatList by obatViewModel.obatList.collectAsState()
-    val context = LocalContext.current // ✅ Ambil di sini sekali saja
+    val context = LocalContext.current
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
 
-    // Filter reminder yang belum lewat dari waktu sekarang
+    // Waktu sekarang
     val now = remember { LocalDateTime.now() }
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
+    // Filter hanya reminder yang >= sekarang
     val filteredReminders = reminders
         .mapNotNull { reminder ->
             try {
@@ -72,9 +72,10 @@ fun HomeScreen(
         .filter { (_, dateTime) ->
             dateTime.isAfter(now) || dateTime.isEqual(now)
         }
-        .sortedBy { (_, dateTime) -> dateTime } // 🔥 Urutkan dari waktu terdekat ke waktu terlama
-        .map { (reminder, _) -> reminder } // ambil kembali objek Reminder saja
+        .sortedBy { (_, dateTime) -> dateTime }
+        .map { (reminder, _) -> reminder }
 
+    // Reminder terdekat
     val reminderTerdekat = filteredReminders
         .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
         .firstOrNull()
@@ -110,7 +111,6 @@ fun HomeScreen(
                     .fillMaxHeight()
                     .verticalScroll(scrollState)
             ) {
-                // Tambahkan jarak ekstra di atas
                 Spacer(modifier = Modifier.height(5.dp))
 
                 // ✅ Card Reminder Terdekat
@@ -144,14 +144,14 @@ fun HomeScreen(
                                 .joinToString(", ") { it.nama }
 
                             Text(
-                                text = "$lansiaName",
+                                text = lansiaName,
                                 color = Color.Black,
                                 fontSize = 16.sp,
                                 modifier = Modifier.padding(top = 5.dp)
                             )
 
                             Text(
-                                text = "$obatName",
+                                text = obatName,
                                 color = Color.Black,
                                 fontSize = 16.sp,
                                 modifier = Modifier.padding(top = 5.dp)
@@ -201,15 +201,14 @@ fun HomeScreen(
                     }
                 }
 
-                // ✅ List Semua Reminder
-                reminders.forEach { reminder ->
+                // ✅ List Semua Reminder (hanya reminder >= sekarang)
+                filteredReminders.forEach { reminder ->
                     val lansiaName = lansiaList
                         .filter { it.id in reminder.lansiaIds }
                         .joinToString(", ") { it.nama }
                     val obatName = obatList
                         .filter { it.id in reminder.obatIds }
                         .joinToString(", ") { it.nama }
-
 
                     ReminderItem(
                         lansia = buildAnnotatedString {
@@ -234,11 +233,12 @@ fun HomeScreen(
                         }
                     )
                 }
-                // Tambahkan jarak ekstra di bawah
+
                 Spacer(modifier = Modifier.height(50.dp))
             }
         }
 
+        // ✅ Tombol Tambah Reminder
         AddButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -248,6 +248,7 @@ fun HomeScreen(
             }
         )
 
+        // ✅ Dialog Konfirmasi Hapus
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = {
@@ -271,7 +272,6 @@ fun HomeScreen(
                                 reminderViewModel.deleteReminder(id) { success ->
                                     if (success) {
                                         Log.d("HomeScreen", "Reminder berhasil dihapus")
-                                        // Opsional: tampilkan snackbar atau efek lain
                                     } else {
                                         Log.e("HomeScreen", "Gagal menghapus reminder")
                                     }
@@ -300,8 +300,6 @@ fun HomeScreen(
         }
     }
 }
-
-
 
 @Composable
 fun ReminderItem(

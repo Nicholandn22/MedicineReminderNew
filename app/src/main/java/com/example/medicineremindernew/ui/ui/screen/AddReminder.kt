@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -55,33 +54,18 @@ import androidx.navigation.NavController
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Reminder
-import com.example.medicineremindernew.ui.data.repository.LansiaRepository
-import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import com.example.medicineremindernew.ui.data.repository.ReminderRepository
 import com.example.medicineremindernew.ui.ui.theme.AbuMenu
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ObatViewModelFactory
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.ReminderViewModelFactory
-import kotlinx.coroutines.launch
-import java.sql.Time
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
-import com.example.medicineremindernew.ui.ui.theme.BiruMuda
-import com.example.medicineremindernew.ui.ui.theme.BiruTua
-import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
-import com.google.firebase.Timestamp
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
+import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.google.firebase.auth.FirebaseAuth
 import java.util.UUID
-
 
 @Composable
 fun AddReminderScreen(
@@ -90,35 +74,31 @@ fun AddReminderScreen(
     onBackClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
     onClearClick: () -> Unit = {},
-    obatViewModel: HybridObatViewModel = viewModel(), // ✅ Ubah ke Hybrid
-    lansiaViewModel: HybridLansiaViewModel = viewModel(), // ✅ Ubah ke Hybrid
+    obatViewModel: HybridObatViewModel = viewModel(),
+    lansiaViewModel: HybridLansiaViewModel = viewModel(),
     reminderViewModel: HybridReminderViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // ✅ Ambil data dari Firestore via ViewModel
     val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle()
     val obatList by obatViewModel.obatList.collectAsStateWithLifecycle()
 
-    // ✅ Panggil load data saat pertama kali
-    LaunchedEffect(Unit) {
-//        lansiaViewModel.loadLansia()
-//        obatViewModel.loadObat()
-    }
-
-    var selectedLansia by remember { mutableStateOf(setOf<String>()) }
+    var selectedLansia by remember { mutableStateOf<String?>(null) } // ✅ hanya 1 lansia
     var selectedObat by remember { mutableStateOf(setOf<String>()) }
     var tanggal by remember { mutableStateOf("") }
     var waktu by remember { mutableStateOf("") }
 
     val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
-//    val nadaDeringOptions = listOf("Nada 1", "Nada 2", "Nada 3")
-
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
-//    var selectedNadaDering by remember { mutableStateOf(nadaDeringOptions.first()) }
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedLansiaId by remember { mutableStateOf<String?>(null) }
+    var selectedObatId by remember { mutableStateOf<String?>(null) }
+
+
+
 
     Box(modifier = Modifier.padding(16.dp)) {
         Column(
@@ -166,7 +146,9 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = { datePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth().border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
@@ -192,7 +174,9 @@ fun AddReminderScreen(
 
                 Button(
                     onClick = { timePickerDialog.show() },
-                    modifier = Modifier.fillMaxWidth().border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
@@ -209,14 +193,6 @@ fun AddReminderScreen(
                 DropdownMenuField(pengulanganOptions, selectedPengulangan) {
                     selectedPengulangan = it
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-
-//                Text(text = "Nada Dering", fontWeight = FontWeight.Bold)
-//                Spacer(modifier = Modifier.height(4.dp))
-//                DropdownMenuField(nadaDeringOptions, selectedNadaDering) {
-//                    selectedNadaDering = it
-//                }
-//                Spacer(modifier = Modifier.height(4.dp))
             }
 
             // ✅ Section Lansia
@@ -229,13 +205,10 @@ fun AddReminderScreen(
                         ReminderButton(
                             text = lansia.nama,
                             onClick = {
-                                selectedLansia = if (selectedLansia.contains(lansia.id)) {
-                                    selectedLansia - lansia.id
-                                } else {
-                                    selectedLansia + lansia.id
-                                }
+                                selectedLansia = if (selectedLansia == lansia.id) null else lansia.id
+                                selectedObat = emptySet() // reset obat tiap ganti lansia
                             },
-                            isSelected = selectedLansia.contains(lansia.id)
+                            isSelected = selectedLansia == lansia.id
                         )
                     }
                 }
@@ -244,24 +217,32 @@ fun AddReminderScreen(
             // ✅ Section Obat
             SectionWithAddButton("List Obat", navController = navController)
             CardSection {
-                if (obatList.isEmpty()) {
-                    Text("Belum ada data obat")
+                if (selectedLansia == null) {
+                    Text("Silahkan pilih lansia terlebih dahulu")
                 } else {
-                    obatList.forEach { obat ->
-                        ReminderButton(
-                            text = obat.nama,
-                            onClick = {
-                                selectedObat = if (selectedObat.contains(obat.id)) {
-                                    selectedObat - obat.id
-                                } else {
-                                    selectedObat + obat.id
-                                }
-                            },
-                            isSelected = selectedObat.contains(obat.id)
-                        )
+                    val lansia = lansiaList.find { it.id == selectedLansia }
+                    val obatFiltered = obatList.filter { lansia?.obatIds?.contains(it.id) == true }
+
+                    if (obatFiltered.isEmpty()) {
+                        Text("Lansia ini belum memiliki obat yang ditandai")
+                    } else {
+                        obatFiltered.forEach { obat ->
+                            ReminderButton(
+                                text = obat.nama,
+                                onClick = {
+                                    selectedObat = if (selectedObat.contains(obat.id)) {
+                                        selectedObat - obat.id
+                                    } else {
+                                        selectedObat + obat.id
+                                    }
+                                },
+                                isSelected = selectedObat.contains(obat.id)
+                            )
+                        }
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // ✅ Buttons Save & Clear
@@ -274,7 +255,7 @@ fun AddReminderScreen(
                 // Tombol Save
                 Button(
                     onClick = {
-                        if (selectedLansia.isNotEmpty() && selectedObat.isNotEmpty() &&
+                        if (!selectedLansia.isNullOrEmpty() && selectedObat.isNotEmpty() &&
                             tanggal.isNotEmpty() && waktu.isNotEmpty()) {
 
                             val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
@@ -284,47 +265,61 @@ fun AddReminderScreen(
                             val timeInMillis = date?.time ?: 0L
 
                             coroutineScope.launch {
+
                                 val reminderId = UUID.randomUUID().toString()
                                 val reminder = Reminder(
                                     id = reminderId,
-                                    obatIds = selectedObat.toList(),        // ✅ Semua obat yang dipilih
-                                    lansiaIds = selectedLansia.toList(),    // ✅ Semua lansia yang dipilih
+                                    obatIds = selectedObat.toList(),
+                                    lansiaIds = listOf(selectedLansia!!),
                                     tanggal = tanggal,
                                     waktu = waktu,
                                     pengulangan = selectedPengulangan
                                 )
-                                    // ✅ Simpan ke Firestore via ViewModel
-                                    reminderViewModel.addReminder(reminder) { success ->
-                                        if (success) {
-                                            coroutineScope.launch {
-                                                // ✅ Cek permission alarm
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                                    val alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
-                                                    if (!alarmManager.canScheduleExactAlarms()) {
-                                                        val intent = android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                                                        intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                                                        context.startActivity(intent)
-                                                        return@launch
-                                                    }
-                                                }
 
-                                                // ✅ Jadwalkan alarm berulang menggunakan AlarmUtils
+
+
+                                reminderViewModel.addReminder(reminder) { success ->
+                                    if (success) {
+                                        coroutineScope.launch {
+                                            // ✅ Cek permission exact alarm (Android 12+)
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                                val alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
+                                                if (!alarmManager.canScheduleExactAlarms()) {
+                                                    val intent = android.content.Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                                                    intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                                    context.startActivity(intent)
+                                                    return@launch
+                                                }
+                                            }
+
+                                            // ✅ Jadwalkan alarm berulang
+                                            com.example.medicineremindernew.ui.alarm.AlarmUtils.scheduleRecurringReminder(
+                                                context = context,
+                                                reminderId = reminderId,
+                                                timeInMillis = timeInMillis,
+                                                recurrenceType = selectedPengulangan
+                                            )
+
+                                            // ✅ Alarm kedua (1 jam sebelum waktu yang dipilih)
+                                            val oneHourBefore = timeInMillis - 60 * 60 * 1000
+                                            if (oneHourBefore > System.currentTimeMillis()) { // jangan pasang alarm di masa lalu
                                                 com.example.medicineremindernew.ui.alarm.AlarmUtils.scheduleRecurringReminder(
                                                     context = context,
-                                                    reminderId = reminderId,
-                                                    timeInMillis = timeInMillis,
+                                                    reminderId = reminderId + "_before", // pakai id unik biar tidak bentrok
+                                                    timeInMillis = oneHourBefore,
                                                     recurrenceType = selectedPengulangan
                                                 )
+                                            }
 
-                                                snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm berulang dijadwalkan")
-                                                navController.popBackStack()
-                                            }
-                                        } else {
-                                            coroutineScope.launch {
-                                                snackbarHostState.showSnackbar("Gagal menyimpan reminder")
-                                            }
+                                            snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm berulang dijadwalkan")
+                                            navController.popBackStack()
+                                        }
+                                    } else {
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Gagal menyimpan reminder")
                                         }
                                     }
+                                }
                             }
                         } else {
                             coroutineScope.launch {
@@ -332,14 +327,11 @@ fun AddReminderScreen(
                             }
                         }
                     },
+                    modifier = Modifier.weight(1f).padding(end = 8.dp).border(1.dp, biru, shape = RoundedCornerShape(35.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp)
-                        .border(1.dp, biru, shape = RoundedCornerShape(35.dp)),
+                    )
                 ) {
                     Text("Save")
                 }
@@ -347,25 +339,21 @@ fun AddReminderScreen(
                 // Tombol Clear
                 Button(
                     onClick = {
-                        selectedLansia = mutableSetOf()
-                        selectedObat = mutableSetOf()
+                        selectedLansia = null
+                        selectedObat = emptySet()
                         tanggal = ""
                         waktu = ""
                         selectedPengulangan = pengulanganOptions.first()
-//                        selectedNadaDering = nadaDeringOptions.first()
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Form telah direset")
                         }
                         onClearClick()
                     },
+                    modifier = Modifier.weight(1f).padding(start = 8.dp).border(1.dp, biru, shape = RoundedCornerShape(35.dp)),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp)
-                        .border(1.dp, biru, shape = RoundedCornerShape(35.dp)),
+                    )
                 ) {
                     Text("Clear")
                 }
@@ -373,9 +361,7 @@ fun AddReminderScreen(
 
             SnackbarHost(
                 hostState = snackbarHostState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(50.dp)
+                modifier = Modifier.fillMaxWidth().padding(50.dp)
             )
         }
     }

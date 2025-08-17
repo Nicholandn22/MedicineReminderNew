@@ -39,6 +39,8 @@ fun AddObatScreen(
     var satuanDosis by remember { mutableStateOf("mg") }
     var notes by remember { mutableStateOf("") }
     var pertamaKonsumsi by remember { mutableStateOf<Date?>(null) }
+    var stok by remember { mutableStateOf("") }
+
 
     val blueColor = BiruMuda.copy(alpha = 1.0f)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -112,7 +114,7 @@ fun AddObatScreen(
 
                 Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
-                    options = listOf("mg", "ml", "IU"),
+                    options = listOf("mg", "ml", "IU","Tetes"),
                     selectedOption = satuanDosis,
                     onOptionSelected = { satuanDosis = it }
                 )
@@ -151,6 +153,20 @@ fun AddObatScreen(
                     singleLine = true
                 )
                 Spacer(modifier = Modifier.height(15.dp))
+
+                OutlinedTextField(
+                    value = stok,
+                    onValueChange = {
+                        if (it.all { char -> char.isDigit() }) stok = it
+                    },
+                    placeholder = { Text("Stok Obat") },
+                    label = { Text("Masukkan Stok Obat") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    singleLine = true
+                )
+
             }
         }
 
@@ -176,7 +192,9 @@ fun AddObatScreen(
                             jenis = jenisObat,
                             dosis = satuanDosis,
                             pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) },
-                            catatan = notes
+                            catatan = notes,
+                            stok = stok.toIntOrNull() ?: 0 // ✅ simpan stok
+
                         )
 
                         // Simpan ke Firestore lewat ViewModel
@@ -212,6 +230,7 @@ fun AddObatScreen(
                     jenisObat = "Tablet"
                     satuanDosis = "mg"
                     notes = ""
+                    stok = ""
                 },
                 modifier = Modifier
                     .weight(1f)

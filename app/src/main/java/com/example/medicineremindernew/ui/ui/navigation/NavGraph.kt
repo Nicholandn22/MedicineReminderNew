@@ -2,6 +2,7 @@
 
     //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
     import ObatScreen
+    import RiwayatScreen
     import android.os.Build
     import androidx.annotation.RequiresApi
     import androidx.compose.runtime.Composable
@@ -55,6 +56,8 @@
                 )
             }
 
+
+
             // ✅ Tambahan lain
             composable("add_reminder") {
                 AddReminderScreen(
@@ -79,7 +82,9 @@
             composable("addlansia") {
                 AddLansiaScreen(
                     viewModel = lansiaViewModel,
+                    obatViewModel = obatViewModel,
                     onBackClick = { navController.popBackStack() }
+
                 )
             }
 
@@ -88,9 +93,23 @@
 //                AlarmPopupPreviewScreen()
 //            }
 
-            // ✅ Lainnya
-            composable(BottomNavItem.Lansia.route) { LansiaScreen(navController, lansiaViewModel) }
+            // ✅ Lansia
+            composable("lansia") {
+                LansiaScreen(
+                    navController = navController,
+                    lansiaViewModel = lansiaViewModel,
+                    obatViewModel = obatViewModel
+                )
+            }
+
+
+
             composable(BottomNavItem.Obat.route) { ObatScreen(navController, obatViewModel) }
+
+            composable(BottomNavItem.Riwayat.route) { RiwayatScreen() }
+            composable(BottomNavItem.Kunjungan.route) {  }
+
+
 
             composable(
                 "detail_lansia/{lansiaId}",
@@ -100,8 +119,11 @@
                 DetailLansiaScreen(
                     lansiaId = lansiaId,
                     viewModel = lansiaViewModel,
+                    obatViewModel = obatViewModel,
                     navController = navController,
                     onBackClick = { navController.popBackStack() }
+
+
                 )
             }
 
@@ -137,12 +159,12 @@
             }
 
             // Tambah ini jika kamu punya screen khusus untuk daftar obat/lansia:
-            composable("lansia") {
-                LansiaScreen(navController, lansiaViewModel)
-            }
-            composable("obat") {
-                ObatScreen(navController, obatViewModel)
-            }
+//            composable("lansia") {
+//                LansiaScreen(navController, lansiaViewModel)
+//            }
+//            composable("obat") {
+//                ObatScreen(navController, obatViewModel)
+//            }
         }
     }
 

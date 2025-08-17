@@ -2,42 +2,12 @@ package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,22 +18,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.medicineremindernew.R.drawable.back_white
+import com.example.medicineremindernew.R
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailLansiaScreen(
     lansiaId: String,
     viewModel: HybridLansiaViewModel,
+    obatViewModel: HybridObatViewModel,
     navController: NavHostController,
     onBackClick: () -> Unit = {}
 ) {
@@ -71,9 +41,11 @@ fun DetailLansiaScreen(
     val scope = rememberCoroutineScope()
 
     val lansia by viewModel.lansiaDetail.collectAsStateWithLifecycle()
+    val obatList by obatViewModel.obatList.collectAsStateWithLifecycle(initialValue = emptyList())
 
     LaunchedEffect(lansiaId) {
         viewModel.getLansiaById(lansiaId)
+        obatViewModel.loadObat()
     }
 
     if (lansia == null) {
@@ -83,17 +55,34 @@ fun DetailLansiaScreen(
         return
     }
 
-    var namaLansia by remember { mutableStateOf(lansia!!.nama) }
-    var golonganDarah by remember { mutableStateOf(lansia!!.goldar) }
-    var gender by remember { mutableStateOf(lansia!!.gender) }
-    var penyakit by remember { mutableStateOf(lansia!!.penyakit) }
-    var nomorWali by remember { mutableStateOf(lansia!!.nomorwali.toString()) }
-    var tanggalLahir by remember { mutableStateOf(lansia!!.lahir?.toDate() ?: Date()) }
+    // ✅ State yang akan diisi ulang ketika data lansia berubah
+    var selectedObat by remember { mutableStateOf(listOf<String>()) }
+    var namaLansia by remember { mutableStateOf("") }
+    var golonganDarah by remember { mutableStateOf("") }
+    var gender by remember { mutableStateOf("") }
+    var penyakit by remember { mutableStateOf("") }
+    var nomorWali by remember { mutableStateOf("") }
+    var tanggalLahir by remember { mutableStateOf(Date()) }
+
+    // ✅ Isi ulang state ketika data lansia masuk
+    LaunchedEffect(lansia) {
+        lansia?.let {
+            selectedObat = it.obatIds.toMutableList()
+            namaLansia = it.nama
+            golonganDarah = it.goldar
+            gender = it.gender
+            penyakit = it.penyakit
+            nomorWali = it.nomorwali.toString()
+            tanggalLahir = it.lahir?.toDate() ?: Date()
+        }
+    }
+
     var expandedGolongan by remember { mutableStateOf(false) }
     var expandedGender by remember { mutableStateOf(false) }
 
     val golonganOptions = listOf("A", "B", "AB", "O")
     val genderOptions = listOf("Laki-Laki", "Perempuan")
+
     val context = LocalContext.current
     val blueColor = BiruMuda.copy(alpha = 1.0f)
 
@@ -128,7 +117,7 @@ fun DetailLansiaScreen(
         ) {
             IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
                 Icon(
-                    painter = painterResource(id = back_white),
+                    painter = painterResource(id = R.drawable.back_white),
                     contentDescription = "Back",
                     tint = Color.White,
                     modifier = Modifier.size(15.dp)
@@ -136,8 +125,12 @@ fun DetailLansiaScreen(
             }
             Text("Update Lansia", color = Color.White, fontSize = 20.sp)
         }
+
+        // ✅ Form Card
         Card(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -146,7 +139,9 @@ fun DetailLansiaScreen(
                     value = namaLansia,
                     onValueChange = { namaLansia = it },
                     label = { Text("Nama Lansia") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
 
                 // ✅ Golongan Darah
@@ -178,7 +173,7 @@ fun DetailLansiaScreen(
                 ExposedDropdownMenuBox(expanded = expandedGender, onExpandedChange = { expandedGender = !expandedGender }) {
                     TextField(
                         readOnly = true,
-                        value = gender,
+                        value = if (gender == "L") "Laki-Laki" else "Perempuan",
                         onValueChange = {},
                         label = { Text("Pilih jenis kelamin") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedGender) },
@@ -202,7 +197,9 @@ fun DetailLansiaScreen(
                     value = penyakit,
                     onValueChange = { penyakit = it },
                     label = { Text("Penyakit") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
 
                 // ✅ Nomor Wali
@@ -210,7 +207,9 @@ fun DetailLansiaScreen(
                     value = nomorWali,
                     onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
                     label = { Text("Nomor Wali") },
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
                 )
 
                 // ✅ Tanggal Lahir
@@ -222,12 +221,51 @@ fun DetailLansiaScreen(
                 ) {
                     Text(SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(tanggalLahir))
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ✅ Pilih Obat
+                Text("Obat untuk Lansia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+
+                if (obatList.isEmpty()) {
+                    Text("Belum ada data obat", color = Color.Gray, modifier = Modifier.padding(8.dp))
+                } else {
+                    Column {
+                        obatList.forEach { obat ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                val isSelected = selectedObat.contains(obat.id)
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = { checked ->
+                                        selectedObat = if (checked) {
+                                            (selectedObat + obat.id).toMutableList()
+                                        } else {
+                                            (selectedObat - obat.id).toMutableList()
+                                        }
+                                    }
+                                )
+                                Text(
+                                    text = obat.nama,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
         // ✅ Buttons
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalArrangement = Arrangement.Center
         ) {
             OutlinedButton(
@@ -239,7 +277,8 @@ fun DetailLansiaScreen(
                             gender = gender,
                             penyakit = penyakit,
                             nomorwali = nomorWali.toInt(),
-                            lahir = Timestamp(tanggalLahir)
+                            lahir = Timestamp(tanggalLahir),
+                            obatIds = selectedObat
                         )
                         viewModel.updateLansia(updatedLansia) { success ->
                             scope.launch {
@@ -255,7 +294,9 @@ fun DetailLansiaScreen(
                         scope.launch { snackbarHostState.showSnackbar("Lengkapi semua data!") }
                     }
                 },
-                modifier = Modifier.weight(1f).padding(end = 8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
             ) {
                 Text("Update")
@@ -263,14 +304,20 @@ fun DetailLansiaScreen(
 
             OutlinedButton(
                 onClick = onBackClick,
-                modifier = Modifier.weight(1f).padding(start = 8.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
             ) {
                 Text("Cancel")
             }
         }
 
-        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.fillMaxWidth().padding(16.dp))
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
     }
 }
-

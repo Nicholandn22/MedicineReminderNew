@@ -9,5 +9,8 @@ data class Obat(
     val dosis: String = "",
     val catatan: String = "",
     val pertamaKonsumsi: Timestamp? = null,
+    val stok: Int = 0 // ✅ Tambahan baru
+
+
 )
 

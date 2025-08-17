@@ -45,30 +45,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-// nitip buat preview
-//import androidx.compose.material3.Button
-
 @Composable
 fun LansiaScreen(
     navController: NavController,
-    lansiaViewModel: HybridLansiaViewModel
+    lansiaViewModel: HybridLansiaViewModel,
+    obatViewModel: HybridObatViewModel
 ) {
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
+    val allObat by obatViewModel.obatList.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
 
-    // State untuk dialog konfirmasi delete
     var showDeleteDialog by remember { mutableStateOf(false) }
     var lansiaToDelete by remember { mutableStateOf<Lansia?>(null) }
 
@@ -107,9 +107,16 @@ fun LansiaScreen(
                 } else {
                     lansiaList.forEach { lansia ->
                         val usia = hitungUsiaDariTanggalLahir(lansia.lahir)
+
+                        // 🔹 Ambil daftar obat yang cocok dengan ID yg disimpan di Lansia
+                        val obatDipilih: List<Obat> = allObat.filter { obat ->
+                            lansia.obatIds.contains(obat.id.toString())
+                        }
+
                         LansiaItem(
                             lansia = lansia,
                             usia = usia,
+                            obatDipilih = obatDipilih,
                             onDeleteClick = {
                                 lansiaToDelete = lansia
                                 showDeleteDialog = true
@@ -120,20 +127,10 @@ fun LansiaScreen(
                         )
                     }
                 }
-                // Tambahkan jarak ekstra di bawah
                 Spacer(modifier = Modifier.height(50.dp))
-
-//                // nitip buat preview
-//                Button(onClick = {
-//                    navController.navigate("preview_popup")
-//                }) {
-//                    Text("Lihat Desain Popup")
-//                }
-
             }
         }
 
-        // ✅ Tombol floating Add
         AddLansia(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -150,7 +147,6 @@ fun LansiaScreen(
                 .padding(16.dp)
         )
 
-        // Dialog konfirmasi delete
         if (showDeleteDialog && lansiaToDelete != null) {
             AlertDialog(
                 onDismissRequest = {
@@ -209,6 +205,7 @@ fun LansiaScreen(
 fun LansiaItem(
     lansia: Lansia,
     usia: Int,
+    obatDipilih: List<Obat>,
     onDeleteClick: () -> Unit,
     onItemClick: () -> Unit
 ) {
@@ -225,17 +222,19 @@ fun LansiaItem(
     ) {
         Column {
             Text(text = lansia.nama, fontSize = 20.sp, color = Color.Black, fontWeight = FontWeight.Bold)
-            Column {
-                Text(
-                    text = "Usia : $usia",
-                    fontSize = 16.sp,
-                    color = Color.DarkGray
-                )
-                Text(
-                    text = "Penyakit : ${lansia.penyakit}",
-                    fontSize = 16.sp,
-                    color = Color.DarkGray
-                )
+            Text(text = "Usia : $usia", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = "Penyakit : ${lansia.penyakit}", fontSize = 16.sp, color = Color.DarkGray)
+
+            if (obatDipilih.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Obat:", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+                obatDipilih.forEach { obat ->
+                    Text(
+                        text = "- ${obat.nama}",
+                        fontSize = 14.sp,
+                        color = Color.DarkGray
+                    )
+                }
             }
         }
 

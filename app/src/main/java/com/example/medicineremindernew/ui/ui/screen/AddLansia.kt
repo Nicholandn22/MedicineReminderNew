@@ -18,19 +18,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.LansiaViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import com.google.firebase.Timestamp
 
-
 @Composable
 fun AddLansiaScreen(
     viewModel: HybridLansiaViewModel,
+    obatViewModel: HybridObatViewModel,
     onBackClick: () -> Unit = {},
     onCancelClick: () -> Unit = {}
 ) {
@@ -48,6 +49,10 @@ fun AddLansiaScreen(
     val golonganOptions = listOf("A", "B", "AB", "O")
     val genderOptions = listOf("Laki-Laki", "Perempuan")
     val blueColor = BiruMuda.copy(alpha = 1.0f)
+
+    // ✅ Ambil list obat dari ViewModel
+    val obatList by obatViewModel.obatList.collectAsState(initial = emptyList())
+    var selectedObatIds by remember { mutableStateOf(setOf<String>()) }
 
     val calendar = Calendar.getInstance()
     val datePickerDialog = DatePickerDialog(
@@ -85,6 +90,8 @@ fun AddLansiaScreen(
             }
             Text("Tambah Lansia", color = Color.White, fontSize = 20.sp)
         }
+
+        // ✅ Form Lansia
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -164,6 +171,44 @@ fun AddLansiaScreen(
             }
         }
 
+        // ✅ Pilih Obat (checkbox)
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Pilih Obat untuk Lansia", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (obatList.isEmpty()) {
+                    Text("Belum ada data obat", color = Color.Gray)
+                } else {
+                    obatList.forEach { obat ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Checkbox(
+                                checked = selectedObatIds.contains(obat.id),
+                                onCheckedChange = { checked ->
+                                    selectedObatIds = if (checked) {
+                                        selectedObatIds + obat.id
+                                    } else {
+                                        selectedObatIds - obat.id
+                                    }
+                                }
+                            )
+                            Text(obat.nama)
+                        }
+                    }
+                }
+            }
+        }
+
+        // ✅ Tombol Save & Clear
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -178,15 +223,15 @@ fun AddLansiaScreen(
                         tanggalLahir != null
                     ) {
                         val lansia = Lansia(
-                            id = UUID.randomUUID().toString(), // ✅ Tambahkan ini
+                            id = UUID.randomUUID().toString(),
                             nama = namaLansia,
                             goldar = golonganDarah,
                             gender = gender,
-                            lahir = Timestamp(tanggalLahir!!), // ✅ Konversi ke Firestore Timestamp
+                            lahir = Timestamp(tanggalLahir!!),
                             nomorwali = nomorWali.toInt(),
-                            penyakit = penyakit
+                            penyakit = penyakit,
+                            obatIds = selectedObatIds.toList() // ✅ simpan id obat
                         )
-
 
                         viewModel.addLansia(lansia) { success ->
                             scope.launch {
@@ -198,6 +243,7 @@ fun AddLansiaScreen(
                                     nomorWali = ""
                                     golonganDarah = "A"
                                     tanggalLahir = null
+                                    selectedObatIds = emptySet()
                                 } else {
                                     snackbarHostState.showSnackbar("Gagal menyimpan data")
                                 }
@@ -227,6 +273,7 @@ fun AddLansiaScreen(
                     nomorWali = ""
                     golonganDarah = "A"
                     tanggalLahir = null
+                    selectedObatIds = emptySet()
                     onCancelClick()
                 },
                 modifier = Modifier
