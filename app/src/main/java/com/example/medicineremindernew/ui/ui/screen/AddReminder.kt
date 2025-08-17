@@ -300,6 +300,17 @@ fun AddReminderScreen(
                                                 recurrenceType = selectedPengulangan
                                             )
 
+                                            // ✅ Alarm kedua (1 jam sebelum waktu yang dipilih)
+                                            val oneHourBefore = timeInMillis - 60 * 60 * 1000
+                                            if (oneHourBefore > System.currentTimeMillis()) { // jangan pasang alarm di masa lalu
+                                                com.example.medicineremindernew.ui.alarm.AlarmUtils.scheduleRecurringReminder(
+                                                    context = context,
+                                                    reminderId = reminderId + "_before", // pakai id unik biar tidak bentrok
+                                                    timeInMillis = oneHourBefore,
+                                                    recurrenceType = selectedPengulangan
+                                                )
+                                            }
+
                                             snackbarHostState.showSnackbar("Reminder berhasil disimpan & alarm berulang dijadwalkan")
                                             navController.popBackStack()
                                         }
