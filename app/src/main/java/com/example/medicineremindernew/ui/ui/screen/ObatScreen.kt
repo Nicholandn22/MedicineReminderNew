@@ -190,6 +190,7 @@ fun ObatItem(
             Text(text = obat.nama, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Text(text = "Jenis : ${obat.jenis}", fontSize = 16.sp, color = Color.DarkGray)
             Text(text = "Dosis : ${obat.dosis}", fontSize = 16.sp, color = Color.DarkGray)
+            Text(text = "Waktu Minum : ${obat.waktuMinum}", fontSize = 16.sp, color = Color.DarkGray)
             Text(text = "Stok : ${obat.stok}", fontSize = 16.sp, color = Color.DarkGray) // ✅ Tambahan stok
             Text(text = "Keterangan : ${obat.catatan}", fontSize = 16.sp, color = Color.DarkGray)
         }
