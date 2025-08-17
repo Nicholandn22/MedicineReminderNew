@@ -9,5 +9,7 @@ data class Lansia(
     val gender: String = "",
     val lahir: Timestamp? = null,     // Gunakan Timestamp agar kompatibel dengan Firestore
     val nomorwali: Int = 0,       // Gunakan String agar lebih fleksibel
-    val penyakit: String = ""
+    val penyakit: String = "",
+    val obatIds: List<String> = emptyList() // ✅ tambahkan field ini
+
 )
