@@ -114,7 +114,7 @@ fun AddObatScreen(
 
                 Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
-                    options = listOf("mg", "ml", "IU"),
+                    options = listOf("mg", "ml", "IU","Tetes"),
                     selectedOption = satuanDosis,
                     onOptionSelected = { satuanDosis = it }
                 )
