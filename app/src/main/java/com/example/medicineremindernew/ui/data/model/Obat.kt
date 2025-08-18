@@ -6,12 +6,11 @@ data class Obat(
     val id: String = "",
     val jenis: String = "",
     val nama: String = "",
+    val takaranDosis: String = "",
     val dosis: String = "",
     val waktuMinum: String = "",
     val catatan: String = "",
     val pertamaKonsumsi: Timestamp? = null,
     val stok: Int = 0 // ✅ Tambahan baru
-
-
 )
 

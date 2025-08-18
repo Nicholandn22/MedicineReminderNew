@@ -44,6 +44,7 @@ fun AddObatScreen(
     var notes by remember { mutableStateOf("") }
     var pertamaKonsumsi by remember { mutableStateOf<Date?>(null) }
     var stok by remember { mutableStateOf("") }
+    var takaranDosis by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
@@ -131,12 +132,23 @@ fun AddObatScreen(
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-                Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Dosis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    // ini buat masukkin takaran
+                    OutlinedTextField(
+                        value = takaranDosis,
+                        onValueChange = {takaranDosis = it},
+                        placeholder = {Text ("Takaran")},
+                        label = {Text ("Takaran")},
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+
                     // Dropdown satuan (tanpa "Lainnya")
                     DropdownMenuField(
                         options = listSatuanDosis,
@@ -246,9 +258,9 @@ fun AddObatScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda),
+//                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(blueColor)
+                        brush = androidx.compose.ui.graphics.SolidColor(BiruMuda)
                     )
                 ) {
                     Text(
