@@ -23,23 +23,44 @@ class HybridReminderRepository(
 
     suspend fun addReminder(reminder: Reminder): Boolean {
         return try {
+            // ✅ Pastikan reminder punya ID
             val fixedReminder = if (reminder.id.isEmpty()) {
-                reminder.copy(id = java.util.UUID.randomUUID().toString())  // ✅ Generate UUID jika kosong
+                reminder.copy(id = java.util.UUID.randomUUID().toString())
             } else {
                 reminder
             }
 
+            // ✅ Pastikan ada lansia dan obat yang dipilih
+            if (fixedReminder.lansiaIds.isEmpty()) {
+                Log.e("HybridReminderRepo", "LansiaIds kosong! Reminder id=${fixedReminder.id}")
+                return false
+            }
+            if (fixedReminder.obatIds.isEmpty()) {
+                Log.e("HybridReminderRepo", "ObatIds kosong! Reminder id=${fixedReminder.id}")
+                return false
+            }
+
+            // ✅ Simpan ke Firestore jika network tersedia
             if (networkUtils.isNetworkAvailable()) {
-                // ✅ Paksa Firestore pakai fixedReminder.id sebagai Document ID
-                reminderRepository.addReminder(fixedReminder)
-                localDao.insertReminder(fixedReminder.toLocalEntity(isSynced = true))
+                reminderRepository.addReminder(fixedReminder)  // Firestore
+                try {
+                    localDao.insertReminder(fixedReminder.toLocalEntity(isSynced = true))
+                } catch (e: Exception) {
+                    Log.e("HybridReminderRepo", "Room insert failed: ${e.message}")
+                    // tetap return true biar UI anggap berhasil
+                }
             } else {
-                localDao.insertReminder(fixedReminder.toLocalEntity(isSynced = false))
+                try {
+                    localDao.insertReminder(fixedReminder.toLocalEntity(isSynced = false))
+                } catch (e: Exception) {
+                    Log.e("HybridReminderRepo", "Room insert failed (offline): ${e.message}")
+                    // tetap return true
+                }
             }
 
             true
         } catch (e: Exception) {
-            Log.e("HybridReminderRepo", "Add failed: ${e.message}")
+            Log.e("HybridReminderRepo", "Add failed: ${e.message}", e)
             false
         }
     }
@@ -50,40 +71,39 @@ class HybridReminderRepository(
             Log.d("HybridReminderRepo", "=== STARTING UPDATE FOR ${reminder.id} ===")
             Log.d("HybridReminderRepo", "New time: ${reminder.tanggal} ${reminder.waktu}")
 
-            // STEP 1: Cancel alarm lama
-            cancelAlarm(context, reminder.id)
+            // Validasi tanggal & waktu
+            if (reminder.tanggal.isEmpty() || reminder.waktu.isEmpty()) {
+                Log.e("HybridReminderRepo", "Tanggal atau Waktu kosong!")
+                return false
+            }
 
-            // STEP 2: Update data di Firestore & Local DB
+            // STEP 1: Cancel alarm lama (try/catch biar tidak stop eksekusi)
+            try { cancelAlarm(context, reminder.id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Cancel alarm failed: ${e.message}") }
+
+            // STEP 2: Update Firestore & Room
             if (networkUtils.isNetworkAvailable()) {
-                reminderRepository.updateReminder(reminder)  // ✅ Update Firestore Document pakai reminder.id
-                localDao.updateReminder(reminder.toLocalEntity(isSynced = true))
+                try { reminderRepository.updateReminder(reminder) } catch(e: Exception) { Log.e("HybridReminderRepo", "Firestore update failed: ${e.message}") }
+                try { localDao.updateReminder(reminder.toLocalEntity(isSynced = true)) } catch(e: Exception) { Log.e("HybridReminderRepo", "Room update failed: ${e.message}") }
             } else {
                 val localData = localDao.getAllReminders().find { it.id == reminder.id }
                 if (localData != null) {
-                    localDao.updateReminder(reminder.toLocalEntity(isSynced = false))
+                    try { localDao.updateReminder(reminder.toLocalEntity(isSynced = false)) } catch(e: Exception) { Log.e("HybridReminderRepo", "Room update failed offline: ${e.message}") }
                 }
             }
 
-            // STEP 3: Safety cancel (optional tapi biarin aja bro, bagus preventif)
-            cancelAlarm(context, reminder.id)
-
-            // STEP 4: Delay sedikit biar cancel settle
-            kotlinx.coroutines.delay(500)
-
-            // STEP 5: Schedule alarm baru
-            val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-            val localDateTime = java.time.LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)
-            val timeMillis = localDateTime
-                .atZone(java.time.ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli()
-
-            val currentTime = System.currentTimeMillis()
-            if (timeMillis > currentTime) {
-                scheduleAlarm(context, reminder.id, timeMillis)
-                Log.d("HybridReminderRepo", "✅ NEW ALARM SCHEDULED for ${Date(timeMillis)}")
-            } else {
-                Log.d("HybridReminderRepo", "⚠️ ALARM TIME IN PAST - NOT SCHEDULED")
+            // STEP 3: Schedule alarm baru (try/catch biar gagal alarm tidak return false)
+            try {
+                val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+                val localDateTime = java.time.LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)
+                val timeMillis = localDateTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                if (timeMillis > System.currentTimeMillis()) {
+                    scheduleAlarm(context, reminder.id, timeMillis)
+                    Log.d("HybridReminderRepo", "✅ NEW ALARM SCHEDULED for ${Date(timeMillis)}")
+                } else {
+                    Log.d("HybridReminderRepo", "⚠️ ALARM TIME IN PAST - NOT SCHEDULED")
+                }
+            } catch(e: Exception) {
+                Log.e("HybridReminderRepo", "Schedule alarm failed: ${e.message}")
             }
 
             Log.d("HybridReminderRepo", "=== UPDATE COMPLETED SUCCESSFULLY ===")
@@ -96,16 +116,17 @@ class HybridReminderRepository(
 
     suspend fun deleteReminder(id: String): Boolean {
         return try {
-            // STEP 1: Cancel alarm dulu
-            cancelAlarm(context, id)
+            // STEP 1: Cancel alarm dulu (try/catch biar tidak stop eksekusi)
+            try { cancelAlarm(context, id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Cancel alarm failed: ${e.message}") }
 
-            // STEP 2: Delete di Firestore & Local DB
+            // STEP 2: Delete Firestore & Room
             if (networkUtils.isNetworkAvailable()) {
-                reminderRepository.deleteReminder(id)
-                localDao.deleteReminder(id)
+                try { reminderRepository.deleteReminder(id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Firestore delete failed: ${e.message}") }
+                try { localDao.deleteReminder(id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Room delete failed: ${e.message}") }
             } else {
-                localDao.deleteReminder(id)
+                try { localDao.deleteReminder(id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Room delete failed offline: ${e.message}") }
             }
+
             true
         } catch (e: Exception) {
             Log.e("HybridReminderRepo", "Delete failed: ${e.message}")

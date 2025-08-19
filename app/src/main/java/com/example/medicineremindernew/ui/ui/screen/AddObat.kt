@@ -149,7 +149,6 @@ fun AddObatScreen(
                         singleLine = true
                     )
 
-                    // Dropdown satuan (tanpa "Lainnya")
                     DropdownMenuField(
                         options = listSatuanDosis,
                         selectedOption = satuanDosis,

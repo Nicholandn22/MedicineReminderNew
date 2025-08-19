@@ -11,7 +11,7 @@ data class LocalLansiaEntity(
     val goldar: String,
     val gender: String,
     val lahir: String, // Simpan sebagai String
-    val nomorwali: Int,
+//    val nomorwali: Int,
     val penyakit: String,
     val isSynced: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
