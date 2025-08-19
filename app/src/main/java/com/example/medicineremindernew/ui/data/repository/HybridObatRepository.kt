@@ -24,9 +24,13 @@ class HybridObatRepository(
                 val localEntity = LocalObatEntity(
                     id = obat.id,
                     nama = obat.nama,
+                    deskripsi = obat.deskripsi,
                     jenis = obat.jenis,
+                    takaranDosis = obat.takaranDosis,
                     dosis = obat.dosis,
+                    waktuMinum = obat.waktuMinum,
                     catatan = obat.catatan,
+                    stok = obat.stok,
                     isSynced = false
                 )
                 localDao.insertObat(localEntity)
@@ -57,9 +61,13 @@ class HybridObatRepository(
                 val localEntity = LocalObatEntity(
                     id = id,
                     nama = obat.nama,
+                    deskripsi = obat.deskripsi,
                     jenis = obat.jenis,
+                    takaranDosis = obat.takaranDosis,
                     dosis = obat.dosis,
+                    waktuMinum = obat.waktuMinum,
                     catatan = obat.catatan,
+                    stok = obat.stok,
                     isSynced = false
                 )
                 localDao.updateObat(localEntity)
@@ -106,9 +114,13 @@ class HybridObatRepository(
             Obat(
                 id = it.id,
                 nama = it.nama,
+                deskripsi = it.deskripsi,
                 jenis = it.jenis,
+                takaranDosis = it.takaranDosis,
                 dosis = it.dosis,
-                catatan = it.catatan
+                waktuMinum = it.waktuMinum,
+                catatan = it.catatan,
+                stok = it.stok
             )
         }
     }
@@ -121,9 +133,13 @@ class HybridObatRepository(
             val obat = Obat(
                 id = entity.id,
                 nama = entity.nama,
+                deskripsi = entity.deskripsi,
                 jenis = entity.jenis,
+                takaranDosis = entity.takaranDosis,
                 dosis = entity.dosis,
-                catatan = entity.catatan
+                waktuMinum = entity.waktuMinum,
+                catatan = entity.catatan,
+                stok = entity.stok
             )
             // Gunakan suspendCoroutine agar sinkronisasi menunggu callback selesai
             suspendCoroutine<Unit> { continuation ->

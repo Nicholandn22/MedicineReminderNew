@@ -41,7 +41,7 @@ fun AddLansiaScreen(
 
     var namaLansia by remember { mutableStateOf("") }
     var penyakit by remember { mutableStateOf("") }
-    var nomorWali by remember { mutableStateOf("") }
+//    var nomorWali by remember { mutableStateOf("") }
     var golonganDarah by remember { mutableStateOf("A") }
     var gender by remember { mutableStateOf("L") }
     var tanggalLahir by remember { mutableStateOf<Date?>(null) }
@@ -140,16 +140,16 @@ fun AddLansiaScreen(
                     singleLine = true
                 )
 
-                OutlinedTextField(
-                    value = nomorWali,
-                    onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
-                    placeholder = { Text("Nomor Wali") },
-                    label = { Text("Masukkan Nomor Wali") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    singleLine = true
-                )
+//                OutlinedTextField(
+//                    value = nomorWali,
+//                    onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
+//                    placeholder = { Text("Nomor Wali") },
+//                    label = { Text("Masukkan Nomor Wali") },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(bottom = 16.dp),
+//                    singleLine = true
+//                )
 
                 Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedButton(
@@ -219,7 +219,7 @@ fun AddLansiaScreen(
                 onClick = {
                     if (
                         namaLansia.isNotBlank() &&
-                        nomorWali.isNotBlank() &&
+//                        nomorWali.isNotBlank() &&
                         tanggalLahir != null
                     ) {
                         val lansia = Lansia(
@@ -228,7 +228,7 @@ fun AddLansiaScreen(
                             goldar = golonganDarah,
                             gender = gender,
                             lahir = Timestamp(tanggalLahir!!),
-                            nomorwali = nomorWali.toInt(),
+//                            nomorwali = nomorWali.toInt(),
                             penyakit = penyakit,
                             obatIds = selectedObatIds.toList() // ✅ simpan id obat
                         )
@@ -240,7 +240,7 @@ fun AddLansiaScreen(
                                     // Reset form
                                     namaLansia = ""
                                     penyakit = ""
-                                    nomorWali = ""
+//                                    nomorWali = ""
                                     golonganDarah = "A"
                                     tanggalLahir = null
                                     selectedObatIds = emptySet()
@@ -270,7 +270,7 @@ fun AddLansiaScreen(
                 onClick = {
                     namaLansia = ""
                     penyakit = ""
-                    nomorWali = ""
+//                    nomorWali = ""
                     golonganDarah = "A"
                     tanggalLahir = null
                     selectedObatIds = emptySet()

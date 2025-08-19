@@ -45,6 +45,7 @@ fun AddObatScreen(
     var pertamaKonsumsi by remember { mutableStateOf<Date?>(null) }
     var stok by remember { mutableStateOf("") }
     var takaranDosis by remember { mutableStateOf("") }
+    var deskripsi by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
@@ -132,6 +133,19 @@ fun AddObatScreen(
 
                 Spacer(modifier = Modifier.height(15.dp))
 
+                OutlinedTextField(
+                    value = deskripsi,
+                    onValueChange = { deskripsi = it },
+                    placeholder = { Text("Deskripsi Obat") },
+                    label = { Text("Masukkan Deskripsi Obat") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
                 Text("Dosis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -149,7 +163,6 @@ fun AddObatScreen(
                         singleLine = true
                     )
 
-                    // Dropdown satuan (tanpa "Lainnya")
                     DropdownMenuField(
                         options = listSatuanDosis,
                         selectedOption = satuanDosis,
@@ -253,14 +266,15 @@ fun AddObatScreen(
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                val biru = BiruMuda.copy(alpha = 1.0f)
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-//                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = biru),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(BiruMuda)
+                        brush = androidx.compose.ui.graphics.SolidColor(biru)
                     )
                 ) {
                     Text(
@@ -321,6 +335,7 @@ fun AddObatScreen(
                             id = UUID.randomUUID().toString(), // ✅ Tambahkan ini
                             nama = namaObat,
                             jenis = jenisObat,
+                            deskripsi = deskripsi,
                             dosis = satuanDosis,
                             waktuMinum = waktuMinum,
                             pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) },
@@ -336,6 +351,7 @@ fun AddObatScreen(
                                     snackbarHostState.showSnackbar("Data Obat berhasil disimpan")
                                     namaObat = ""
                                     jenisObat = "Tablet"
+                                    deskripsi = ""
                                     satuanDosis = "mg"
                                     waktuMinum = "Sebelum Makan"
                                     notes = ""
@@ -365,6 +381,7 @@ fun AddObatScreen(
                 onClick = {
                     namaObat = ""
                     jenisObat = "Tablet"
+                    deskripsi = ""
                     satuanDosis = "mg"
                     waktuMinum = "Sebelum Makan"
                     notes = ""

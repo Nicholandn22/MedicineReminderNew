@@ -1,5 +1,9 @@
 package com.example.medicineremindernew.ui.alarm
 
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 // import com.example.medicineremindernew.ui.alarm.cancelAlarm
 import androidx.compose.runtime.getValue
@@ -91,12 +95,25 @@ class AlarmPopupActivity : ComponentActivity() {
                         cancelAlarm(this, reminderId)
                         Log.d("AlarmPopup", "AlarmManager dibatalkan")
                         finish()
+                    },
+                    onSnooze = {
+                        Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan")
+
+                        // Hentikan ringtone saat ini
+                        if (ringtone != null && ringtone!!.isPlaying) {
+                            ringtone?.stop()
+                            Log.d("AlarmPopup", "Ringtone dihentikan untuk snooze")
+                        }
+
+                        // Set alarm untuk 5 menit kemudian
+                        setSnoozeAlarm(this, reminderId)
+
+                        finish()
                     }
                 )
             }
         }
     }
-
     // 🔹 Fungsi update Firestore
     private fun matikanIoT(reminderId: String) {
         if (reminderId == "Unknown") {
@@ -115,6 +132,88 @@ class AlarmPopupActivity : ComponentActivity() {
             }
     }
 
+    private fun setSnoozeAlarm(context: Context, reminderId: String) {
+        try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+            // ✅ TAMBAHAN: Cek permission untuk exact alarms (Android 12+)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                if (!alarmManager.canScheduleExactAlarms()) {
+                    Log.e("AlarmPopup", "Aplikasi tidak memiliki permission untuk schedule exact alarms")
+                    // Fallback ke alarm biasa (tidak exact)
+                    setRegularSnoozeAlarm(context, reminderId, alarmManager)
+                    return
+                }
+            }
+
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("reminderId", reminderId)
+                putExtra("reminder_id", reminderId)
+                putExtra("is_snooze", true)
+                putExtra("is_recurring", false)
+            }
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                reminderId.hashCode() + 1000,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val triggerTime = System.currentTimeMillis() + (5 * 60 * 1000)
+
+            try {
+                // ✅ TAMBAHAN: Penanganan SecurityException
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+                Log.d("AlarmPopup", "Exact snooze alarm diset untuk reminder $reminderId dalam 5 menit")
+            } catch (se: SecurityException) {
+                Log.w("AlarmPopup", "SecurityException saat set exact alarm, fallback ke regular alarm: ${se.message}")
+                // ✅ TAMBAHAN: Fallback ke alarm biasa
+                setRegularSnoozeAlarm(context, reminderId, alarmManager)
+            }
+
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Gagal mengatur snooze alarm: ${e.message}")
+        }
+    }
+
+    // ✅ FUNGSI BARU: Fallback untuk alarm biasa
+    private fun setRegularSnoozeAlarm(context: Context, reminderId: String, alarmManager: AlarmManager) {
+        try {
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("reminderId", reminderId)
+                putExtra("reminder_id", reminderId)
+                putExtra("is_snooze", true)
+                putExtra("is_recurring", false)
+            }
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                reminderId.hashCode() + 1000,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val triggerTime = System.currentTimeMillis() + (5 * 60 * 1000)
+
+            // Gunakan alarm biasa (mungkin tidak tepat waktu tapi tetap berfungsi)
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                triggerTime,
+                pendingIntent
+            )
+
+            Log.d("AlarmPopup", "Regular snooze alarm diset untuk reminder $reminderId dalam 5 menit (non-exact)")
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Gagal mengatur regular snooze alarm: ${e.message}")
+        }
+    }
+
+
     override fun onDestroy() {
 //        ringtone?.stop()
 //        super.onDestroy()
@@ -131,7 +230,8 @@ class AlarmPopupActivity : ComponentActivity() {
 @Composable
 fun AlarmPopupScreen(
     reminderId: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSnooze: () -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
 
@@ -268,14 +368,34 @@ fun AlarmPopupScreen(
 //            }
 
             Spacer(modifier = Modifier.height(24.dp))
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF027A7E),
-                    contentColor = Color.White
-                )
+            // Row untuk menampung dua tombol secara horizontal
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Matikan Alarm")
+                // Tombol Sudah Diminum (sebelumnya Matikan Alarm)
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF027A7E),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Sudah Diminum", fontSize = 12.sp)
+                }
+
+                // Tombol Snooze
+                Button(
+                    onClick = onSnooze,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF9800), // Warna orange untuk snooze
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("5 Menit Lagi", fontSize = 12.sp)
+                }
             }
         }
     }

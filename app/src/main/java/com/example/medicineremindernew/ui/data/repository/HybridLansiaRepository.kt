@@ -31,7 +31,7 @@ class HybridLansiaRepository(
                     goldar = lansia.goldar,
                     gender = lansia.gender,
                     lahir = lansia.lahir?.toDate().toString(),
-                    nomorwali = lansia.nomorwali,
+//                    nomorwali = lansia.nomorwali,
                     penyakit = lansia.penyakit,
                     isSynced = false
                 )
@@ -56,7 +56,7 @@ class HybridLansiaRepository(
                     goldar = lansia.goldar,
                     gender = lansia.gender,
                     lahir = lansia.lahir?.toDate().toString(),
-                    nomorwali = lansia.nomorwali,
+//                    nomorwali = lansia.nomorwali,
                     penyakit = lansia.penyakit,
                     isSynced = false
                 )
@@ -107,7 +107,7 @@ class HybridLansiaRepository(
                 goldar = it.goldar,
                 gender = it.gender,
                 lahir = parseDateToTimestamp(it.lahir),
-                nomorwali = it.nomorwali,
+//                nomorwali = it.nomorwali,
                 penyakit = it.penyakit
             )
         }
@@ -124,7 +124,7 @@ class HybridLansiaRepository(
                 goldar = entity.goldar,
                 gender = entity.gender,
                 lahir = parseDateToTimestamp(entity.lahir),
-                nomorwali = entity.nomorwali,
+//                nomorwali = entity.nomorwali,
                 penyakit = entity.penyakit
             )
 
