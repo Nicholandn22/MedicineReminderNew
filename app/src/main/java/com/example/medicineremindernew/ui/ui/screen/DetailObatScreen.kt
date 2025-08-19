@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.app.DatePickerDialog
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -50,7 +51,12 @@ import com.example.medicineremindernew.R.drawable.back_white
 import com.example.medicineremindernew.ui.ui.theme.BiruAgakTua
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun DetailObatScreen(
@@ -62,12 +68,13 @@ fun DetailObatScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val blueColor = BiruMuda.copy(alpha = 1.0f)
-
+    val context = LocalContext.current
 
     // Load data saat pertama kali
     LaunchedEffect(obatId) {
         viewModel.getObatById(obatId)
     }
+
 
     if (obat == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -76,17 +83,30 @@ fun DetailObatScreen(
         return
     }
 
-    var namaObat by remember { mutableStateOf(obat!!.nama) }
-    var jenisObat by remember { mutableStateOf(obat!!.jenis) }
-    var satuanDosis by remember { mutableStateOf(obat!!.dosis) }
-    var waktuMinum by remember { mutableStateOf(obat!!.waktuMinum) }
-    var stok by remember { mutableStateOf(obat!!.stok.toString()) }
-    var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
-    var takaranDosis by remember { mutableStateOf(obat!!.takaranDosis) }
+//    var namaObat by remember { mutableStateOf(obat!!.nama) }
+//    var jenisObat by remember { mutableStateOf(obat!!.jenis) }
+//    var satuanDosis by remember { mutableStateOf(obat!!.dosis) }
+//    var waktuMinum by remember { mutableStateOf(obat!!.waktuMinum) }
+//    var stok by remember { mutableStateOf(obat!!.stok.toString()) }
+//    var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
+//    var takaranDosis by remember { mutableStateOf(obat!!.takaranDosis) }
+//    var pertamaKonsumsi by remember { mutableStateOf(Date()) }
 
-    val context = LocalContext.current
+    var namaObat by remember(obat?.id) { mutableStateOf(obat?.nama ?: "") }
+    var jenisObat by remember(obat?.id) { mutableStateOf(obat?.jenis ?: "") }
+    var satuanDosis by remember(obat?.id) { mutableStateOf(obat?.dosis ?: "") }
+    var waktuMinum by remember(obat?.id) { mutableStateOf(obat?.waktuMinum ?: "") }
+    var stok by remember(obat?.id) { mutableStateOf(obat?.stok.toString() ?: "") }
+    var notes by remember(obat?.id) { mutableStateOf(obat?.catatan ?: "") }
+    var takaranDosis by remember(obat?.id) { mutableStateOf(obat?.takaranDosis ?: "") }
+
+//    val pertamaKonsumsi = obat!!.pertamaKonsumsi?.toDate()
+
+    var pertamaKonsumsi by remember(obat?.id) {
+        mutableStateOf(obat?.pertamaKonsumsi?.toDate())
+    }
+
     val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
-
     val defaultSatuan = listOf("mg", "ml", "IU", "Tetes")
     val savedSatuan = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toList() ?: emptyList()
     var listSatuanDosis by remember { mutableStateOf((defaultSatuan + savedSatuan).distinct().toMutableList()) }
@@ -101,6 +121,20 @@ fun DetailObatScreen(
         sharedPrefs.edit().putStringSet("custom_satuan", currentSaved).apply()
     }
 
+    val datePickerDialog = remember {
+        val calendar = Calendar.getInstance()
+        calendar.time = pertamaKonsumsi
+        DatePickerDialog(
+            context,
+            { _, year, month, day ->
+                calendar.set(year, month, day)
+//                pertamaKonsumsi = calendar.time
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -272,6 +306,39 @@ fun DetailObatScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                OutlinedButton(
+//                    onClick = { datePickerDialog.show() },
+                    onClick = {
+                        val cal = Calendar.getInstance().apply{
+                            time = pertamaKonsumsi ?: Date()
+                        }
+                        DatePickerDialog(
+                            context,
+                            {_, y, m, d ->
+                                cal.set(y, m, d)
+                                pertamaKonsumsi = cal.time
+                            },
+                            cal.get(Calendar.YEAR),
+                            cal.get(Calendar.MONTH),
+                            cal.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
+                ) {
+//                    Text(SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi))
+                    Text(
+                        text = if (pertamaKonsumsi != null){
+                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi)
+                        } else {
+                            "Belum Diatur"
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 OutlinedTextField(
                     value = stok,
                     onValueChange = { if (it.all { c -> c.isDigit() }) stok = it },
@@ -307,7 +374,10 @@ fun DetailObatScreen(
                         waktuMinum = waktuMinum,
                         catatan = notes,
                         stok = stok.toIntOrNull() ?: 0, // ✅ update stok
-                    )
+                        takaranDosis = takaranDosis,
+//                        pertamaKonsumsi = pertamaKonsumsi?.let {com.google.firebase.Timestamp(it)}
+                        pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) }
+                        )
                     viewModel.updateObat(updated) { success ->
                         scope.launch {
                             snackbarHostState.showSnackbar(
