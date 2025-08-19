@@ -252,14 +252,15 @@ fun AddObatScreen(
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                val biru = BiruMuda.copy(alpha = 1.0f)
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-//                    colors = ButtonDefaults.outlinedButtonColors(contentColor = BiruMuda),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = biru),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(BiruMuda)
+                        brush = androidx.compose.ui.graphics.SolidColor(biru)
                     )
                 ) {
                     Text(
