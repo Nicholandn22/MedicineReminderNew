@@ -22,13 +22,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.rememberNavController
 import com.example.medicineremindernew.ui.data.local.LocalDatabase
 import com.example.medicineremindernew.ui.data.network.NetworkUtils
-import com.example.medicineremindernew.ui.data.repository.FirestoreRepository
-import com.example.medicineremindernew.ui.data.repository.HybridLansiaRepository
-import com.example.medicineremindernew.ui.data.repository.HybridObatRepository
-import com.example.medicineremindernew.ui.data.repository.HybridReminderRepository
-import com.example.medicineremindernew.ui.data.repository.LansiaRepository
-import com.example.medicineremindernew.ui.data.repository.ObatRepository
-import com.example.medicineremindernew.ui.data.repository.ReminderRepository
+import com.example.medicineremindernew.ui.data.repository.*
 import com.example.medicineremindernew.ui.ui.navigation.NavGraph
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
@@ -37,6 +31,7 @@ import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
+
     // ✅ Local Database
     private lateinit var localDatabase: LocalDatabase
     private lateinit var networkUtils: NetworkUtils
@@ -45,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hybridReminderRepository: HybridReminderRepository
     private lateinit var hybridLansiaRepository: HybridLansiaRepository
     private lateinit var hybridObatRepository: HybridObatRepository
+    private lateinit var hybridKunjunganRepository: HybridKunjunganRepository
 
     // ✅ Repository utama (Firestore base)
     private val firestoreRepository = FirestoreRepository()
@@ -53,8 +49,15 @@ class MainActivity : AppCompatActivity() {
     private val lansiaRepository by lazy { LansiaRepository(firestoreRepository) }
     private val obatRepository by lazy { ObatRepository(firestoreRepository) }
     private val reminderRepository by lazy { ReminderRepository(firestoreRepository) }
+    private val kunjunganRepository by lazy { KunjunganRepository(firestoreRepository) }
 
-    // ✅ ViewModels dengan Factory
+    // ✅ Hybrid ViewModels (akan diinisialisasi manual)
+    private lateinit var hybridObatViewModel: HybridObatViewModel
+    private lateinit var hybridLansiaViewModel: HybridLansiaViewModel
+    private lateinit var hybridReminderViewModel: HybridReminderViewModel
+    private lateinit var hybridKunjunganViewModel: HybridKunjunganViewModel
+
+    // ✅ ViewModels standar
     private val lansiaViewModel: LansiaViewModel by viewModels {
         LansiaViewModelFactory(lansiaRepository)
     }
@@ -65,18 +68,6 @@ class MainActivity : AppCompatActivity() {
 
     private val reminderViewModel: ReminderViewModel by viewModels {
         ReminderViewModelFactory(reminderRepository)
-    }
-
-    private val hybridObatViewModel: HybridObatViewModel by viewModels {
-        HybridObatViewModelFactory(hybridObatRepository)
-    }
-
-    private val hybridLansiaViewModel: HybridLansiaViewModel by viewModels {
-        HybridLansiaViewModelFactory(hybridLansiaRepository)
-    }
-
-    private val hybridReminderViewModel: HybridReminderViewModel by viewModels {
-        HybridReminderViewModelFactory(hybridReminderRepository)
     }
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +82,7 @@ class MainActivity : AppCompatActivity() {
 
         // ✅ Inisialisasi hybrid repositories
         hybridReminderRepository = HybridReminderRepository(
-            context = this, // ✅ pass Context dari MainActivity
+            context = this,
             reminderRepository = reminderRepository,
             localDao = localDatabase.reminderDao(),
             networkUtils = networkUtils
@@ -108,6 +99,26 @@ class MainActivity : AppCompatActivity() {
             localDatabase.obatDao(),
             networkUtils
         )
+
+        hybridKunjunganRepository = HybridKunjunganRepository(
+            context = this,
+            kunjunganRepository = kunjunganRepository,
+            localDao = localDatabase.kunjunganDao(),
+            networkUtils = networkUtils
+        )
+
+        // ✅ Inisialisasi Hybrid ViewModels setelah repositories siap
+        hybridObatViewModel = HybridObatViewModelFactory(hybridObatRepository)
+            .create(HybridObatViewModel::class.java)
+
+        hybridLansiaViewModel = HybridLansiaViewModelFactory(hybridLansiaRepository)
+            .create(HybridLansiaViewModel::class.java)
+
+        hybridReminderViewModel = HybridReminderViewModelFactory(hybridReminderRepository)
+            .create(HybridReminderViewModel::class.java)
+
+        hybridKunjunganViewModel = HybridKunjunganViewModelFactory(this, firestoreRepository)
+            .create(HybridKunjunganViewModel::class.java)
 
         // ✅ Observer perubahan koneksi untuk auto-sync
         lifecycleScope.launch {
@@ -147,6 +158,7 @@ class MainActivity : AppCompatActivity() {
                         obatViewModel = hybridObatViewModel,
                         lansiaViewModel = hybridLansiaViewModel,
                         reminderViewModel = hybridReminderViewModel,
+                        kunjunganViewModel = hybridKunjunganViewModel,
                         hybridReminderRepository = hybridReminderRepository,
                         hybridLansiaRepository = hybridLansiaRepository,
                         hybridObatRepository = hybridObatRepository,
@@ -157,25 +169,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * ✅ Sinkronisasi semua data yang pending
-     */
+    // ✅ Sinkronisasi semua data yang pending
     private suspend fun syncAllPendingData() {
         try {
             hybridReminderRepository.syncPendingData()
             hybridLansiaRepository.syncPendingData()
             hybridObatRepository.syncPendingData()
-
             Log.d("MainActivity", "Sinkronisasi selesai")
         } catch (e: Exception) {
             Log.e("MainActivity", "Error saat sinkronisasi", e)
         }
     }
 
-    /**
-     * ✅ Minta user agar mengizinkan aplikasi mengabaikan battery optimization.
-     * Ini penting agar AlarmManager tetap berjalan di background, terutama di Android 6+.
-     */
+    // ✅ Minta user agar mengizinkan aplikasi mengabaikan battery optimization
     private fun requestIgnoreBatteryOptimization() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -199,5 +205,4 @@ class MainActivity : AppCompatActivity() {
             manager.createNotificationChannel(channel)
         }
     }
-
 }

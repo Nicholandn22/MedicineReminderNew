@@ -8,6 +8,10 @@ class HybridLansiaViewModelFactory(
     private val repository: HybridLansiaRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return HybridLansiaViewModel(repository) as T
+        if (modelClass.isAssignableFrom(HybridLansiaViewModel::class.java)) {
+            return HybridLansiaViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
+
 }
