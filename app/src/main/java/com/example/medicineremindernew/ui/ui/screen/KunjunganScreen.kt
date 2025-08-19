@@ -117,7 +117,7 @@ fun KunjunganScreen(
                     ) {
                         Text(
                             text = "Kunjungan Terdekat",
-                            color = BiruTua,
+                            color = warnaBiru,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 10.dp)

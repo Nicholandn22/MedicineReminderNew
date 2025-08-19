@@ -89,7 +89,6 @@ fun AddKunjunganScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(warnaKrem) // langsung pakai Krem
             .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
         Column(
@@ -102,7 +101,7 @@ fun AddKunjunganScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .background(BiruAgakTua),
+                    .background(BiruAgakTua.copy(alpha = 1.0f)),
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(onClick = onBackClick, modifier = Modifier.align(Alignment.TopStart)) {
@@ -116,7 +115,7 @@ fun AddKunjunganScreen(
                 Text("Tambah Kunjungan", color = Color.White, fontSize = 20.sp)
             }
 
-            val biru = BiruMuda
+            val biru = BiruMuda.copy(alpha = 1.0f)
 
             // Section: Tanggal & Waktu
             SectionTitle("Waktu Kunjungan")
@@ -141,7 +140,7 @@ fun AddKunjunganScreen(
                         .fillMaxWidth()
                         .border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
                     ),
                     shape = RoundedCornerShape(30.dp)
@@ -169,7 +168,7 @@ fun AddKunjunganScreen(
                         .fillMaxWidth()
                         .border(1.dp, biru, shape = RoundedCornerShape(30.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
                     ),
                     shape = RoundedCornerShape(30.dp)
@@ -232,7 +231,7 @@ fun AddKunjunganScreen(
                         .padding(end = 8.dp)
                         .border(1.dp, biru, RoundedCornerShape(35.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
                     )
                 ) {
@@ -253,7 +252,7 @@ fun AddKunjunganScreen(
                         .padding(start = 8.dp)
                         .border(1.dp, biru, RoundedCornerShape(35.dp)),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
+                        containerColor = BiruMuda.copy(alpha = 0.0f),
                         contentColor = biru
                     )
                 ) {
