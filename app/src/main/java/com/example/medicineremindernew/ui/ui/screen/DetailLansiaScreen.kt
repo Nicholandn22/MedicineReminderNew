@@ -61,7 +61,7 @@ fun DetailLansiaScreen(
     var golonganDarah by remember { mutableStateOf("") }
     var gender by remember { mutableStateOf("") }
     var penyakit by remember { mutableStateOf("") }
-    var nomorWali by remember { mutableStateOf("") }
+//    var nomorWali by remember { mutableStateOf("") }
     var tanggalLahir by remember { mutableStateOf(Date()) }
 
     // ✅ Isi ulang state ketika data lansia masuk
@@ -72,7 +72,7 @@ fun DetailLansiaScreen(
             golonganDarah = it.goldar
             gender = it.gender
             penyakit = it.penyakit
-            nomorWali = it.nomorwali.toString()
+//            nomorWali = it.nomorwali.toString()
             tanggalLahir = it.lahir?.toDate() ?: Date()
         }
     }
@@ -202,15 +202,15 @@ fun DetailLansiaScreen(
                         .padding(bottom = 16.dp)
                 )
 
-                // ✅ Nomor Wali
-                OutlinedTextField(
-                    value = nomorWali,
-                    onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
-                    label = { Text("Nomor Wali") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
-                )
+//                // ✅ Nomor Wali
+//                OutlinedTextField(
+//                    value = nomorWali,
+//                    onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
+//                    label = { Text("Nomor Wali") },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(bottom = 16.dp)
+//                )
 
                 // ✅ Tanggal Lahir
                 Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -270,13 +270,13 @@ fun DetailLansiaScreen(
         ) {
             OutlinedButton(
                 onClick = {
-                    if (namaLansia.isNotBlank() && nomorWali.isNotBlank()) {
+                    if (namaLansia.isNotBlank()) {
                         val updatedLansia = lansia!!.copy(
                             nama = namaLansia,
                             goldar = golonganDarah,
                             gender = gender,
                             penyakit = penyakit,
-                            nomorwali = nomorWali.toInt(),
+//                            nomorwali = nomorWali.toInt(),
                             lahir = Timestamp(tanggalLahir),
                             obatIds = selectedObat
                         )
