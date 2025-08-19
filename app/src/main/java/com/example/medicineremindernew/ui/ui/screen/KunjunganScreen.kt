@@ -186,6 +186,7 @@ fun KunjunganScreen(
                         .joinToString(", ") { it.nama }
 
                     KunjunganItem(
+                        kunjunganId = kunjungan.idKunjungan, // ✅ sekarang ada
                         lansia = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 append("Lansia : ")
@@ -193,8 +194,8 @@ fun KunjunganScreen(
                             append(lansiaName)
                         },
                         time = "${kunjungan.tanggal} - ${kunjungan.waktu}",
-                        onClick = {
-                            navController.navigate("detail_kunjungan/${kunjungan.idKunjungan}")
+                        onClick = { id ->
+                            navController.navigate("detail_kunjungan/$id") // ✅ navigasi dengan id
                         },
                         onDelete = {
                             kunjunganToDelete = kunjungan.idKunjungan
@@ -243,9 +244,10 @@ fun KunjunganScreen(
 
 @Composable
 fun KunjunganItem(
+    kunjunganId: String, // ✅ tambahin ini
     lansia: AnnotatedString,
     time: String,
-    onClick: () -> Unit,
+    onClick: (String) -> Unit, // ✅ passing id saat diklik
     onDelete: () -> Unit
 ) {
     Row(
@@ -254,7 +256,7 @@ fun KunjunganItem(
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable { onClick() }
+            .clickable { onClick(kunjunganId) } // ✅ passing id ke callback
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -262,7 +264,12 @@ fun KunjunganItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = lansia, fontSize = 20.sp, color = Color.Black)
             Row {
-                Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Waktu : ",
+                    fontSize = 16.sp,
+                    color = Color.DarkGray,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
             }
         }

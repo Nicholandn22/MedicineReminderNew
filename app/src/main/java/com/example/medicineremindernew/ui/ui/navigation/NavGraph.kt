@@ -19,6 +19,7 @@
     import com.example.medicineremindernew.ui.ui.screen.AddLansiaScreen
     import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
     import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
+    import com.example.medicineremindernew.ui.ui.screen.DetailKunjunganScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailLansiaScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailObatScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailReminderScreen
@@ -140,6 +141,22 @@
                 )
             }
 
+            composable(
+                route = "detail_kunjungan/{kunjunganId}",
+                arguments = listOf(navArgument("kunjunganId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val kunjunganId = backStackEntry.arguments?.getString("kunjunganId") ?: return@composable
+                DetailKunjunganScreen(
+                    kunjunganId = kunjunganId,
+                    navController = navController,
+                    kunjunganViewModel = kunjunganViewModel,
+                    lansiaViewModel = lansiaViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+
+
             composable("detail_obat/{obatId}") { backStackEntry ->
                 val obatId = backStackEntry.arguments?.getString("obatId") ?: return@composable
                 DetailObatScreen(
@@ -154,6 +171,8 @@
     //            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: return@composable
     //            DetailReminderScreen(reminderId = id, navController = navController)
     //        }
+
+
 
             composable(
                 route = "detail_reminder/{reminderId}",

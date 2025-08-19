@@ -1,6 +1,7 @@
 // HybridKunjunganViewModel.kt
 package com.example.medicineremindernew.ui.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Kunjungan
@@ -21,6 +22,9 @@ class HybridKunjunganViewModel(
     private val _kunjunganList = MutableStateFlow<List<Kunjungan>>(emptyList())
     val kunjunganList: StateFlow<List<Kunjungan>> = _kunjunganList.asStateFlow()
 
+    private val _kunjunganDetail = MutableStateFlow<Kunjungan?>(null)
+    val kunjunganDetail: StateFlow<Kunjungan?> = _kunjunganDetail.asStateFlow()
+
     private val _loading = MutableStateFlow(false)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
@@ -31,26 +35,40 @@ class HybridKunjunganViewModel(
         loadKunjungan()
     }
 
-    /** Load semua kunjungan (ambil dari repo — repo memilih antara remote atau local) */
     fun loadKunjungan() {
         viewModelScope.launch {
             try {
                 _loading.value = true
                 _error.value = null
                 val list = repository.getAllKunjungan()
+                Log.d("HybridVM", "Dapat ${list.size} kunjungan dari repo")
+                list.forEach { Log.d("HybridVM", "Data: $it") }
                 _kunjunganList.value = list
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Unknown error"
+                Log.e("HybridVM", "Error loadKunjungan", t)
             } finally {
                 _loading.value = false
             }
         }
     }
 
-    /**
-     * Tambah kunjungan. Memanggil callback(Boolean) setelah proses selesai.
-     * Callback akan dipanggil di scope utama (UI).
-     */
+
+    fun getKunjunganById(id: String) {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                val list = repository.getAllKunjungan()
+                _kunjunganDetail.value = list.find { it.idKunjungan == id }
+            } catch (t: Throwable) {
+                _error.value = t.message ?: "Load detail failed"
+                _kunjunganDetail.value = null
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
     fun addKunjungan(kunjungan: Kunjungan, callback: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             try {
@@ -67,13 +85,15 @@ class HybridKunjunganViewModel(
         }
     }
 
-    /** Update kunjungan (by id inside model). */
     fun updateKunjungan(kunjungan: Kunjungan, callback: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             try {
                 _loading.value = true
                 val success = repository.updateKunjungan(kunjungan)
-                if (success) loadKunjungan()
+                if (success) {
+                    loadKunjungan()
+                    _kunjunganDetail.value = kunjungan
+                }
                 callback(success)
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Update failed"
@@ -84,17 +104,15 @@ class HybridKunjunganViewModel(
         }
     }
 
-    suspend fun addKunjunganSuspend(kunjungan: Kunjungan): Boolean {
-        return repository.addKunjungan(kunjungan)
-    }
-
-    /** Delete kunjungan by id. */
     fun deleteKunjungan(id: String, callback: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             try {
                 _loading.value = true
                 val success = repository.deleteKunjungan(id)
-                if (success) loadKunjungan()
+                if (success) {
+                    loadKunjungan()
+                    _kunjunganDetail.value = null
+                }
                 callback(success)
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Delete failed"
@@ -105,12 +123,10 @@ class HybridKunjunganViewModel(
         }
     }
 
-    /** Sinkronisasi pending lokal -> Firestore (pakai repository). */
     fun syncPendingData() {
         viewModelScope.launch {
             try {
                 repository.syncPendingData()
-                // refresh list setelah sync
                 loadKunjungan()
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Sync failed"

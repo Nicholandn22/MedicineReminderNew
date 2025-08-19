@@ -212,14 +212,16 @@ fun AddKunjunganScreen(
                                 tanggal = tanggal,
                                 waktu = waktu
                             )
-                            coroutineScope.launch {
-                                val success = kunjunganViewModel.addKunjunganSuspend(kunjungan)
-                                if (success) {
-                                    snackbarHostState.showSnackbar("Kunjungan berhasil disimpan")
-                                } else {
-                                    snackbarHostState.showSnackbar("Gagal menyimpan kunjungan")
+                            kunjunganViewModel.addKunjungan(kunjungan) { success ->
+                                coroutineScope.launch {
+                                    if (success) {
+                                        snackbarHostState.showSnackbar("Kunjungan berhasil disimpan")
+                                    } else {
+                                        snackbarHostState.showSnackbar("Gagal menyimpan kunjungan")
+                                    }
                                 }
                             }
+
                         } else {
                             coroutineScope.launch {
                                 snackbarHostState.showSnackbar("Harap lengkapi semua data")
