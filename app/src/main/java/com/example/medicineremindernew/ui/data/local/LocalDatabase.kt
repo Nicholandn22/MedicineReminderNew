@@ -8,12 +8,20 @@ import androidx.room.TypeConverters
 import com.example.medicineremindernew.ui.data.dao.LocalLansiaDao
 import com.example.medicineremindernew.ui.data.dao.LocalObatDao
 import com.example.medicineremindernew.ui.data.dao.LocalReminderDao
+import com.example.medicineremindernew.ui.data.dao.LocalKunjunganDao
 import com.example.medicineremindernew.ui.data.entity.LocalReminderEntity
 import com.example.medicineremindernew.ui.data.entity.LocalLansiaEntity
 import com.example.medicineremindernew.ui.data.entity.LocalObatEntity
+import com.example.medicineremindernew.ui.data.entity.LocalKunjunganEntity // ✅ tambahkan
+
 
 @Database(
-    entities = [LocalReminderEntity::class, LocalLansiaEntity::class, LocalObatEntity::class],
+    entities = [
+        LocalReminderEntity::class,
+        LocalLansiaEntity::class,
+        LocalObatEntity::class,
+        LocalKunjunganEntity::class // ✅ tambahkan ini
+    ],
     version = 1,
     exportSchema = false
 )
@@ -23,6 +31,7 @@ abstract class LocalDatabase : RoomDatabase() {
     abstract fun reminderDao(): LocalReminderDao
     abstract fun lansiaDao(): LocalLansiaDao
     abstract fun obatDao(): LocalObatDao
+    abstract fun kunjunganDao(): LocalKunjunganDao // ✅ perbaiki return DAO
 
     companion object {
         @Volatile
