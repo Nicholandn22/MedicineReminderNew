@@ -1,5 +1,6 @@
 package com.example.medicineremindernew.ui.ui.screen
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -76,6 +82,24 @@ fun DetailObatScreen(
     var waktuMinum by remember { mutableStateOf(obat!!.waktuMinum) }
     var stok by remember { mutableStateOf(obat!!.stok.toString()) }
     var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
+    var takaranDosis by remember { mutableStateOf(obat!!.takaranDosis) }
+
+    val context = LocalContext.current
+    val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
+
+    val defaultSatuan = listOf("mg", "ml", "IU", "Tetes")
+    val savedSatuan = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toList() ?: emptyList()
+    var listSatuanDosis by remember { mutableStateOf((defaultSatuan + savedSatuan).distinct().toMutableList()) }
+//    var listSatuanDosis by remember { mutableStateOf(mutableListOf("mg", "ml", "IU", "Tetes")) }
+    var inputSatuanBaru by remember { mutableStateOf(false) }
+    var satuanBaru by remember { mutableStateOf("") }
+
+    // Fungsi untuk menyimpan satuan baru ke SharedPreferences
+    fun saveSatuanToPrefs(newSatuan: String) {
+        val currentSaved = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toMutableSet() ?: mutableSetOf()
+        currentSaved.add(newSatuan)
+        sharedPrefs.edit().putStringSet("custom_satuan", currentSaved).apply()
+    }
 
     Column(
         modifier = Modifier
@@ -129,14 +153,115 @@ fun DetailObatScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Satuan Dosis", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                DropdownMenuField(
-                    options = listOf("mg", "ml", "IU", "Lainnya"),
-                    selectedOption = satuanDosis,
-                    onOptionSelected = { satuanDosis = it }
-                )
+                Text("Dosis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    // ini buat masukkin takaran
+                    OutlinedTextField(
+                        value = takaranDosis,
+                        onValueChange = {takaranDosis = it},
+                        placeholder = {Text ("Takaran")},
+                        label = {Text ("Takaran")},
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+
+                    DropdownMenuField(
+                        options = listSatuanDosis,
+                        selectedOption = satuanDosis,
+                        onOptionSelected = { selected ->
+                            satuanDosis = selected
+                            inputSatuanBaru = false
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Card(
+                        modifier = Modifier.size(56.dp),
+                        colors = CardDefaults.cardColors(containerColor = BiruMuda),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        IconButton(
+                            onClick = {
+                                inputSatuanBaru = !inputSatuanBaru
+                                satuanBaru = ""
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Tambah Satuan Baru",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (inputSatuanBaru) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = satuanBaru,
+                            onValueChange = { satuanBaru = it },
+                            placeholder = { Text("Satuan baru") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+
+                        Button(
+                            onClick = {
+                                if (satuanBaru.isNotBlank() && !listSatuanDosis.contains(satuanBaru)) {
+                                    listSatuanDosis = (listSatuanDosis + satuanBaru).toMutableList()
+                                    saveSatuanToPrefs(satuanBaru) // Simpan ke SharedPreferences
+                                    satuanDosis = satuanBaru
+                                    satuanBaru = ""
+                                    inputSatuanBaru = false
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Satuan '$satuanDosis' berhasil ditambahkan!")
+                                    }
+                                } else if (listSatuanDosis.contains(satuanBaru)) {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Satuan sudah ada!")
+                                    }
+                                } else {
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Satuan tidak boleh kosong!")
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = BiruMuda),
+                            modifier = Modifier.height(56.dp)
+                        ) {
+                            Text(
+                                "Add",
+                                color = Color.White,
+                                fontSize = 16.sp, // Font lebih besar
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    // Tombol batal dalam satu baris
+                    TextButton(
+                        onClick = {
+                            inputSatuanBaru = false
+                            satuanBaru = ""
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Batal", color = BiruMuda, fontSize = 14.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
 
                 Text("Waktu Minum", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
@@ -181,9 +306,7 @@ fun DetailObatScreen(
                         dosis = satuanDosis,
                         waktuMinum = waktuMinum,
                         catatan = notes,
-                        stok = stok.toIntOrNull() ?: 0 // ✅ update stok
-
-
+                        stok = stok.toIntOrNull() ?: 0, // ✅ update stok
                     )
                     viewModel.updateObat(updated) { success ->
                         scope.launch {
@@ -210,3 +333,4 @@ fun DetailObatScreen(
         SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(16.dp))
     }
 }
+
