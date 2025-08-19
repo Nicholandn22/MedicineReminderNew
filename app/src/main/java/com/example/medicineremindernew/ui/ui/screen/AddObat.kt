@@ -45,6 +45,7 @@ fun AddObatScreen(
     var pertamaKonsumsi by remember { mutableStateOf<Date?>(null) }
     var stok by remember { mutableStateOf("") }
     var takaranDosis by remember { mutableStateOf("") }
+    var deskripsi by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
@@ -128,6 +129,19 @@ fun AddObatScreen(
                     options = listOf("Tablet", "Sirup", "Salep", "Tetes", "Kapsul"),
                     selectedOption = jenisObat,
                     onOptionSelected = { jenisObat = it }
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                OutlinedTextField(
+                    value = deskripsi,
+                    onValueChange = { deskripsi = it },
+                    placeholder = { Text("Deskripsi Obat") },
+                    label = { Text("Masukkan Deskripsi Obat") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
@@ -321,6 +335,7 @@ fun AddObatScreen(
                             id = UUID.randomUUID().toString(), // ✅ Tambahkan ini
                             nama = namaObat,
                             jenis = jenisObat,
+                            deskripsi = deskripsi,
                             dosis = satuanDosis,
                             waktuMinum = waktuMinum,
                             pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) },
@@ -336,6 +351,7 @@ fun AddObatScreen(
                                     snackbarHostState.showSnackbar("Data Obat berhasil disimpan")
                                     namaObat = ""
                                     jenisObat = "Tablet"
+                                    deskripsi = ""
                                     satuanDosis = "mg"
                                     waktuMinum = "Sebelum Makan"
                                     notes = ""
@@ -365,6 +381,7 @@ fun AddObatScreen(
                 onClick = {
                     namaObat = ""
                     jenisObat = "Tablet"
+                    deskripsi = ""
                     satuanDosis = "mg"
                     waktuMinum = "Sebelum Makan"
                     notes = ""

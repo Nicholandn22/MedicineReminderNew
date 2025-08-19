@@ -6,6 +6,7 @@ data class Obat(
     val id: String = "",
     val jenis: String = "",
     val nama: String = "",
+    val deskripsi: String = "",
     val takaranDosis: String = "",
     val dosis: String = "",
     val waktuMinum: String = "",

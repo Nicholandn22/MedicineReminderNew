@@ -99,6 +99,7 @@ fun DetailObatScreen(
     var stok by remember(obat?.id) { mutableStateOf(obat?.stok.toString() ?: "") }
     var notes by remember(obat?.id) { mutableStateOf(obat?.catatan ?: "") }
     var takaranDosis by remember(obat?.id) { mutableStateOf(obat?.takaranDosis ?: "") }
+    var deskripsi by remember(obat?.id) { mutableStateOf(obat?.deskripsi ?: "") }
 
 //    val pertamaKonsumsi = obat!!.pertamaKonsumsi?.toDate()
 
@@ -183,6 +184,15 @@ fun DetailObatScreen(
                     options = listOf("Tablet", "Sirup", "Salep", "Tetes", "Kapsul"),
                     selectedOption = jenisObat,
                     onOptionSelected = { jenisObat = it }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = deskripsi,
+                    onValueChange = { deskripsi = it },
+                    label = { Text("Deskripsi Obat") },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -370,6 +380,7 @@ fun DetailObatScreen(
                     val updated = obat!!.copy(
                         nama = namaObat,
                         jenis = jenisObat,
+                        deskripsi = deskripsi,
                         dosis = satuanDosis,
                         waktuMinum = waktuMinum,
                         catatan = notes,
