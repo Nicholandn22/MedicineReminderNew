@@ -105,6 +105,9 @@ class AlarmPopupActivity : ComponentActivity() {
                             Log.d("AlarmPopup", "Ringtone dihentikan untuk snooze")
                         }
 
+                        // 🔹 Update Firestore: statusIoT = "OFF"
+                        matikanIoT(reminderId)
+
                         // Set alarm untuk 5 menit kemudian
                         setSnoozeAlarm(this, reminderId)
 
