@@ -1,7 +1,9 @@
 package com.example.medicineremindernew.ui.ui.screen
 
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -139,8 +141,7 @@ fun AddObatScreen(
                     placeholder = { Text("Deskripsi Obat") },
                     label = { Text("Masukkan Deskripsi Obat") },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
+                        .fillMaxWidth(),
                     singleLine = true
                 )
 
@@ -172,10 +173,10 @@ fun AddObatScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    Card(
-                        modifier = Modifier.size(56.dp),
-                        colors = CardDefaults.cardColors(containerColor = BiruMuda),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .border(width = 1.dp, color = BiruMuda.copy(alpha = 1.0f), shape = RoundedCornerShape(12.dp)) // garis tepi
                     ) {
                         IconButton(
                             onClick = {
@@ -187,7 +188,7 @@ fun AddObatScreen(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Tambah Satuan Baru",
-                                tint = Color.White,
+                                tint = BiruMuda.copy(alpha = 1.0f), // icon sekarang berwarna BiruMuda
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -230,27 +231,19 @@ fun AddObatScreen(
                                     }
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = BiruMuda),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = BiruMuda.copy(alpha = 1.0f) // teks tombol
+                            ),
+                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)), // garis tepi
+                            shape = RoundedCornerShape(8.dp), // <-- ngatur lengkungannya
                             modifier = Modifier.height(56.dp)
                         ) {
                             Text(
                                 "Add",
-                                color = Color.White,
                                 fontSize = 16.sp, // Font lebih besar
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                    }
-
-                    // Tombol batal dalam satu baris
-                    TextButton(
-                        onClick = {
-                            inputSatuanBaru = false
-                            satuanBaru = ""
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Batal", color = BiruMuda, fontSize = 14.sp)
                     }
                 }
 

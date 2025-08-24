@@ -2,7 +2,9 @@ package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -197,10 +199,10 @@ fun DetailObatScreen(
                         modifier = Modifier.weight(1f)
                     )
 
-                    Card(
-                        modifier = Modifier.size(56.dp),
-                        colors = CardDefaults.cardColors(containerColor = BiruMuda),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .border(width = 1.dp, color = BiruMuda.copy(alpha = 1.0f), shape = RoundedCornerShape(12.dp)) // garis tepi
                     ) {
                         IconButton(
                             onClick = {
@@ -212,7 +214,7 @@ fun DetailObatScreen(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Tambah Satuan Baru",
-                                tint = Color.White,
+                                tint = BiruMuda.copy(alpha = 1.0f), // icon sekarang berwarna BiruMuda
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -255,21 +257,15 @@ fun DetailObatScreen(
                                     }
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = BiruMuda),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = BiruMuda.copy(alpha = 1.0f) // teks tombol
+                            ),
+                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)), // garis tepi
+                            shape = RoundedCornerShape(8.dp), // <-- ngatur lengkungannya
                             modifier = Modifier.height(56.dp)
                         ) {
-                            Text("Add", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                            Text("Add", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
-                    }
-
-                    TextButton(
-                        onClick = {
-                            inputSatuanBaru = false
-                            satuanBaru = ""
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Batal", color = BiruMuda, fontSize = 14.sp)
                     }
                 }
 
@@ -284,36 +280,36 @@ fun DetailObatScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                OutlinedButton(
-                    onClick = {
-                        val cal = Calendar.getInstance().apply {
-                            time = pertamaKonsumsi ?: Date()
-                        }
-                        DatePickerDialog(
-                            context,
-                            { _, y, m, d ->
-                                cal.set(y, m, d)
-                                pertamaKonsumsi = cal.time
-                            },
-                            cal.get(Calendar.YEAR),
-                            cal.get(Calendar.MONTH),
-                            cal.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
-                ) {
-                    Text(
-                        text = if (pertamaKonsumsi != null) {
-                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi!!)
-                        } else {
-                            "Belum Diatur"
-                        }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+//                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+//                OutlinedButton(
+//                    onClick = {
+//                        val cal = Calendar.getInstance().apply {
+//                            time = pertamaKonsumsi ?: Date()
+//                        }
+//                        DatePickerDialog(
+//                            context,
+//                            { _, y, m, d ->
+//                                cal.set(y, m, d)
+//                                pertamaKonsumsi = cal.time
+//                            },
+//                            cal.get(Calendar.YEAR),
+//                            cal.get(Calendar.MONTH),
+//                            cal.get(Calendar.DAY_OF_MONTH)
+//                        ).show()
+//                    },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
+//                ) {
+//                    Text(
+//                        text = if (pertamaKonsumsi != null) {
+//                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi!!)
+//                        } else {
+//                            "Belum Diatur"
+//                        }
+//                    )
+//                }
+//
+//                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = stok,
