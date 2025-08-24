@@ -6,11 +6,15 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.medicineremindernew.ui.data.entity.LocalKunjunganEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LocalKunjunganDao {
     @Query("SELECT * FROM local_kunjungan ORDER BY createdAt DESC")
     suspend fun getAllKunjungan(): List<LocalKunjunganEntity>
+
+    @Query("SELECT * FROM local_kunjungan ORDER BY createdAt DESC")
+    fun getAllKunjunganFlow(): Flow<List<LocalKunjunganEntity>>
 
     @Query("SELECT * FROM local_kunjungan WHERE isSynced = 0")
     suspend fun getUnsyncedKunjungan(): List<LocalKunjunganEntity>
