@@ -178,7 +178,7 @@ fun AddKunjunganScreen(
             }
 
             // Section Lansia
-            SectionWithAddButton("Pasien", navController = navController)
+            SectionWithAddButton("Lansia", navController = navController)
             CardSection {
                 if (lansiaList.isEmpty()) {
                     Text("Belum ada data lansia")

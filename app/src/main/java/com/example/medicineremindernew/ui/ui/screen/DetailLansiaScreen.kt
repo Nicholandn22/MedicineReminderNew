@@ -146,7 +146,9 @@ fun DetailLansiaScreen(
 
                 // ✅ Golongan Darah
                 Text("Golongan Darah", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                ExposedDropdownMenuBox(expanded = expandedGolongan, onExpandedChange = { expandedGolongan = !expandedGolongan }) {
+                ExposedDropdownMenuBox(
+                    expanded = expandedGolongan,
+                    onExpandedChange = { expandedGolongan = !expandedGolongan }) {
                     TextField(
                         readOnly = true,
                         value = golonganDarah,
@@ -156,7 +158,9 @@ fun DetailLansiaScreen(
                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = expandedGolongan, onDismissRequest = { expandedGolongan = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandedGolongan,
+                        onDismissRequest = { expandedGolongan = false }) {
                         golonganOptions.forEach { option ->
                             DropdownMenuItem(text = { Text(option) }, onClick = {
                                 golonganDarah = option
@@ -170,7 +174,9 @@ fun DetailLansiaScreen(
 
                 // ✅ Gender
                 Text("Jenis Kelamin", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                ExposedDropdownMenuBox(expanded = expandedGender, onExpandedChange = { expandedGender = !expandedGender }) {
+                ExposedDropdownMenuBox(
+                    expanded = expandedGender,
+                    onExpandedChange = { expandedGender = !expandedGender }) {
                     TextField(
                         readOnly = true,
                         value = if (gender == "L") "Laki-Laki" else "Perempuan",
@@ -180,7 +186,9 @@ fun DetailLansiaScreen(
                         colors = ExposedDropdownMenuDefaults.textFieldColors(),
                         modifier = Modifier.menuAnchor().fillMaxWidth()
                     )
-                    ExposedDropdownMenu(expanded = expandedGender, onDismissRequest = { expandedGender = false }) {
+                    ExposedDropdownMenu(
+                        expanded = expandedGender,
+                        onDismissRequest = { expandedGender = false }) {
                         genderOptions.forEach { option ->
                             DropdownMenuItem(text = { Text(option) }, onClick = {
                                 gender = if (option == "Laki-Laki") "L" else "P"
@@ -223,39 +231,37 @@ fun DetailLansiaScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
 
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 // ✅ Pilih Obat
-                Text("Obat untuk Lansia", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Obat untuk Lansia", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
 
                 if (obatList.isEmpty()) {
-                    Text("Belum ada data obat", color = Color.Gray, modifier = Modifier.padding(8.dp))
+                    Text("Belum ada data obat", color = Color.Gray)
                 } else {
-                    Column {
-                        obatList.forEach { obat ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                val isSelected = selectedObat.contains(obat.id)
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = { checked ->
-                                        selectedObat = if (checked) {
-                                            (selectedObat + obat.id).toMutableList()
-                                        } else {
-                                            (selectedObat - obat.id).toMutableList()
-                                        }
-                                    }
-                                )
-                                Text(
-                                    text = obat.nama,
-                                    fontSize = 16.sp,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
-                            }
-                        }
+                    obatList.forEach { obat ->
+                        ReminderButton(
+                            text = obat.nama,
+                            onClick = {
+                                selectedObat = if (selectedObat.contains(obat.id)) {
+                                    (selectedObat - obat.id).toMutableList() // unselect
+                                } else {
+                                    (selectedObat + obat.id).toMutableList() // select
+                                }
+                            },
+                            isSelected = selectedObat.contains(obat.id)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }

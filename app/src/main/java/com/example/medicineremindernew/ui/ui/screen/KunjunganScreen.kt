@@ -89,7 +89,7 @@ fun KunjunganScreen(
                 textAlign = TextAlign.Center,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = BiruTua
+                color = warnaBiru
             )
 
             val scrollState = rememberScrollState()
@@ -164,7 +164,7 @@ fun KunjunganScreen(
                                     Icon(
                                         imageVector = Icons.Default.Edit,
                                         contentDescription = "Edit",
-                                        tint = BiruTua
+                                        tint = warnaBiru
                                     )
                                 }
                             }
@@ -214,15 +214,17 @@ fun KunjunganScreen(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 20.dp, bottom = 100.dp),
+            containerColor = BiruTua.copy(alpha = 1.0f), // background tombol
+            contentColor = Color.White // warna ikon '+'
         ) {
-            Icon(Icons.Default.Add, contentDescription = "Tambah")
+            Icon(Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp))
         }
 
         // Dialog Hapus
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda) },
+                title = { Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda.copy(alpha = 1.0f)) },
                 text = { Text("Apakah Anda yakin ingin menghapus kunjungan ini?") },
                 confirmButton = {
                     TextButton(onClick = {
@@ -234,7 +236,7 @@ fun KunjunganScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Tidak", color = BiruMuda)
+                        Text("Tidak", color = BiruMuda.copy(alpha = 1.0f))
                     }
                 }
             )

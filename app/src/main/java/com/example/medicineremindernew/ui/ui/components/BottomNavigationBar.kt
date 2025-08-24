@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem
@@ -46,7 +47,8 @@ fun BottomNavigationBar(navController: NavController) {
                 label = {
                     Text(
                         text = item.title,
-                        color = if (isSelected) Color.White else Color.Gray
+                        color = if (isSelected) Color.White else Color.Gray,
+                        fontSize = 11.sp
                     )
                 },
                 selected = isSelected,
