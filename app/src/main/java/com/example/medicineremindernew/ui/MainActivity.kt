@@ -13,9 +13,22 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
@@ -24,11 +37,20 @@ import com.example.medicineremindernew.ui.data.local.LocalDatabase
 import com.example.medicineremindernew.ui.data.network.NetworkUtils
 import com.example.medicineremindernew.ui.data.repository.*
 import com.example.medicineremindernew.ui.ui.navigation.NavGraph
+import com.example.medicineremindernew.ui.ui.screen.SplashScreen
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 import com.example.medicineremindernew.ui.ui.viewmodel.*
 import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.example.medicineremindernew.R
 
 class MainActivity : AppCompatActivity() {
 
@@ -70,7 +92,49 @@ class MainActivity : AppCompatActivity() {
         ReminderViewModelFactory(reminderRepository)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun MainApp(navController: NavHostController) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(id = R.mipmap.logo), // logo MedTime tercinta
+                                contentDescription = "Logo",
+                                modifier = Modifier
+                                    .size(24.dp) // ukuran kecil
+                                    .clip(RoundedCornerShape(6.dp)) // sedikit melengkung
+                            )
+                            Spacer(modifier = Modifier.width(8.dp)) // jarak antara logo & teks
+                            Text("MedTime")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = BiruTua.copy(alpha = 1.0f),
+                        titleContentColor = Color.White
+                    )
+                )
+            },
+            bottomBar = { BottomNavigationBar(navController) }
+        ) { innerPadding ->
+            NavGraph(
+                navController = navController,
+                obatViewModel = hybridObatViewModel,
+                lansiaViewModel = hybridLansiaViewModel,
+                reminderViewModel = hybridReminderViewModel,
+                kunjunganViewModel = hybridKunjunganViewModel,
+                hybridReminderRepository = hybridReminderRepository,
+                hybridLansiaRepository = hybridLansiaRepository,
+                hybridObatRepository = hybridObatRepository,
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,33 +201,35 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
             MedicineReminderNewTheme {
-                val navController = rememberNavController()
+                var showSplash by remember { mutableStateOf(true) }
 
-                Scaffold(
-                    topBar = {
-                        TopAppBar(
-                            title = { Text("Medicine Reminder") },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = BiruTua.copy(alpha = 1.0f),
-                                titleContentColor = Color.White
-                            )
-                        )
-                    },
-                    bottomBar = {
-                        BottomNavigationBar(navController)
-                    }
-                ) { innerPadding ->
-                    NavGraph(
-                        navController = navController,
-                        obatViewModel = hybridObatViewModel,
-                        lansiaViewModel = hybridLansiaViewModel,
-                        reminderViewModel = hybridReminderViewModel,
-                        kunjunganViewModel = hybridKunjunganViewModel,
-                        hybridReminderRepository = hybridReminderRepository,
-                        hybridLansiaRepository = hybridLansiaRepository,
-                        hybridObatRepository = hybridObatRepository,
-                        modifier = Modifier.padding(innerPadding)
+                if (showSplash) {
+                    SplashScreen(
+                        onSplashFinished = { showSplash = false }
                     )
+                } else {
+                    val navController = rememberNavController()
+
+                    // State untuk animasi fade-in
+                    var fadeIn by remember { mutableStateOf(false) }
+                    val alphaAnim by animateFloatAsState(
+                        targetValue = if (fadeIn) 1f else 0f,
+                        animationSpec = tween(durationMillis = 500)
+                    )
+
+                    // Mulai fade-in setelah composable muncul
+                    LaunchedEffect(Unit) {
+                        fadeIn = true
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(BiruTua.copy(alpha = 1.0f)) // <-- ganti warna sesuai tema
+                            .alpha(alphaAnim)
+                    ) {
+                        MainApp(navController)
+                    }
                 }
             }
         }
