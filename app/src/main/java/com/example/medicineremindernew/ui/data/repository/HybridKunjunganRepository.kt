@@ -6,6 +6,8 @@ import com.example.medicineremindernew.ui.data.dao.LocalKunjunganDao
 import com.example.medicineremindernew.ui.data.entity.LocalKunjunganEntity
 import com.example.medicineremindernew.ui.data.model.Kunjungan
 import com.example.medicineremindernew.ui.data.network.NetworkUtils
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class HybridKunjunganRepository(
     private val kunjunganRepository: KunjunganRepository, // Firestore layer
@@ -63,20 +65,34 @@ class HybridKunjunganRepository(
         }
     }
 
-    suspend fun getAllKunjungan(): List<Kunjungan> {
+    /**
+     * Versi sekali ambil (one-shot).
+     */
+    suspend fun getAllKunjunganOnce(): List<Kunjungan> {
         return if (networkUtils.isNetworkAvailable()) {
             try {
                 kunjunganRepository.getAllKunjungan()
             } catch (e: Exception) {
                 Log.e("HybridKunjunganRepo", "Get remote failed: ${e.message}")
-                getLocalKunjungan()
+                getAllKunjunganFlowOnce()
             }
         } else {
-            getLocalKunjungan()
+            getAllKunjunganFlowOnce()
         }
     }
 
-    private suspend fun getLocalKunjungan(): List<Kunjungan> {
+    /**
+     * Versi reaktif (Flow).
+     */
+    fun getAllKunjunganFlow(): Flow<List<Kunjungan>> {
+        return localDao.getAllKunjunganFlow()
+            .map { list -> list.map { entity -> entity.toDomainModel() } }
+    }
+
+    /**
+     * Helper buat one-shot dari DAO (fallback untuk getAllKunjunganOnce).
+     */
+    private suspend fun getAllKunjunganFlowOnce(): List<Kunjungan> {
         return localDao.getAllKunjungan().map { it.toDomainModel() }
     }
 
