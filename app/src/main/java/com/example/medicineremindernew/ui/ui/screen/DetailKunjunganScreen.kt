@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -49,6 +50,12 @@ fun DetailKunjunganScreen(
     // Ambil data
     val kunjungan by kunjunganViewModel.kunjunganDetail.collectAsStateWithLifecycle(initialValue = null)
     val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    // Tambahkan state jenis kunjungan
+    var jenisKunjungan by remember { mutableStateOf(kunjungan?.jenisKunjungan ?: "") }
+    var expandedJenis by remember { mutableStateOf(false) }
+    val jenisOptions = listOf("Konsultasi ke Rumah Sakit", "Kegiatan Bersama")
+
 
     val biru = BiruMuda.copy(alpha = 1.0f)
 
@@ -183,6 +190,49 @@ fun DetailKunjunganScreen(
             }
         }
 
+        // Pilih Jenis Kunjungan
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Jenis Kunjungan", fontWeight = FontWeight.Bold)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, biru, shape = RoundedCornerShape(30.dp))
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .clickable { expandedJenis = true }
+                ) {
+                    Text(
+                        text = if (jenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else jenisKunjungan,
+                        color = if (jenisKunjungan.isEmpty()) Color.Gray else Color.Black
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expandedJenis,
+                    onDismissRequest = { expandedJenis = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    jenisOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                jenisKunjungan = option
+                                expandedJenis = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+
         // Buttons
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -194,7 +244,9 @@ fun DetailKunjunganScreen(
                         val updatedKunjungan = kunjungan!!.copy(
                             lansiaIds = listOf(selectedLansia!!),
                             tanggal = tanggal,
-                            waktu = waktu
+                            waktu = waktu,
+                            jenisKunjungan = jenisKunjungan // ✅ ikut disimpan
+
                         )
                         kunjunganViewModel.updateKunjungan(updatedKunjungan) { success ->
                             scope.launch {

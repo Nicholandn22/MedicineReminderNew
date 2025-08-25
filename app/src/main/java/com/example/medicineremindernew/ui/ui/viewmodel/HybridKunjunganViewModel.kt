@@ -8,10 +8,6 @@ import com.example.medicineremindernew.ui.data.repository.HybridKunjunganReposit
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel hybrid: menggunakan HybridKunjunganRepository (local Room + Firestore).
- * Exposes state flows untuk daftar kunjungan, loading, dan error message.
- */
 class HybridKunjunganViewModel(
     private val repository: HybridKunjunganRepository
 ) : ViewModel() {
@@ -33,21 +29,20 @@ class HybridKunjunganViewModel(
     }
 
     /**
-     * Mulai collect Flow dari repository → UI auto-update saat Room berubah.
+     * 🔹 Ambil data hanya dari Firestore via HybridRepo.getAllKunjunganOnce()
      */
     private fun observeKunjungan() {
         viewModelScope.launch {
-            repository.getAllKunjunganFlow()
-                .onStart { _loading.value = true }
-                .catch { e ->
-                    _error.value = e.message ?: "Error observing kunjungan"
-                    Log.e("HybridVM", "observeKunjungan error", e)
-                }
-                .collect { list ->
-                    Log.d("HybridVM", "Flow emit ${list.size} kunjungan")
-                    _kunjunganList.value = list
-                    _loading.value = false
-                }
+            try {
+                _loading.value = true
+                val list = repository.getAllKunjunganOnce()
+                _kunjunganList.value = list.distinctBy { it.idKunjungan }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error fetching kunjungan"
+                Log.e("HybridVM", "observeKunjungan error", e)
+            } finally {
+                _loading.value = false
+            }
         }
     }
 
@@ -61,6 +56,7 @@ class HybridKunjunganViewModel(
             try {
                 _loading.value = true
                 val success = repository.addKunjungan(kunjungan)
+                if (success) observeKunjungan()
                 callback(success)
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Add failed"
@@ -76,7 +72,10 @@ class HybridKunjunganViewModel(
             try {
                 _loading.value = true
                 val success = repository.updateKunjungan(kunjungan)
-                if (success) _kunjunganDetail.value = kunjungan
+                if (success) {
+                    observeKunjungan()
+                    _kunjunganDetail.value = kunjungan
+                }
                 callback(success)
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Update failed"
@@ -92,7 +91,10 @@ class HybridKunjunganViewModel(
             try {
                 _loading.value = true
                 val success = repository.deleteKunjungan(id)
-                if (success) _kunjunganDetail.value = null
+                if (success) {
+                    observeKunjungan()
+                    _kunjunganDetail.value = null
+                }
                 callback(success)
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Delete failed"
@@ -103,10 +105,14 @@ class HybridKunjunganViewModel(
         }
     }
 
+    /**
+     * 🔹 Sync dulu (biar data offline masuk Firestore), lalu reload dari Firestore
+     */
     fun syncPendingData() {
         viewModelScope.launch {
             try {
                 repository.syncPendingData()
+                observeKunjungan()
             } catch (t: Throwable) {
                 _error.value = t.message ?: "Sync failed"
             }

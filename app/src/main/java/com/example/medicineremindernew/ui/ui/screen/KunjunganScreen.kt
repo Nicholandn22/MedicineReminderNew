@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medicineremindernew.ui.data.model.Kunjungan
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
@@ -44,6 +45,14 @@ fun KunjunganScreen(
     kunjunganViewModel: HybridKunjunganViewModel,
     lansiaViewModel: HybridLansiaViewModel
 ) {
+
+
+    // Fetch ulang setiap screen dibuka
+    // 🔄 Fetch data ulang saat screen dibuka
+    LaunchedEffect(Unit) {
+        kunjunganViewModel.syncPendingData()
+    }
+
     val kunjunganList by kunjunganViewModel.kunjunganList.collectAsState()
     val lansiaList by lansiaViewModel.lansiaList.collectAsState()
     val now = remember { LocalDateTime.now() }
@@ -194,6 +203,7 @@ fun KunjunganScreen(
                             append(lansiaName)
                         },
                         time = "${kunjungan.tanggal} - ${kunjungan.waktu}",
+                        jenis = kunjungan.jenisKunjungan,   // <--- WAJIB DITAMBAH
                         onClick = { id ->
                             navController.navigate("detail_kunjungan/$id") // ✅ navigasi dengan id
                         },
@@ -246,10 +256,11 @@ fun KunjunganScreen(
 
 @Composable
 fun KunjunganItem(
-    kunjunganId: String, // ✅ tambahin ini
+    kunjunganId: String,
     lansia: AnnotatedString,
     time: String,
-    onClick: (String) -> Unit, // ✅ passing id saat diklik
+    jenis: String, // 🆕 tambahin jenis
+    onClick: (String) -> Unit,
     onDelete: () -> Unit
 ) {
     Row(
@@ -258,7 +269,7 @@ fun KunjunganItem(
             .padding(vertical = 6.dp, horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .clickable { onClick(kunjunganId) } // ✅ passing id ke callback
+            .clickable { onClick(kunjunganId) }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -266,14 +277,15 @@ fun KunjunganItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(text = lansia, fontSize = 20.sp, color = Color.Black)
             Row {
-                Text(
-                    text = "Waktu : ",
-                    fontSize = 16.sp,
-                    color = Color.DarkGray,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
+                Text("Waktu : ", fontSize = 16.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                Text(time, fontSize = 16.sp, color = Color.DarkGray)
             }
+            Text(
+                text = "Jenis : $jenis",
+                fontSize = 14.sp,
+                color = Color(0xFF555555),
+                modifier = Modifier.padding(top = 2.dp)
+            )
         }
 
         IconButton(onClick = onDelete) {
@@ -281,3 +293,4 @@ fun KunjunganItem(
         }
     }
 }
+

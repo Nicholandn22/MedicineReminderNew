@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -85,6 +86,12 @@ fun AddKunjunganScreen(
     var waktu by remember { mutableStateOf("") }
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    var selectedJenisKunjungan by remember { mutableStateOf("") }
+    var expandedJenis by remember { mutableStateOf(false) }
+
+    val jenisOptions = listOf("Konsultasi ke Rumah Sakit", "Kegiatan Bersama")
+
 
     Box(
         modifier = Modifier
@@ -195,6 +202,40 @@ fun AddKunjunganScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Section Jenis Kunjungan
+            SectionTitle("Jenis Kunjungan")
+            CardSection {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, biru, shape = RoundedCornerShape(30.dp))
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .clickable { expandedJenis = true }
+                ) {
+                    Text(
+                        text = if (selectedJenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else selectedJenisKunjungan,
+                        color = if (selectedJenisKunjungan.isEmpty()) Color.Gray else Color.Black
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = expandedJenis,
+                    onDismissRequest = { expandedJenis = false },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    jenisOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedJenisKunjungan = option
+                                expandedJenis = false
+                            }
+                        )
+                    }
+                }
+            }
+
+
             // Buttons Save & Clear
             Row(
                 modifier = Modifier
@@ -204,13 +245,15 @@ fun AddKunjunganScreen(
             ) {
                 Button(
                     onClick = {
-                        if (!selectedLansia.isNullOrEmpty() && tanggal.isNotEmpty() && waktu.isNotEmpty()) {
+                        if (!selectedLansia.isNullOrEmpty() && tanggal.isNotEmpty() && waktu.isNotEmpty()&& selectedJenisKunjungan.isNotEmpty()) {
                             val kunjunganId = UUID.randomUUID().toString()
                             val kunjungan = Kunjungan(
                                 idKunjungan = kunjunganId,
                                 lansiaIds = listOf(selectedLansia!!),
                                 tanggal = tanggal,
-                                waktu = waktu
+                                waktu = waktu,
+                                jenisKunjungan = selectedJenisKunjungan // 🔹 ikut disimpan
+
                             )
                             kunjunganViewModel.addKunjungan(kunjungan) { success ->
                                 coroutineScope.launch {
