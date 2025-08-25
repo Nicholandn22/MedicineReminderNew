@@ -159,8 +159,7 @@ fun AddObatScreen(
                         value = takaranDosis,
                         onValueChange = {takaranDosis = it},
                         placeholder = {Text ("Takaran")},
-                        label = {Text ("Takaran")},
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(56.dp),
                         singleLine = true
                     )
 
@@ -175,15 +174,19 @@ fun AddObatScreen(
                     )
                     Box(
                         modifier = Modifier
-                            .size(56.dp)
+                            .height(56.dp)
+                            .aspectRatio(1f)
                             .border(width = 1.dp, color = BiruMuda.copy(alpha = 1.0f), shape = RoundedCornerShape(12.dp)) // garis tepi
                     ) {
-                        IconButton(
+                        OutlinedIconButton(
                             onClick = {
                                 inputSatuanBaru = !inputSatuanBaru
                                 satuanBaru = ""
                             },
-                            modifier = Modifier.fillMaxSize()
+//                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.size(56.dp),
+                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,
