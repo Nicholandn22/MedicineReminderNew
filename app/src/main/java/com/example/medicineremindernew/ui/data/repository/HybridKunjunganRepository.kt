@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class HybridKunjunganRepository(
-    private val kunjunganRepository: KunjunganRepository, // Firestore layer
+    private val kunjunganRepository: KunjunganRepository, // Firestore repo
     private val localDao: LocalKunjunganDao,
     private val networkUtils: NetworkUtils,
     private val context: Context
@@ -23,14 +23,19 @@ class HybridKunjunganRepository(
             } else kunjungan
 
             if (networkUtils.isNetworkAvailable()) {
-                kunjunganRepository.addKunjungan(fixed)
-                localDao.insertKunjungan(fixed.toLocalEntity(isSynced = true))
+                try { kunjunganRepository.addKunjungan(fixed) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Firestore add failed: ${e.message}") }
+
+                try { localDao.insertKunjungan(fixed.toLocalEntity(isSynced = true)) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Room insert failed: ${e.message}") }
             } else {
-                localDao.insertKunjungan(fixed.toLocalEntity(isSynced = false))
+                try { localDao.insertKunjungan(fixed.toLocalEntity(isSynced = false)) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Room insert failed offline: ${e.message}") }
             }
+
             true
         } catch (e: Exception) {
-            Log.e("HybridKunjunganRepo", "Add failed: ${e.message}")
+            Log.e("HybridKunjunganRepo", "Add failed: ${e.message}", e)
             false
         }
     }
@@ -38,14 +43,19 @@ class HybridKunjunganRepository(
     suspend fun updateKunjungan(kunjungan: Kunjungan): Boolean {
         return try {
             if (networkUtils.isNetworkAvailable()) {
-                kunjunganRepository.updateKunjungan(kunjungan)
-                localDao.updateKunjungan(kunjungan.toLocalEntity(isSynced = true))
+                try { kunjunganRepository.updateKunjungan(kunjungan) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Firestore update failed: ${e.message}") }
+
+                try { localDao.updateKunjungan(kunjungan.toLocalEntity(isSynced = true)) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Room update failed: ${e.message}") }
             } else {
-                localDao.updateKunjungan(kunjungan.toLocalEntity(isSynced = false))
+                try { localDao.updateKunjungan(kunjungan.toLocalEntity(isSynced = false)) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Room update failed offline: ${e.message}") }
             }
+
             true
         } catch (e: Exception) {
-            Log.e("HybridKunjunganRepo", "Update failed: ${e.message}")
+            Log.e("HybridKunjunganRepo", "Update failed: ${e.message}", e)
             false
         }
     }
@@ -53,11 +63,16 @@ class HybridKunjunganRepository(
     suspend fun deleteKunjungan(id: String): Boolean {
         return try {
             if (networkUtils.isNetworkAvailable()) {
-                kunjunganRepository.deleteKunjungan(id)
-                localDao.deleteKunjungan(id)
+                try { kunjunganRepository.deleteKunjungan(id) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Firestore delete failed: ${e.message}") }
+
+                try { localDao.deleteKunjungan(id) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Room delete failed: ${e.message}") }
             } else {
-                localDao.deleteKunjungan(id)
+                try { localDao.deleteKunjungan(id) }
+                catch (e: Exception) { Log.e("HybridKunjunganRepo", "Room delete failed offline: ${e.message}") }
             }
+
             true
         } catch (e: Exception) {
             Log.e("HybridKunjunganRepo", "Delete failed: ${e.message}")
@@ -65,34 +80,25 @@ class HybridKunjunganRepository(
         }
     }
 
-    /**
-     * Versi sekali ambil (one-shot).
-     */
     suspend fun getAllKunjunganOnce(): List<Kunjungan> {
         return if (networkUtils.isNetworkAvailable()) {
             try {
                 kunjunganRepository.getAllKunjungan()
             } catch (e: Exception) {
                 Log.e("HybridKunjunganRepo", "Get remote failed: ${e.message}")
-                getAllKunjunganFlowOnce()
+                getLocalKunjunganOnce()
             }
         } else {
-            getAllKunjunganFlowOnce()
+            getLocalKunjunganOnce()
         }
     }
 
-    /**
-     * Versi reaktif (Flow).
-     */
     fun getAllKunjunganFlow(): Flow<List<Kunjungan>> {
         return localDao.getAllKunjunganFlow()
             .map { list -> list.map { entity -> entity.toDomainModel() } }
     }
 
-    /**
-     * Helper buat one-shot dari DAO (fallback untuk getAllKunjunganOnce).
-     */
-    private suspend fun getAllKunjunganFlowOnce(): List<Kunjungan> {
+    private suspend fun getLocalKunjunganOnce(): List<Kunjungan> {
         return localDao.getAllKunjungan().map { it.toDomainModel() }
     }
 
@@ -111,13 +117,14 @@ class HybridKunjunganRepository(
         }
     }
 
-    // Mapping extensions
+    // === Mapping Extensions ===
     private fun Kunjungan.toLocalEntity(isSynced: Boolean): LocalKunjunganEntity {
         return LocalKunjunganEntity(
             id = this.idKunjungan,
             lansiaIds = this.lansiaIds.joinToString(","),
             tanggal = this.tanggal,
             waktu = this.waktu,
+            jenisKunjungan = this.jenisKunjungan,
             isSynced = isSynced
         )
     }
@@ -127,7 +134,8 @@ class HybridKunjunganRepository(
             idKunjungan = this.id,
             lansiaIds = this.lansiaIds.split(","),
             tanggal = this.tanggal,
-            waktu = this.waktu
+            waktu = this.waktu,
+            jenisKunjungan = this.jenisKunjungan
         )
     }
 }

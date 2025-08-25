@@ -9,8 +9,16 @@ class KunjunganRepository(firestoreRepository: FirestoreRepository) {
     private val collection = db.collection("kunjungan")
 
     suspend fun addKunjungan(kunjungan: Kunjungan) {
-        collection.document(kunjungan.idKunjungan).set(kunjungan).await()
+        val docRef = if (kunjungan.idKunjungan.isBlank()) {
+            collection.document() // auto generate ID
+        } else {
+            collection.document(kunjungan.idKunjungan)
+        }
+
+        val dataWithId = kunjungan.copy(idKunjungan = docRef.id) // pastikan ID tersimpan
+        docRef.set(dataWithId).await()
     }
+
 
     suspend fun updateKunjungan(kunjungan: Kunjungan) {
         collection.document(kunjungan.idKunjungan).set(kunjungan).await()
@@ -24,4 +32,5 @@ class KunjunganRepository(firestoreRepository: FirestoreRepository) {
         val snapshot = collection.get().await()
         return snapshot.toObjects(Kunjungan::class.java)
     }
+
 }

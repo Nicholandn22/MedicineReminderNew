@@ -10,10 +10,18 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LocalKunjunganDao {
-    @Query("SELECT * FROM local_kunjungan ORDER BY createdAt DESC")
+    @Query("""
+        SELECT * FROM local_kunjungan
+        WHERE datetime(tanggal || ' ' || waktu) >= datetime('now')
+        ORDER BY createdAt DESC
+    """)
     suspend fun getAllKunjungan(): List<LocalKunjunganEntity>
 
-    @Query("SELECT * FROM local_kunjungan ORDER BY createdAt DESC")
+    @Query("""
+        SELECT * FROM local_kunjungan
+        WHERE datetime(tanggal || ' ' || waktu) >= datetime('now')
+        ORDER BY createdAt DESC
+    """)
     fun getAllKunjunganFlow(): Flow<List<LocalKunjunganEntity>>
 
     @Query("SELECT * FROM local_kunjungan WHERE isSynced = 0")
