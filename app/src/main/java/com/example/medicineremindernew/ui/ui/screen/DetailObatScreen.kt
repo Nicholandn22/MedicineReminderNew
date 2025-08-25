@@ -2,7 +2,9 @@ package com.example.medicineremindernew.ui.ui.screen
 
 import android.app.DatePickerDialog
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -75,7 +77,6 @@ fun DetailObatScreen(
         viewModel.getObatById(obatId)
     }
 
-
     if (obat == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -83,59 +84,35 @@ fun DetailObatScreen(
         return
     }
 
-//    var namaObat by remember { mutableStateOf(obat!!.nama) }
-//    var jenisObat by remember { mutableStateOf(obat!!.jenis) }
-//    var satuanDosis by remember { mutableStateOf(obat!!.dosis) }
-//    var waktuMinum by remember { mutableStateOf(obat!!.waktuMinum) }
-//    var stok by remember { mutableStateOf(obat!!.stok.toString()) }
-//    var notes by remember { mutableStateOf(obat!!.catatan ?: "") }
-//    var takaranDosis by remember { mutableStateOf(obat!!.takaranDosis) }
-//    var pertamaKonsumsi by remember { mutableStateOf(Date()) }
-
-    var namaObat by remember(obat?.id) { mutableStateOf(obat?.nama ?: "") }
-    var jenisObat by remember(obat?.id) { mutableStateOf(obat?.jenis ?: "") }
-    var satuanDosis by remember(obat?.id) { mutableStateOf(obat?.dosis ?: "") }
-    var waktuMinum by remember(obat?.id) { mutableStateOf(obat?.waktuMinum ?: "") }
-    var stok by remember(obat?.id) { mutableStateOf(obat?.stok.toString() ?: "") }
-    var notes by remember(obat?.id) { mutableStateOf(obat?.catatan ?: "") }
-    var takaranDosis by remember(obat?.id) { mutableStateOf(obat?.takaranDosis ?: "") }
-    var deskripsi by remember(obat?.id) { mutableStateOf(obat?.deskripsi ?: "") }
-
-//    val pertamaKonsumsi = obat!!.pertamaKonsumsi?.toDate()
-
+    // ✅ Amanin null saat inisialisasi state
+    var namaObat by remember(obat?.id) { mutableStateOf(obat?.nama.orEmpty()) }
+    var jenisObat by remember(obat?.id) { mutableStateOf(obat?.jenis.orEmpty()) }
+    var satuanDosis by remember(obat?.id) { mutableStateOf(obat?.dosis.orEmpty()) }
+    var waktuMinum by remember(obat?.id) { mutableStateOf(obat?.waktuMinum.orEmpty()) }
+    var stok by remember(obat?.id) { mutableStateOf(obat?.stok?.toString().orEmpty()) }
+    var notes by remember(obat?.id) { mutableStateOf(obat?.catatan.orEmpty()) }
+    var takaranDosis by remember(obat?.id) { mutableStateOf(obat?.takaranDosis.orEmpty()) }
+    var deskripsi by remember(obat?.id) { mutableStateOf(obat?.deskripsi.orEmpty()) }
     var pertamaKonsumsi by remember(obat?.id) {
         mutableStateOf(obat?.pertamaKonsumsi?.toDate())
     }
 
+    // SharedPreferences untuk satuan
     val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
     val defaultSatuan = listOf("mg", "ml", "IU", "Tetes")
     val savedSatuan = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toList() ?: emptyList()
-    var listSatuanDosis by remember { mutableStateOf((defaultSatuan + savedSatuan).distinct().toMutableList()) }
-//    var listSatuanDosis by remember { mutableStateOf(mutableListOf("mg", "ml", "IU", "Tetes")) }
+    var listSatuanDosis by remember {
+        mutableStateOf((defaultSatuan + savedSatuan).distinct().toMutableList())
+    }
     var inputSatuanBaru by remember { mutableStateOf(false) }
     var satuanBaru by remember { mutableStateOf("") }
 
-    // Fungsi untuk menyimpan satuan baru ke SharedPreferences
     fun saveSatuanToPrefs(newSatuan: String) {
         val currentSaved = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toMutableSet() ?: mutableSetOf()
         currentSaved.add(newSatuan)
         sharedPrefs.edit().putStringSet("custom_satuan", currentSaved).apply()
     }
 
-    val datePickerDialog = remember {
-        val calendar = Calendar.getInstance()
-        calendar.time = pertamaKonsumsi
-        DatePickerDialog(
-            context,
-            { _, year, month, day ->
-                calendar.set(year, month, day)
-//                pertamaKonsumsi = calendar.time
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -161,7 +138,7 @@ fun DetailObatScreen(
             Text("Update Obat", color = Color.White, fontSize = 20.sp)
         }
 
-        // FORM
+        // ✅ FORM
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -203,13 +180,11 @@ fun DetailObatScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    // ini buat masukkin takaran
                     OutlinedTextField(
                         value = takaranDosis,
-                        onValueChange = {takaranDosis = it},
-                        placeholder = {Text ("Takaran")},
-                        label = {Text ("Takaran")},
+                        onValueChange = { takaranDosis = it },
+                        placeholder = { Text("Takaran") },
+                        label = { Text("Takaran") },
                         modifier = Modifier.weight(1f),
                         singleLine = true
                     )
@@ -223,10 +198,11 @@ fun DetailObatScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
-                    Card(
-                        modifier = Modifier.size(56.dp),
-                        colors = CardDefaults.cardColors(containerColor = BiruMuda),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .border(width = 1.dp, color = BiruMuda.copy(alpha = 1.0f), shape = RoundedCornerShape(12.dp)) // garis tepi
                     ) {
                         IconButton(
                             onClick = {
@@ -238,7 +214,7 @@ fun DetailObatScreen(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Tambah Satuan Baru",
-                                tint = Color.White,
+                                tint = BiruMuda.copy(alpha = 1.0f), // icon sekarang berwarna BiruMuda
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -264,7 +240,7 @@ fun DetailObatScreen(
                             onClick = {
                                 if (satuanBaru.isNotBlank() && !listSatuanDosis.contains(satuanBaru)) {
                                     listSatuanDosis = (listSatuanDosis + satuanBaru).toMutableList()
-                                    saveSatuanToPrefs(satuanBaru) // Simpan ke SharedPreferences
+                                    saveSatuanToPrefs(satuanBaru)
                                     satuanDosis = satuanBaru
                                     satuanBaru = ""
                                     inputSatuanBaru = false
@@ -281,27 +257,15 @@ fun DetailObatScreen(
                                     }
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = BiruMuda),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = BiruMuda.copy(alpha = 1.0f) // teks tombol
+                            ),
+                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)), // garis tepi
+                            shape = RoundedCornerShape(8.dp), // <-- ngatur lengkungannya
                             modifier = Modifier.height(56.dp)
                         ) {
-                            Text(
-                                "Add",
-                                color = Color.White,
-                                fontSize = 16.sp, // Font lebih besar
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("Add", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
-                    }
-
-                    // Tombol batal dalam satu baris
-                    TextButton(
-                        onClick = {
-                            inputSatuanBaru = false
-                            satuanBaru = ""
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Batal", color = BiruMuda, fontSize = 14.sp)
                     }
                 }
 
@@ -316,38 +280,36 @@ fun DetailObatScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                OutlinedButton(
-//                    onClick = { datePickerDialog.show() },
-                    onClick = {
-                        val cal = Calendar.getInstance().apply{
-                            time = pertamaKonsumsi ?: Date()
-                        }
-                        DatePickerDialog(
-                            context,
-                            {_, y, m, d ->
-                                cal.set(y, m, d)
-                                pertamaKonsumsi = cal.time
-                            },
-                            cal.get(Calendar.YEAR),
-                            cal.get(Calendar.MONTH),
-                            cal.get(Calendar.DAY_OF_MONTH)
-                        ).show()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
-                ) {
-//                    Text(SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi))
-                    Text(
-                        text = if (pertamaKonsumsi != null){
-                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi)
-                        } else {
-                            "Belum Diatur"
-                        }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
+//                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+//                OutlinedButton(
+//                    onClick = {
+//                        val cal = Calendar.getInstance().apply {
+//                            time = pertamaKonsumsi ?: Date()
+//                        }
+//                        DatePickerDialog(
+//                            context,
+//                            { _, y, m, d ->
+//                                cal.set(y, m, d)
+//                                pertamaKonsumsi = cal.time
+//                            },
+//                            cal.get(Calendar.YEAR),
+//                            cal.get(Calendar.MONTH),
+//                            cal.get(Calendar.DAY_OF_MONTH)
+//                        ).show()
+//                    },
+//                    modifier = Modifier.fillMaxWidth(),
+//                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
+//                ) {
+//                    Text(
+//                        text = if (pertamaKonsumsi != null) {
+//                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi!!)
+//                        } else {
+//                            "Belum Diatur"
+//                        }
+//                    )
+//                }
+//
+//                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = stok,
@@ -357,7 +319,6 @@ fun DetailObatScreen(
                     singleLine = true
                 )
 
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
@@ -366,6 +327,7 @@ fun DetailObatScreen(
                     label = { Text("Catatan Tambahan") },
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(modifier = Modifier.height(15.dp))
             }
         }
@@ -377,24 +339,25 @@ fun DetailObatScreen(
         ) {
             OutlinedButton(
                 onClick = {
-                    val updated = obat!!.copy(
-                        nama = namaObat,
-                        jenis = jenisObat,
-                        deskripsi = deskripsi,
-                        dosis = satuanDosis,
-                        waktuMinum = waktuMinum,
-                        catatan = notes,
-                        stok = stok.toIntOrNull() ?: 0, // ✅ update stok
-                        takaranDosis = takaranDosis,
-//                        pertamaKonsumsi = pertamaKonsumsi?.let {com.google.firebase.Timestamp(it)}
-                        pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) }
+                    obat?.let {
+                        val updated = it.copy(
+                            nama = namaObat,
+                            jenis = jenisObat,
+                            deskripsi = deskripsi,
+                            dosis = satuanDosis,
+                            waktuMinum = waktuMinum,
+                            catatan = notes,
+                            stok = stok.toIntOrNull() ?: 0,
+                            takaranDosis = takaranDosis,
+                            pertamaKonsumsi = pertamaKonsumsi?.let { date -> Timestamp(date) }
                         )
-                    viewModel.updateObat(updated) { success ->
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                if (success) "Data berhasil diperbarui" else "Gagal memperbarui data"
-                            )
-                            if (success) onBackClick()
+                        viewModel.updateObat(updated) { success ->
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (success) "Data berhasil diperbarui" else "Gagal memperbarui data"
+                                )
+                                if (success) onBackClick()
+                            }
                         }
                     }
                 },
@@ -403,6 +366,7 @@ fun DetailObatScreen(
             ) {
                 Text("Update")
             }
+
             OutlinedButton(
                 onClick = onBackClick,
                 modifier = Modifier.weight(1f).padding(start = 8.dp),
@@ -411,7 +375,7 @@ fun DetailObatScreen(
                 Text("Cancel")
             }
         }
+
         SnackbarHost(hostState = snackbarHostState, modifier = Modifier.padding(16.dp))
     }
 }
-

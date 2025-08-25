@@ -187,22 +187,18 @@ fun AddLansiaScreen(
                     Text("Belum ada data obat", color = Color.Gray)
                 } else {
                     obatList.forEach { obat ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Checkbox(
-                                checked = selectedObatIds.contains(obat.id),
-                                onCheckedChange = { checked ->
-                                    selectedObatIds = if (checked) {
-                                        selectedObatIds + obat.id
-                                    } else {
-                                        selectedObatIds - obat.id
-                                    }
+                        ReminderButton(
+                            text = obat.nama,
+                            onClick = {
+                                selectedObatIds = if (selectedObatIds.contains(obat.id)) {
+                                    selectedObatIds - obat.id // kalau sudah dipilih, hapus
+                                } else {
+                                    selectedObatIds + obat.id // kalau belum, tambahkan
                                 }
-                            )
-                            Text(obat.nama)
-                        }
+                            },
+                            isSelected = selectedObatIds.contains(obat.id)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }

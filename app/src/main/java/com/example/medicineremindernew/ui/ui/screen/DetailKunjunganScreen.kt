@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -101,11 +102,12 @@ fun DetailKunjunganScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
+        // ✅ Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(80.dp)
+                .padding(16.dp)
                 .background(BiruAgakTua.copy(alpha = 1.0f)),
             contentAlignment = Alignment.Center
         ) {
@@ -117,12 +119,8 @@ fun DetailKunjunganScreen(
                     modifier = Modifier.size(15.dp)
                 )
             }
-            Text("Detail Kunjungan", color = Color.White, fontSize = 20.sp)
+            Text("Update Kunjungan", color = Color.White, fontSize = 20.sp)
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
 
         // Pilih Tanggal & Waktu
         Card(
@@ -133,23 +131,27 @@ fun DetailKunjunganScreen(
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Button(
+                OutlinedButton(
                     onClick = { datePickerDialog.show() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = BiruMuda.copy(alpha = 0.0f),
-                        contentColor = biru
+                    border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)), // garis tepi
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent, // transparan
+                        contentColor = biru // warna teks
                     )
                 ) {
                     Text(if (tanggal.isEmpty()) "Pilih Tanggal" else "Tanggal: $tanggal")
                 }
+
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(
+
+                OutlinedButton(
                     onClick = { timePickerDialog.show() },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = BiruMuda.copy(alpha = 0.0f),
-                        contentColor = biru
+                    border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)), // garis tepi
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.Transparent, // transparan
+                        contentColor = biru // warna teks
                     )
                 ) {
                     Text(if (waktu.isEmpty()) "Pilih Waktu" else "Waktu: $waktu")

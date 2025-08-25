@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -196,7 +197,7 @@ fun AddReminderScreen(
             }
 
             // ✅ Section Lansia
-            SectionWithAddButton("Pasien", navController = navController)
+            SectionWithAddButton("Lansia", navController = navController)
             CardSection {
                 if (lansiaList.isEmpty()) {
                     Text("Belum ada data lansia")
@@ -215,16 +216,24 @@ fun AddReminderScreen(
             }
 
             // ✅ Section Obat
-            SectionWithAddButton("List Obat", navController = navController)
+            SectionWithAddButton("Obat", navController = navController)
             CardSection {
                 if (selectedLansia == null) {
-                    Text("Silahkan pilih lansia terlebih dahulu")
+                    Text(
+                        "Silahkan pilih lansia terlebih dahulu",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
                 } else {
                     val lansia = lansiaList.find { it.id == selectedLansia }
                     val obatFiltered = obatList.filter { lansia?.obatIds?.contains(it.id) == true }
 
                     if (obatFiltered.isEmpty()) {
-                        Text("Lansia ini belum memiliki obat yang ditandai")
+                        Text(
+                            "Lansia ini belum memiliki obat yang ditandai",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
                     } else {
                         obatFiltered.forEach { obat ->
                             ReminderButton(
