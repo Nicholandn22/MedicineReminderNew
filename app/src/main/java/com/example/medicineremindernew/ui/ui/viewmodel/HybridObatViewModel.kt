@@ -1,11 +1,13 @@
 package com.example.medicineremindernew.ui.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.repository.HybridObatRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HybridObatViewModel(
@@ -17,6 +19,12 @@ class HybridObatViewModel(
 
     private val _obatDetail = MutableStateFlow<Obat?>(null)
     val obatDetail: StateFlow<Obat?> = _obatDetail
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         loadObat()
@@ -55,6 +63,32 @@ class HybridObatViewModel(
             val success = hybridRepository.deleteObat(id)
             if (success) loadObat()
             onResult(success)
+        }
+    }
+
+    private fun observeObat() {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                val list = hybridRepository.getAllObat()
+                _obatList.value = list.distinctBy { it.id }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error fetching kunjungan"
+                Log.e("HybridVM", "observeKunjungan error", e)
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun syncPendingData() {
+        viewModelScope.launch {
+            try {
+                hybridRepository.syncPendingData()
+                observeObat()
+            } catch (t: Throwable) {
+                _error.value = t.message ?: "Sync failed"
+            }
         }
     }
 }

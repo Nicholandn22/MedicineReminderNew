@@ -1,11 +1,13 @@
 package com.example.medicineremindernew.ui.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.HybridLansiaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HybridLansiaViewModel(
@@ -17,6 +19,12 @@ class HybridLansiaViewModel(
 
     private val _lansiaDetail = MutableStateFlow<Lansia?>(null)
     val lansiaDetail: StateFlow<Lansia?> = _lansiaDetail
+
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         loadLansia()
@@ -55,6 +63,32 @@ class HybridLansiaViewModel(
             val success = hybridRepository.deleteLansia(id)
             if (success) loadLansia()
             onResult(success)
+        }
+    }
+
+    private fun observeLansia() {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                val list = hybridRepository.getAllLansia()
+                _lansiaList.value = list.distinctBy { it.id }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error fetching kunjungan"
+                Log.e("HybridVM", "observeKunjungan error", e)
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun syncPendingData() {
+        viewModelScope.launch {
+            try {
+                hybridRepository.syncPendingData()
+                observeLansia()
+            } catch (t: Throwable) {
+                _error.value = t.message ?: "Sync failed"
+            }
         }
     }
 }
