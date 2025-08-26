@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +29,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -184,8 +186,7 @@ fun DetailObatScreen(
                         value = takaranDosis,
                         onValueChange = { takaranDosis = it },
                         placeholder = { Text("Takaran") },
-                        label = { Text("Takaran") },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(56.dp),
                         singleLine = true
                     )
 
@@ -201,15 +202,19 @@ fun DetailObatScreen(
 
                     Box(
                         modifier = Modifier
-                            .size(56.dp)
+                            .height(56.dp)
+                            .aspectRatio(1f)
                             .border(width = 1.dp, color = BiruMuda.copy(alpha = 1.0f), shape = RoundedCornerShape(12.dp)) // garis tepi
                     ) {
-                        IconButton(
+                        OutlinedIconButton(
                             onClick = {
                                 inputSatuanBaru = !inputSatuanBaru
                                 satuanBaru = ""
                             },
-                            modifier = Modifier.fillMaxSize()
+//                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.size(56.dp),
+                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Add,

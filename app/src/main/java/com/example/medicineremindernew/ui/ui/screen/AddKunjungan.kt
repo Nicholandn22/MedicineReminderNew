@@ -210,18 +210,19 @@ fun AddKunjunganScreen(
                         .fillMaxWidth()
                         .border(1.dp, biru, shape = RoundedCornerShape(30.dp))
                         .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .clickable { expandedJenis = true }
+                        .clickable { expandedJenis = true },
+                    contentAlignment = Alignment.Center // ✅ teks di tengah
                 ) {
                     Text(
                         text = if (selectedJenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else selectedJenisKunjungan,
-                        color = if (selectedJenisKunjungan.isEmpty()) Color.Gray else Color.Black
+                        color = if (selectedJenisKunjungan.isEmpty()) biru else biru
                     )
                 }
 
                 DropdownMenu(
                     expanded = expandedJenis,
                     onDismissRequest = { expandedJenis = false },
-                    modifier = Modifier.fillMaxWidth()
+//                    modifier = Modifier.fillMaxWidth()
                 ) {
                     jenisOptions.forEach { option ->
                         DropdownMenuItem(
@@ -235,6 +236,7 @@ fun AddKunjunganScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Buttons Save & Clear
             Row(
