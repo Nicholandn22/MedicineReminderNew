@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -215,7 +216,9 @@ fun AddKunjunganScreen(
                 ) {
                     Text(
                         text = if (selectedJenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else selectedJenisKunjungan,
-                        color = if (selectedJenisKunjungan.isEmpty()) biru else biru
+                        color = if (selectedJenisKunjungan.isEmpty()) biru else biru,
+                        fontSize = 14.sp, // Sesuaikan dengan Button default
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
@@ -290,6 +293,7 @@ fun AddKunjunganScreen(
                         selectedLansia = null
                         tanggal = ""
                         waktu = ""
+                        selectedJenisKunjungan = ""
                         coroutineScope.launch {
                             snackbarHostState.showSnackbar("Form telah direset")
                         }

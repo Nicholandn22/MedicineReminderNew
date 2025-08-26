@@ -205,7 +205,7 @@ fun DetailKunjunganScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Jenis Kunjungan", fontWeight = FontWeight.Bold)
 
-                Spacer(modifier = Modifier.height(8.dp)) // ✅ kasih jarak 8dp
+                Spacer(modifier = Modifier.height(10.dp)) // ✅ kasih jarak 8dp
 
                 Box(
                     modifier = Modifier
@@ -217,7 +217,9 @@ fun DetailKunjunganScreen(
                 ) {
                     Text(
                         text = if (jenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else jenisKunjungan,
-                        color = if (jenisKunjungan.isEmpty()) biru else biru
+                        color = if (jenisKunjungan.isEmpty()) biru else biru,
+                        fontSize = 14.sp, // Sesuaikan dengan Button default
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
