@@ -1,9 +1,14 @@
 package com.example.medicineremindernew.ui.data.repository
 
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.medicineremindernew.ui.alarm.AlarmReceiver
 import com.example.medicineremindernew.ui.alarm.cancelAlarm
 import com.example.medicineremindernew.ui.alarm.scheduleAlarm
 import com.example.medicineremindernew.ui.data.dao.LocalReminderDao
@@ -131,6 +136,42 @@ class HybridReminderRepository(
         } catch (e: Exception) {
             Log.e("HybridReminderRepo", "Delete failed: ${e.message}")
             false
+        }
+    }
+
+    fun cancelAlarm(context: Context, reminderId: String) {
+        try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+            // ✅ 1. Alarm utama
+            val mainIntent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("reminderId", reminderId)
+            }
+            val mainPendingIntent = PendingIntent.getBroadcast(
+                context,
+                reminderId.hashCode(), // requestCode alarm utama
+                mainIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(mainPendingIntent)
+            Log.d("CancelAlarm", "Alarm utama dibatalkan untuk reminder $reminderId")
+
+            // ✅ 2. Snooze alarm (5 menit)
+            val snoozeIntent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra("reminderId", reminderId)
+                putExtra("is_snooze", true)
+            }
+            val snoozePendingIntent = PendingIntent.getBroadcast(
+                context,
+                reminderId.hashCode() + 1000, // requestCode snooze sama seperti saat setSnoozeAlarm
+                snoozeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(snoozePendingIntent)
+            Log.d("CancelAlarm", "Snooze alarm dibatalkan untuk reminder $reminderId")
+
+        } catch (e: Exception) {
+            Log.e("CancelAlarm", "Gagal membatalkan alarm: ${e.message}")
         }
     }
 

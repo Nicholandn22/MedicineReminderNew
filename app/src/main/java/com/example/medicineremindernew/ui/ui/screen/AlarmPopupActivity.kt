@@ -36,6 +36,7 @@ import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import java.util.Calendar
 
 class AlarmPopupActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
@@ -99,16 +100,14 @@ class AlarmPopupActivity : ComponentActivity() {
                     onSnooze = {
                         Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan")
 
-                        // Hentikan ringtone saat ini
-                        if (ringtone != null && ringtone!!.isPlaying) {
-                            ringtone?.stop()
-                            Log.d("AlarmPopup", "Ringtone dihentikan untuk snooze")
-                        }
+                        ringtone?.stop()
 
-                        // 🔹 Update Firestore: statusIoT = "OFF"
                         matikanIoT(reminderId)
 
-                        // Set alarm untuk 5 menit kemudian
+                        // 🔹 Update Firestore: tambah 5 menit ke waktu reminder
+                        tambah5MenitReminder(reminderId)
+
+                        // 🔹 Set alarm snooze
                         setSnoozeAlarm(this, reminderId)
 
                         finish()
@@ -132,6 +131,66 @@ class AlarmPopupActivity : ComponentActivity() {
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Gagal update statusIoT", e)
+            }
+    }
+
+    private fun tambah5MenitReminder(reminderId: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("reminders").document(reminderId).get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    val reminder = doc.toObject(Reminder::class.java)
+                    val tanggal = reminder?.tanggal  // "2025-08-27"
+                    val waktu = reminder?.waktu      // "11:45"
+
+                    if (tanggal != null && waktu != null) {
+                        try {
+                            // Gabungkan tanggal + waktu jadi satu string
+                            val dateTimeStr = "$tanggal $waktu"  // "2025-08-27 11:45"
+                            val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                            val date = format.parse(dateTimeStr)
+
+                            // Tambah 5 menit
+                            val calendar = Calendar.getInstance()
+                            calendar.time = date!!
+                            calendar.add(Calendar.MINUTE, 5)
+
+                            // Pisahkan lagi jadi tanggal & waktu
+                            val newTanggal = String.format(
+                                "%04d-%02d-%02d",
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH) + 1,
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            )
+                            val newWaktu = String.format(
+                                "%02d:%02d",
+                                calendar.get(Calendar.HOUR_OF_DAY),
+                                calendar.get(Calendar.MINUTE)
+                            )
+
+                            // Update ke Firestore
+                            db.collection("reminders").document(reminderId)
+                                .update(
+                                    mapOf(
+                                        "tanggal" to newTanggal,
+                                        "waktu" to newWaktu
+                                    )
+                                )
+                                .addOnSuccessListener {
+                                    Log.d("AlarmPopup", "Reminder diupdate: $newTanggal $newWaktu")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("AlarmPopup", "Gagal update reminder: ${e.message}")
+                                }
+                        } catch (e: Exception) {
+                            Log.e("AlarmPopup", "Error parsing waktu: ${e.message}")
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("AlarmPopup", "Gagal ambil reminder: ${e.message}")
             }
     }
 
