@@ -397,8 +397,8 @@ fun SectionWithAddButton(
     navController: NavController
 ) {
     val route = when (title) {
-        "List Obat" -> "addObat"
-        "Pasien" -> "addlansia"
+        "Obat" -> "addObat"
+        "Lansia" -> "addlansia"
         else -> ""
     }
 

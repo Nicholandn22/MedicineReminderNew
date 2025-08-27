@@ -90,7 +90,10 @@ fun ObatScreen(
                         text = "Belum ada data obat",
                         color = warnaBiru,
                         fontSize = 18.sp,
-                        modifier = Modifier.padding(16.dp)
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     )
                 } else {
                     obatList.forEach { obat ->

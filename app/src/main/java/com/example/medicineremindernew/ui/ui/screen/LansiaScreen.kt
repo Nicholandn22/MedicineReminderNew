@@ -101,8 +101,12 @@ fun LansiaScreen(
                 if (lansiaList.isEmpty()) {
                     Text(
                         text = "Belum ada data lansia",
-                        modifier = Modifier.padding(16.dp),
-                        color = warnaBiru
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        color = warnaBiru,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
                     )
                 } else {
                     lansiaList.forEach { lansia ->
