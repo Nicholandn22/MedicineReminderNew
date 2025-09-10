@@ -26,13 +26,34 @@ class HybridLansiaViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    // Enum untuk kriteria sorting
+    enum class SortCriteria {
+        NAME_ASC,     // A-Z
+        NAME_DESC    // Z-A
+    }
+
+    // StateFlow untuk kriteria sorting saat ini
+    private val _currentSortCriteria = MutableStateFlow(SortCriteria.NAME_ASC)
+    val currentSortCriteria: StateFlow<SortCriteria> = _currentSortCriteria.asStateFlow()
+
+
     init {
         loadLansia()
     }
 
+    // Fungsi untuk mengurutkan lansia berdasarkan kriteria
+    private fun sortLansia(lansiaList: List<Lansia>, criteria: SortCriteria): List<Lansia> {
+        return when (criteria) {
+            SortCriteria.NAME_ASC -> lansiaList.sortedBy { it.nama.lowercase() }
+            SortCriteria.NAME_DESC -> lansiaList.sortedByDescending { it.nama.lowercase() }
+        }
+    }
+
     fun loadLansia() {
         viewModelScope.launch {
-            _lansiaList.value = hybridRepository.getAllLansia()
+            val rawList = hybridRepository.getAllLansia()
+            val sortedList = sortLansia(rawList, _currentSortCriteria.value)
+            _lansiaList.value = sortedList
         }
     }
 
