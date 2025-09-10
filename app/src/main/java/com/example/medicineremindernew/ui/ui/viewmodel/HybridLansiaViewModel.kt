@@ -41,7 +41,7 @@ class HybridLansiaViewModel(
         loadLansia()
     }
 
-    // Fungsi untuk mengurutkan obat berdasarkan kriteria
+    // Fungsi untuk mengurutkan lansia berdasarkan kriteria
     private fun sortLansia(lansiaList: List<Lansia>, criteria: SortCriteria): List<Lansia> {
         return when (criteria) {
             SortCriteria.NAME_ASC -> lansiaList.sortedBy { it.nama.lowercase() }
