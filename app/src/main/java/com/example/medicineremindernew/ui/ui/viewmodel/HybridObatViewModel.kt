@@ -26,13 +26,61 @@ class HybridObatViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    // Enum untuk kriteria sorting
+    enum class SortCriteria {
+        NAME_ASC,     // A-Z
+        NAME_DESC,    // Z-A
+        DATE_ASC,     // Tanggal terlama
+        DATE_DESC,    // Tanggal terbaru
+        STOCK_ASC,    // Stok sedikit
+        STOCK_DESC    // Stok banyak
+    }
+
+    // StateFlow untuk kriteria sorting saat ini
+    private val _currentSortCriteria = MutableStateFlow(SortCriteria.NAME_ASC)
+    val currentSortCriteria: StateFlow<SortCriteria> = _currentSortCriteria.asStateFlow()
+
     init {
         loadObat()
     }
 
+    // Fungsi untuk mengurutkan obat berdasarkan kriteria
+    private fun sortObat(obatList: List<Obat>, criteria: SortCriteria): List<Obat> {
+        return when (criteria) {
+            SortCriteria.NAME_ASC -> obatList.sortedBy { it.nama.lowercase() }
+            SortCriteria.NAME_DESC -> obatList.sortedByDescending { it.nama.lowercase() }
+            SortCriteria.DATE_ASC -> obatList.sortedBy { it.pertamaKonsumsi?.toDate() }
+            SortCriteria.DATE_DESC -> obatList.sortedByDescending { it.pertamaKonsumsi?.toDate() }
+            SortCriteria.STOCK_ASC -> obatList.sortedBy { it.stok ?: 0 }
+            SortCriteria.STOCK_DESC -> obatList.sortedByDescending { it.stok ?: 0 }
+        }
+    }
+
     fun loadObat() {
         viewModelScope.launch {
-            _obatList.value = hybridRepository.getAllObat()
+            val rawList = hybridRepository.getAllObat()
+            val sortedList = sortObat(rawList, _currentSortCriteria.value)
+            _obatList.value = sortedList
+        }
+    }
+
+    // Fungsi untuk mengubah kriteria sorting
+    fun setSortCriteria(criteria: SortCriteria) {
+        _currentSortCriteria.value = criteria
+        // Refresh data dengan sorting baru
+        refreshObatWithCurrentSort()
+    }
+
+    private fun refreshObatWithCurrentSort() {
+        viewModelScope.launch {
+            try {
+                val rawList = hybridRepository.getAllObat()
+                val sortedList = sortObat(rawList, _currentSortCriteria.value)
+                _obatList.value = sortedList
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error refreshing sorted obat"
+                Log.e("HybridObatViewModel", "Error refreshing sorted obat: ${e.message}")
+            }
         }
     }
 
