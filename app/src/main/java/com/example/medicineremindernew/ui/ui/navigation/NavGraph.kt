@@ -2,7 +2,7 @@
 
     //import com.example.medicineremindernew.ui.ui.navigation.BottomNavItem.Lansia
     import ObatScreen
-    import RiwayatScreen
+//    import RiwayatScreen
     import android.os.Build
     import androidx.annotation.RequiresApi
     import androidx.compose.runtime.Composable
@@ -23,6 +23,7 @@
     import com.example.medicineremindernew.ui.ui.screen.DetailLansiaScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailObatScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailReminderScreen
+    import com.example.medicineremindernew.ui.ui.screen.RiwayatScreen
     import com.example.medicineremindernew.ui.ui.screen.HomeScreen
     import com.example.medicineremindernew.ui.ui.screen.KunjunganScreen
     import com.example.medicineremindernew.ui.ui.screen.LansiaScreen
@@ -30,6 +31,7 @@
     import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
     import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
     import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
+    import com.example.medicineremindernew.ui.ui.viewmodel.HybridRiwayatViewModel
 
     //import com.example.medicineremindernew.ui.ui.screen.LoginScreen
     //import com.example.medicineremindernew.ui.ui.screen.RegisterScreen
@@ -43,6 +45,7 @@
         lansiaViewModel: HybridLansiaViewModel,
         reminderViewModel: HybridReminderViewModel,
         kunjunganViewModel : HybridKunjunganViewModel,
+        riwayatViewModel : HybridRiwayatViewModel,
         modifier: Modifier = Modifier,
         hybridReminderRepository: HybridReminderRepository,
         hybridLansiaRepository: HybridLansiaRepository,
@@ -120,7 +123,7 @@
 
             composable(BottomNavItem.Obat.route) { ObatScreen(navController, obatViewModel) }
 
-            composable(BottomNavItem.Riwayat.route) { RiwayatScreen() }
+            composable(BottomNavItem.Riwayat.route) { RiwayatScreen(navController,riwayatViewModel,lansiaViewModel,obatViewModel,) }
             composable(BottomNavItem.Kunjungan.route) { KunjunganScreen(navController, kunjunganViewModel, lansiaViewModel) }
 
 
