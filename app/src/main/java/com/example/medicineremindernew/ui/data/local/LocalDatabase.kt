@@ -11,8 +11,10 @@ import com.example.medicineremindernew.ui.data.dao.LocalLansiaDao
 import com.example.medicineremindernew.ui.data.dao.LocalObatDao
 import com.example.medicineremindernew.ui.data.dao.LocalReminderDao
 import com.example.medicineremindernew.ui.data.dao.LocalKunjunganDao
+import com.example.medicineremindernew.ui.data.dao.LocalRiwayatDao
 import com.example.medicineremindernew.ui.data.entity.LocalReminderEntity
 import com.example.medicineremindernew.ui.data.entity.LocalLansiaEntity
+import com.example.medicineremindernew.ui.data.entity.LocalRiwayatEntity
 import com.example.medicineremindernew.ui.data.entity.LocalObatEntity
 import com.example.medicineremindernew.ui.data.entity.LocalKunjunganEntity // ✅ tambahkan
 
@@ -22,7 +24,8 @@ import com.example.medicineremindernew.ui.data.entity.LocalKunjunganEntity // �
         LocalReminderEntity::class,
         LocalLansiaEntity::class,
         LocalObatEntity::class,
-        LocalKunjunganEntity::class // ✅ tambahkan ini
+        LocalKunjunganEntity::class, // ✅ tambahkan ini
+        LocalRiwayatEntity::class // ✅ tambahkan ini
     ],
     version = 2,
     exportSchema = false
@@ -34,6 +37,7 @@ abstract class LocalDatabase : RoomDatabase() {
     abstract fun lansiaDao(): LocalLansiaDao
     abstract fun obatDao(): LocalObatDao
     abstract fun kunjunganDao(): LocalKunjunganDao // ✅ perbaiki return DAO
+    abstract fun riwayatDao(): LocalRiwayatDao
 
     companion object {
         @Volatile

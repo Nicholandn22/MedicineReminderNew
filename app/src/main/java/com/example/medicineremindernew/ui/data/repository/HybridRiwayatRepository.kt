@@ -7,14 +7,16 @@ import com.example.medicineremindernew.ui.data.entity.LocalRiwayatEntity
 import com.example.medicineremindernew.ui.data.model.Riwayat
 import com.example.medicineremindernew.ui.data.network.NetworkUtils
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class HybridRiwayatRepository(
-    private val riwayatRepository: HybridRiwayatRepository, // Firestore repo
-    private val localDao: LocalRiwayatDao,
+    private val riwayatRepository: RiwayatRepository, // Firestore repo
+    private val localDao: LocalRiwayatDao,            // Room DAO
     private val networkUtils: NetworkUtils,
     private val context: Context
 ) {
+
     suspend fun addRiwayat(riwayat: Riwayat): Boolean {
         return try {
             val fixed = if (riwayat.idRiwayat.isEmpty()) {
@@ -22,15 +24,25 @@ class HybridRiwayatRepository(
             } else riwayat
 
             if (networkUtils.isNetworkAvailable()) {
-                try { riwayatRepository.addRiwayat(fixed) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Firestore add failed: ${e.message}") }
+                try {
+                    riwayatRepository.addRiwayat(fixed)
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Firestore add failed: ${e.message}")
+                }
 
-                try { localDao.insertRiwayat(fixed.toLocalEntity(isSynced = true)) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Room insert failed: ${e.message}") }
+                try {
+                    localDao.insertRiwayat(fixed.toLocalEntity(isSynced = true))
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Room insert failed: ${e.message}")
+                }
             } else {
-                try { localDao.insertRiwayat(fixed.toLocalEntity(isSynced = false)) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Room insert failed offline: ${e.message}") }
+                try {
+                    localDao.insertRiwayat(fixed.toLocalEntity(isSynced = false))
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Room insert failed offline: ${e.message}")
+                }
             }
+
             true
         } catch (e: Exception) {
             Log.e("HybridRiwayatRepo", "Add failed: ${e.message}", e)
@@ -41,15 +53,25 @@ class HybridRiwayatRepository(
     suspend fun updateRiwayat(riwayat: Riwayat): Boolean {
         return try {
             if (networkUtils.isNetworkAvailable()) {
-                try { riwayatRepository.updateRiwayat(riwayat) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Firestore update failed: ${e.message}") }
+                try {
+                    riwayatRepository.updateRiwayat(riwayat)
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Firestore update failed: ${e.message}")
+                }
 
-                try { localDao.updateRiwayat(riwayat.toLocalEntity(isSynced = true)) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Room update failed: ${e.message}") }
+                try {
+                    localDao.updateRiwayat(riwayat.toLocalEntity(isSynced = true))
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Room update failed: ${e.message}")
+                }
             } else {
-                try { localDao.updateRiwayat(riwayat.toLocalEntity(isSynced = false)) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Room update failed offline: ${e.message}") }
+                try {
+                    localDao.updateRiwayat(riwayat.toLocalEntity(isSynced = false))
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Room update failed offline: ${e.message}")
+                }
             }
+
             true
         } catch (e: Exception) {
             Log.e("HybridRiwayatRepo", "Update failed: ${e.message}", e)
@@ -60,15 +82,25 @@ class HybridRiwayatRepository(
     suspend fun deleteRiwayat(id: String): Boolean {
         return try {
             if (networkUtils.isNetworkAvailable()) {
-                try { riwayatRepository.deleteRiwayat(id) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Firestore delete failed: ${e.message}") }
+                try {
+                    riwayatRepository.deleteRiwayat(id)
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Firestore delete failed: ${e.message}")
+                }
 
-                try { localDao.deleteRiwayatById(id) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Room delete failed: ${e.message}") }
+                try {
+                    localDao.deleteRiwayatById(id)
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Room delete failed: ${e.message}")
+                }
             } else {
-                try { localDao.deleteRiwayatById(id) }
-                catch (e: Exception) { Log.e("HybridRiwayatRepo", "Room delete failed offline: ${e.message}") }
+                try {
+                    localDao.deleteRiwayatById(id)
+                } catch (e: Exception) {
+                    Log.e("HybridRiwayatRepo", "Room delete failed offline: ${e.message}")
+                }
             }
+
             true
         } catch (e: Exception) {
             Log.e("HybridRiwayatRepo", "Delete failed: ${e.message}")
@@ -76,15 +108,30 @@ class HybridRiwayatRepository(
         }
     }
 
+    // === Ambil semua riwayat (tanpa filter lansiaId) ===
     suspend fun getAllRiwayatOnce(): List<Riwayat> {
-        // ambil dari Firestore
-        return riwayatRepository.getAllRiwayat()
+        return if (networkUtils.isNetworkAvailable()) {
+            try {
+                riwayatRepository.getAllRiwayat()
+            } catch (e: Exception) {
+                Log.e("HybridRiwayatRepo", "Get remote failed: ${e.message}")
+                getLocalRiwayatOnce()
+            }
+        } else {
+            getLocalRiwayatOnce()
+        }
     }
 
-
+    // === Ambil berdasarkan lansiaId kalau dibutuhkan filter ===
     fun getRiwayatByLansiaFlow(lansiaId: String): Flow<List<Riwayat>> {
         return localDao.getRiwayatByLansiaFlow(lansiaId)
+            .map { list -> list.map { entity -> entity.toDomainModel() } }
+    }
+
+    private suspend fun getLocalRiwayatOnce(): List<Riwayat> {
+        return localDao.getRiwayatByLansiaFlow("%") // ambil semua
             .map { list -> list.map { it.toDomainModel() } }
+            .first()
     }
 
     suspend fun syncPendingData() {
@@ -107,8 +154,8 @@ class HybridRiwayatRepository(
         return LocalRiwayatEntity(
             id = this.idRiwayat,
             lansiaId = this.lansiaId,
-            obatId = this.obatId,
-            kunjunganId = this.kunjunganId,
+            obatId = this.obatId ?: "",
+            kunjunganId = this.kunjunganId ?: "",
             jenis = this.jenis,
             keterangan = this.keterangan,
             tanggal = this.tanggal,
@@ -121,14 +168,13 @@ class HybridRiwayatRepository(
         return Riwayat(
             idRiwayat = this.id,
             lansiaId = this.lansiaId,
-            obatId = this.obatId,
-            kunjunganId = this.kunjunganId,
+            obatId = this.obatId?.ifEmpty { null },
+            kunjunganId = this.kunjunganId?.ifEmpty { null },
             jenis = this.jenis,
             keterangan = this.keterangan,
             tanggal = this.tanggal,
             waktu = this.waktu
         )
     }
-
 
 }

@@ -5,38 +5,47 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 class RiwayatRepository(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestoreRepository: FirestoreRepository
 ) {
-    private val riwayatCollection = firestore.collection("riwayat")
+    private val db = FirebaseFirestore.getInstance()
+    private val collection = db.collection("riwayat") // 📌 nama collection Firestore
+
+//    val firestoreRepo = RiwayatRepository(FirestoreRepository())
+
 
     suspend fun addRiwayat(riwayat: Riwayat) {
-        riwayatCollection.document(riwayat.idRiwayat)
+        collection.document(riwayat.idRiwayat)
             .set(riwayat)
             .await()
     }
 
     suspend fun updateRiwayat(riwayat: Riwayat) {
-        riwayatCollection.document(riwayat.idRiwayat)
+        collection.document(riwayat.idRiwayat)
             .set(riwayat)
             .await()
     }
 
     suspend fun deleteRiwayat(id: String) {
-        riwayatCollection.document(id)
-            .delete()
-            .await()
+        collection.document(id).delete().await()
     }
 
     suspend fun getAllRiwayat(): List<Riwayat> {
-        val snapshot = riwayatCollection.get().await()
-        return snapshot.documents.mapNotNull { it.toObject(Riwayat::class.java) }
+        return try {
+            val snapshot = collection.get().await()
+            snapshot.documents.mapNotNull { it.toObject(Riwayat::class.java) }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     suspend fun getRiwayatByLansia(lansiaId: String): List<Riwayat> {
-        val snapshot = riwayatCollection
-            .whereEqualTo("lansiaId", lansiaId)
-            .get()
-            .await()
-        return snapshot.documents.mapNotNull { it.toObject(Riwayat::class.java) }
+        return try {
+            val snapshot = collection.whereEqualTo("lansiaId", lansiaId).get().await()
+            snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Riwayat::class.java)?.copy(idRiwayat = doc.id)
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 }

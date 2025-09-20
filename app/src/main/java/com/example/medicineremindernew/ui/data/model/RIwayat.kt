@@ -1,6 +1,8 @@
 package com.example.medicineremindernew.ui.data.model
 
 import java.util.*
+import com.google.firebase.Timestamp
+import java.util.Date
 
 data class Riwayat(
     val idRiwayat: String = "",     // Firestore ID

@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var hybridLansiaRepository: HybridLansiaRepository
     private lateinit var hybridObatRepository: HybridObatRepository
     private lateinit var hybridKunjunganRepository: HybridKunjunganRepository
+    private lateinit var hybridRiwayatRepository: HybridRiwayatRepository
 
     // ✅ Repository utama (Firestore base)
     private val firestoreRepository = FirestoreRepository()
@@ -72,12 +73,14 @@ class MainActivity : AppCompatActivity() {
     private val obatRepository by lazy { ObatRepository(firestoreRepository) }
     private val reminderRepository by lazy { ReminderRepository(firestoreRepository) }
     private val kunjunganRepository by lazy { KunjunganRepository(firestoreRepository) }
+    private val riwayatRepository by lazy { RiwayatRepository(firestoreRepository) }
 
     // ✅ Hybrid ViewModels (akan diinisialisasi manual)
     private lateinit var hybridObatViewModel: HybridObatViewModel
     private lateinit var hybridLansiaViewModel: HybridLansiaViewModel
     private lateinit var hybridReminderViewModel: HybridReminderViewModel
     private lateinit var hybridKunjunganViewModel: HybridKunjunganViewModel
+    private lateinit var hybridRiwayatViewModel: HybridRiwayatViewModel
 
     // ✅ ViewModels standar
     private val lansiaViewModel: LansiaViewModel by viewModels {
@@ -126,11 +129,13 @@ class MainActivity : AppCompatActivity() {
                 lansiaViewModel = hybridLansiaViewModel,
                 reminderViewModel = hybridReminderViewModel,
                 kunjunganViewModel = hybridKunjunganViewModel,
+                riwayatViewModel = hybridRiwayatViewModel, // ✅ tambahkan ini
                 hybridReminderRepository = hybridReminderRepository,
                 hybridLansiaRepository = hybridLansiaRepository,
                 hybridObatRepository = hybridObatRepository,
                 modifier = Modifier.padding(innerPadding)
             )
+
         }
     }
 
@@ -170,6 +175,12 @@ class MainActivity : AppCompatActivity() {
             localDao = localDatabase.kunjunganDao(),
             networkUtils = networkUtils
         )
+        hybridRiwayatRepository = HybridRiwayatRepository(
+            context = this,
+            riwayatRepository = riwayatRepository,
+            localDao = localDatabase.riwayatDao(),
+            networkUtils = networkUtils
+        )
 
         // ✅ Inisialisasi Hybrid ViewModels setelah repositories siap
         hybridObatViewModel = HybridObatViewModelFactory(hybridObatRepository)
@@ -183,6 +194,15 @@ class MainActivity : AppCompatActivity() {
 
         hybridKunjunganViewModel = HybridKunjunganViewModelFactory(this, firestoreRepository)
             .create(HybridKunjunganViewModel::class.java)
+
+        hybridRiwayatViewModel = HybridRiwayatViewModelFactory(hybridRiwayatRepository)
+            .create(HybridRiwayatViewModel::class.java)
+
+
+
+
+
+
 
         // ✅ Observer perubahan koneksi untuk auto-sync
         lifecycleScope.launch {
