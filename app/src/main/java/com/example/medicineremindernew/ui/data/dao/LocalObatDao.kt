@@ -9,7 +9,7 @@ import com.example.medicineremindernew.ui.data.entity.LocalObatEntity
 
 @Dao
 interface LocalObatDao {
-    @Query("SELECT * FROM local_obat ORDER BY createdAt DESC")
+    @Query("SELECT * FROM local_obat ORDER BY nama ASC")
     suspend fun getAllObat(): List<LocalObatEntity>
 
     @Query("SELECT * FROM local_obat WHERE isSynced = 0")

@@ -92,10 +92,12 @@ class HybridLansiaViewModel(
             try {
                 _loading.value = true
                 val list = hybridRepository.getAllLansia()
-                _lansiaList.value = list.distinctBy { it.id }
+                val distinctList = list.distinctBy { it.id }
+                val sortedList = sortLansia(distinctList, _currentSortCriteria.value)
+                _lansiaList.value = sortedList
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error fetching kunjungan"
-                Log.e("HybridVM", "observeKunjungan error", e)
+                _error.value = e.message ?: "Error fetching lansia"
+                Log.e("HybridVM", "observeLansia error", e)
             } finally {
                 _loading.value = false
             }

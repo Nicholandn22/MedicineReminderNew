@@ -119,10 +119,12 @@ class HybridObatViewModel(
             try {
                 _loading.value = true
                 val list = hybridRepository.getAllObat()
-                _obatList.value = list.distinctBy { it.id }
+                val distinctList = list.distinctBy { it.id }
+                val sortedList = sortObat(distinctList, _currentSortCriteria.value)
+                _obatList.value = sortedList
             } catch (e: Exception) {
-                _error.value = e.message ?: "Error fetching kunjungan"
-                Log.e("HybridVM", "observeKunjungan error", e)
+                _error.value = e.message ?: "Error fetching obat"
+                Log.e("HybridVM", "observeObat error", e)
             } finally {
                 _loading.value = false
             }
