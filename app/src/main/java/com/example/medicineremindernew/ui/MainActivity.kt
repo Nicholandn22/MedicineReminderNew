@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -99,20 +101,50 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun MainApp(navController: NavHostController) {
+        // State untuk loading refresh
+        var isRefreshing by remember { mutableStateOf(false) }
+
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
-                                painter = painterResource(id = R.mipmap.logo), // logo MedTime tercinta
+                                painter = painterResource(id = R.mipmap.logo),
                                 contentDescription = "Logo",
                                 modifier = Modifier
-                                    .size(24.dp) // ukuran kecil
-                                    .clip(RoundedCornerShape(6.dp)) // sedikit melengkung
+                                    .size(24.dp)
+                                    .clip(RoundedCornerShape(6.dp))
                             )
-                            Spacer(modifier = Modifier.width(8.dp)) // jarak antara logo & teks
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text("MedTime")
+                        }
+                    },
+                    actions = {
+                        // Tombol Refresh
+                        IconButton(
+                            onClick = {
+                                if (!isRefreshing) {
+                                    lifecycleScope.launch {
+                                        refreshAllData()
+                                    }
+                                }
+                            },
+                            enabled = !isRefreshing
+                        ) {
+                            if (isRefreshing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Refresh Data",
+                                    tint = Color.White
+                                )
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -137,13 +169,52 @@ class MainActivity : AppCompatActivity() {
             )
 
         }
+
+        // Function untuk refresh semua data
+        suspend fun refreshAllData() {
+            isRefreshing = true
+            try {
+                Log.d("MainActivity", "Memulai refresh semua data...")
+
+                // Refresh semua hybrid repository secara paralel
+                kotlinx.coroutines.coroutineScope {
+                    launch { hybridReminderViewModel.syncPendingData() }
+                    launch { hybridLansiaViewModel.syncPendingData() }
+                    launch { hybridObatViewModel.syncPendingData() }
+                    launch { hybridKunjunganViewModel.syncPendingData() }
+                }
+
+                Log.d("MainActivity", "Refresh semua data selesai")
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Error saat refresh data", e)
+            } finally {
+                isRefreshing = false
+            }
+        }
+    }
+
+    // Function untuk refresh semua data (dapat dipanggil dari luar Composable)
+    private suspend fun refreshAllData() {
+        try {
+            Log.d("MainActivity", "Memulai refresh semua data...")
+
+            // Refresh semua hybrid repository
+            hybridReminderViewModel.syncPendingData()
+            hybridLansiaViewModel.syncPendingData()
+            hybridObatViewModel.syncPendingData()
+            hybridKunjunganViewModel.syncPendingData()
+
+            Log.d("MainActivity", "Refresh semua data selesai")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error saat refresh data", e)
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseApp.initializeApp(this) // ✅ Penting!
+        FirebaseApp.initializeApp(this)
 
         // ✅ Inisialisasi local database & network utils
         localDatabase = LocalDatabase.getDatabase(this)
@@ -245,7 +316,7 @@ class MainActivity : AppCompatActivity() {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(BiruTua.copy(alpha = 1.0f)) // <-- ganti warna sesuai tema
+                            .background(BiruTua.copy(alpha = 1.0f))
                             .alpha(alphaAnim)
                     ) {
                         MainApp(navController)

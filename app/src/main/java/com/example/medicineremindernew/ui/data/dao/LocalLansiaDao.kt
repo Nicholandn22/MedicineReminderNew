@@ -9,7 +9,7 @@ import com.example.medicineremindernew.ui.data.entity.LocalLansiaEntity
 
 @Dao
 interface LocalLansiaDao {
-    @Query("SELECT * FROM local_lansia ORDER BY createdAt DESC")
+    @Query("SELECT * FROM local_lansia ORDER BY nama ASC")
     suspend fun getAllLansia(): List<LocalLansiaEntity>
 
     @Query("SELECT * FROM local_lansia WHERE isSynced = 0")

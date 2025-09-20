@@ -1,11 +1,13 @@
 package com.example.medicineremindernew.ui.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.repository.HybridLansiaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class HybridLansiaViewModel(
@@ -18,13 +20,40 @@ class HybridLansiaViewModel(
     private val _lansiaDetail = MutableStateFlow<Lansia?>(null)
     val lansiaDetail: StateFlow<Lansia?> = _lansiaDetail
 
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    // Enum untuk kriteria sorting
+    enum class SortCriteria {
+        NAME_ASC,     // A-Z
+        NAME_DESC    // Z-A
+    }
+
+    // StateFlow untuk kriteria sorting saat ini
+    private val _currentSortCriteria = MutableStateFlow(SortCriteria.NAME_ASC)
+    val currentSortCriteria: StateFlow<SortCriteria> = _currentSortCriteria.asStateFlow()
+
+
     init {
         loadLansia()
     }
 
+    // Fungsi untuk mengurutkan lansia berdasarkan kriteria
+    private fun sortLansia(lansiaList: List<Lansia>, criteria: SortCriteria): List<Lansia> {
+        return when (criteria) {
+            SortCriteria.NAME_ASC -> lansiaList.sortedBy { it.nama.lowercase() }
+            SortCriteria.NAME_DESC -> lansiaList.sortedByDescending { it.nama.lowercase() }
+        }
+    }
+
     fun loadLansia() {
         viewModelScope.launch {
-            _lansiaList.value = hybridRepository.getAllLansia()
+            val rawList = hybridRepository.getAllLansia()
+            val sortedList = sortLansia(rawList, _currentSortCriteria.value)
+            _lansiaList.value = sortedList
         }
     }
 
@@ -55,6 +84,34 @@ class HybridLansiaViewModel(
             val success = hybridRepository.deleteLansia(id)
             if (success) loadLansia()
             onResult(success)
+        }
+    }
+
+    private fun observeLansia() {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                val list = hybridRepository.getAllLansia()
+                val distinctList = list.distinctBy { it.id }
+                val sortedList = sortLansia(distinctList, _currentSortCriteria.value)
+                _lansiaList.value = sortedList
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error fetching lansia"
+                Log.e("HybridVM", "observeLansia error", e)
+            } finally {
+                _loading.value = false
+            }
+        }
+    }
+
+    fun syncPendingData() {
+        viewModelScope.launch {
+            try {
+                hybridRepository.syncPendingData()
+                observeLansia()
+            } catch (t: Throwable) {
+                _error.value = t.message ?: "Sync failed"
+            }
         }
     }
 }

@@ -52,13 +52,17 @@ fun DetailKunjunganScreen(
     val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle(initialValue = emptyList())
 
     // Tambahkan state jenis kunjungan
-    var jenisKunjungan by remember { mutableStateOf(kunjungan?.jenisKunjungan ?: "") }
+    var jenisKunjungan by remember { mutableStateOf("") }
     var expandedJenis by remember { mutableStateOf(false) }
     val jenisOptions = listOf("Konsultasi ke Rumah Sakit", "Kegiatan Bersama")
 
 
     val biru = BiruMuda.copy(alpha = 1.0f)
 
+    // update state setiap kali kunjungan berubah
+    LaunchedEffect(kunjungan) {
+        jenisKunjungan = kunjungan?.jenisKunjungan ?: ""
+    }
 
     // Load detail saat screen dibuka
     LaunchedEffect(kunjunganId) {
@@ -201,23 +205,28 @@ fun DetailKunjunganScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Jenis Kunjungan", fontWeight = FontWeight.Bold)
 
+                Spacer(modifier = Modifier.height(10.dp)) // ✅ kasih jarak 8dp
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .border(1.dp, biru, shape = RoundedCornerShape(30.dp))
                         .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .clickable { expandedJenis = true }
+                        .clickable { expandedJenis = true },
+                    contentAlignment = Alignment.Center // ✅ teks di tengah
                 ) {
                     Text(
                         text = if (jenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else jenisKunjungan,
-                        color = if (jenisKunjungan.isEmpty()) Color.Gray else Color.Black
+                        color = if (jenisKunjungan.isEmpty()) biru else biru,
+                        fontSize = 14.sp, // Sesuaikan dengan Button default
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
                 DropdownMenu(
                     expanded = expandedJenis,
                     onDismissRequest = { expandedJenis = false },
-                    modifier = Modifier.fillMaxWidth()
+//                    modifier = Modifier.fillMaxWidth()
                 ) {
                     jenisOptions.forEach { option ->
                         DropdownMenuItem(
