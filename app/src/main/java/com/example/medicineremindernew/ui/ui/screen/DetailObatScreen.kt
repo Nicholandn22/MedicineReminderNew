@@ -285,36 +285,36 @@ fun DetailObatScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-//                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-//                OutlinedButton(
-//                    onClick = {
-//                        val cal = Calendar.getInstance().apply {
-//                            time = pertamaKonsumsi ?: Date()
-//                        }
-//                        DatePickerDialog(
-//                            context,
-//                            { _, y, m, d ->
-//                                cal.set(y, m, d)
-//                                pertamaKonsumsi = cal.time
-//                            },
-//                            cal.get(Calendar.YEAR),
-//                            cal.get(Calendar.MONTH),
-//                            cal.get(Calendar.DAY_OF_MONTH)
-//                        ).show()
-//                    },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
-//                ) {
-//                    Text(
-//                        text = if (pertamaKonsumsi != null) {
-//                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi!!)
-//                        } else {
-//                            "Belum Diatur"
-//                        }
-//                    )
-//                }
-//
-//                Spacer(modifier = Modifier.height(16.dp))
+                Text("Tanggal Pertama Konsumsi", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = {
+                        val cal = Calendar.getInstance().apply {
+                            time = pertamaKonsumsi ?: Date()
+                        }
+                        DatePickerDialog(
+                            context,
+                            { _, y, m, d ->
+                                cal.set(y, m, d)
+                                pertamaKonsumsi = cal.time
+                            },
+                            cal.get(Calendar.YEAR),
+                            cal.get(Calendar.MONTH),
+                            cal.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = blueColor)
+                ) {
+                    Text(
+                        text = if (pertamaKonsumsi != null) {
+                            SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(pertamaKonsumsi!!)
+                        } else {
+                            "Belum Diatur"
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = stok,
