@@ -225,6 +225,8 @@ fun RiwayatScreen(
                                 "(tidak ada obat)"
                             }
 
+                            Log.d("RiwayatDebug", "lansiaIds: ${r.lansiaIds}, lansiaMap keys: ${lansiaMap.keys}")
+
                             val waktuText = remember(r) {
                                 r.waktuDiminumMillis?.let {
                                     try {
