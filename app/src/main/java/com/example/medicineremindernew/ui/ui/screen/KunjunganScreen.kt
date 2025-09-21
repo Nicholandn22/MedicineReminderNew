@@ -91,7 +91,7 @@ fun KunjunganScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Daftar Kunjungan",
+                text = "Daftar Aktivitas",
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 30.dp, bottom = 20.dp),
@@ -110,7 +110,7 @@ fun KunjunganScreen(
             ) {
                 Spacer(modifier = Modifier.height(5.dp))
 
-                // Card Kunjungan Terdekat
+                // Card Aktivitas Terdekat
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -125,7 +125,7 @@ fun KunjunganScreen(
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            text = "Kunjungan Terdekat",
+                            text = "Aktivitas Terdekat",
                             color = warnaBiru,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
@@ -179,7 +179,7 @@ fun KunjunganScreen(
                             }
                         } else {
                             Text(
-                                text = "Tidak ada kunjungan terdekat",
+                                text = "Tidak ada Aktivitas terdekat",
                                 color = Color.Gray,
                                 fontSize = 14.sp,
                                 modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
@@ -235,7 +235,7 @@ fun KunjunganScreen(
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda.copy(alpha = 1.0f)) },
-                text = { Text("Apakah Anda yakin ingin menghapus kunjungan ini?") },
+                text = { Text("Apakah Anda yakin ingin menghapus Aktivitas ini?") },
                 confirmButton = {
                     TextButton(onClick = {
                         kunjunganToDelete?.let { id ->

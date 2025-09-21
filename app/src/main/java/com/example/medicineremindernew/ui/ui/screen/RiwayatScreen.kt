@@ -71,10 +71,11 @@ fun RiwayatScreen(
     var riwayatToDelete by remember { mutableStateOf<String?>(null) }
 
     // Build quick maps id->nama for lookup
-    val lansiaMap by remember(lansiaList) {
-        mutableStateOf(lansiaList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) })
-    }
-    val obatMap by remember(obatList) {mutableStateOf( obatList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) })
+
+    val lansiaMap = lansiaList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) }
+
+    val obatMap by remember(obatList) {
+        mutableStateOf(obatList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) })
     }
 
 //    val obatMap by remember(obatList) {
