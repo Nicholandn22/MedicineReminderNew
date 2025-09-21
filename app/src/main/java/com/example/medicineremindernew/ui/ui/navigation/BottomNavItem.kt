@@ -17,7 +17,7 @@ sealed class BottomNavItem(
     object Home : BottomNavItem("home", "Home", Icons.Default.Home)
     object Lansia : BottomNavItem("lansia", "Lansia", Icons.Default.Person)
     object Obat : BottomNavItem("obat", "Obat", Icons.Default.Medication)
-    object Kunjungan : BottomNavItem("kunjungan", "Kunjungan", Icons.Default.DriveEta)
+    object Kunjungan : BottomNavItem("kunjungan", "Aktivitas", Icons.Default.DriveEta)
     object Riwayat : BottomNavItem("riwayat", "Riwayat", Icons.Default.History)
 
 }
