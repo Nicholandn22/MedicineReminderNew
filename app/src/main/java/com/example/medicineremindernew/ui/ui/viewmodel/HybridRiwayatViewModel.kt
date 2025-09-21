@@ -6,9 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.medicineremindernew.ui.data.model.Riwayat
 import com.example.medicineremindernew.ui.data.repository.HybridRiwayatRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class HybridRiwayatViewModel(
     private val repository: HybridRiwayatRepository
@@ -26,8 +31,72 @@ class HybridRiwayatViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    enum class SortCriteria {
+        TIMESTAMP_ASC,     // Timestamp terlama (tanggal + waktu)
+        TIMESTAMP_DESC,    // Timestamp terbaru (tanggal + waktu)
+    }
+
+    // StateFlow untuk kriteria sorting saat ini - DEFAULT ke TIMESTAMP_DESC (terbaru dulu)
+    private val _currentSortCriteria = MutableStateFlow(SortCriteria.TIMESTAMP_DESC)
+    val currentSortCriteria: StateFlow<SortCriteria> = _currentSortCriteria.asStateFlow()
+
+    // Combined StateFlow untuk data yang sudah di-sort
+    val sortedRiwayatList: StateFlow<List<Riwayat>> = combine(
+        _riwayatList,
+        _currentSortCriteria
+    ) { riwayatList, sortCriteria ->
+        sortRiwayat(riwayatList, sortCriteria)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     init {
         observeRiwayat()
+    }
+
+    // Fungsi untuk mengurutkan riwayat berdasarkan kriteria
+    private fun sortRiwayat(riwayatList: List<Riwayat>, criteria: SortCriteria): List<Riwayat> {
+        return when (criteria) {
+            SortCriteria.TIMESTAMP_ASC -> {
+                riwayatList.sortedBy { riwayat ->
+                    getTimestampFromRiwayat(riwayat)
+                }
+            }
+            SortCriteria.TIMESTAMP_DESC -> {
+                riwayatList.sortedByDescending { riwayat ->
+                    getTimestampFromRiwayat(riwayat)
+                }
+            }
+        }
+    }
+
+    // Fungsi helper untuk mendapatkan timestamp dari riwayat
+    private fun getTimestampFromRiwayat(riwayat: Riwayat): Long {
+        return try {
+            val tanggalString = riwayat.tanggal // Format "yyyy-MM-dd"
+            val waktuString = riwayat.waktu     // Format "HH:mm"
+
+            if (tanggalString.isNotEmpty() && waktuString.isNotEmpty()) {
+                // Gabungkan tanggal dan waktu menjadi timestamp
+                val dateTimeString = "$tanggalString $waktuString"
+                val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                val dateTime = sdf.parse(dateTimeString)
+                dateTime?.time ?: 0L
+            } else if (tanggalString.isNotEmpty()) {
+                // Jika hanya ada tanggal, gunakan tanggal saja (jam 00:00)
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val date = sdf.parse(tanggalString)
+                date?.time ?: 0L
+            } else {
+                // Fallback ke 0 jika tidak ada data
+                0L
+            }
+        } catch (e: Exception) {
+            Log.e("HybridRiwayatVM", "Error parsing timestamp for riwayat ${riwayat.idRiwayat}", e)
+            0L // Fallback value
+        }
     }
 
     private fun observeRiwayat() {

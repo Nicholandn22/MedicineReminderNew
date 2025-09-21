@@ -47,7 +47,8 @@ private data class UiRiwayat(
     val keterangan: String? = null,
     val tanggal: String? = null,   // optional: "2025-09-20"
     val waktu: String? = null,     // optional: "08:00"
-    val waktuDiminumMillis: Long? = null // optional: epoch millis
+    val waktuDiminumMillis: Long? = null, // optional: epoch millis
+    val pertamaKonsumsi: String? = null
 )
 
 /**
@@ -70,11 +71,20 @@ fun RiwayatScreen(
     var riwayatToDelete by remember { mutableStateOf<String?>(null) }
 
     // Build quick maps id->nama for lookup
+
     val lansiaMap = lansiaList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) }
 
     val obatMap by remember(obatList) {
         mutableStateOf(obatList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) })
     }
+
+//    val obatMap by remember(obatList) {
+//        mutableStateOf(
+//            obatList.associateBy(
+//                {it.id},
+//                {it}
+//            ))
+//    }
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
@@ -123,6 +133,11 @@ fun RiwayatScreen(
                     val jenis = doc.getString("jenis") ?: doc.getString("status")
                     val keterangan = doc.getString("keterangan") ?: doc.getString("catatan")
 
+                    val obatData = obatList.find{it.id in obatIds}
+                    val pertamaKonsumsi = obatData?.pertamaKonsumsi?.toDate()?.let{
+                        SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(it)
+                    }
+
                     UiRiwayat(
                         id = doc.id,
                         lansiaIds = lansiaIds,
@@ -131,7 +146,8 @@ fun RiwayatScreen(
                         keterangan = keterangan,
                         tanggal = tanggal,
                         waktu = waktu,
-                        waktuDiminumMillis = waktuDiminumMillis
+                        waktuDiminumMillis = waktuDiminumMillis,
+                        pertamaKonsumsi = pertamaKonsumsi
                     )
                 } catch (e: Exception) {
                     Log.e("RiwayatScreen", "Gagal parsing doc ${doc.id}: ${e.message}")
@@ -210,6 +226,8 @@ fun RiwayatScreen(
                                 "(tidak ada obat)"
                             }
 
+                            Log.d("RiwayatDebug", "lansiaIds: ${r.lansiaIds}, lansiaMap keys: ${lansiaMap.keys}")
+
                             val waktuText = remember(r) {
                                 r.waktuDiminumMillis?.let {
                                     try {
@@ -232,7 +250,8 @@ fun RiwayatScreen(
                                 lansiaNama = namaLansia,
                                 obatNama = namaObat,
                                 waktuText = waktuText,
-                                jenis = r.jenis ?: r.keterangan ?: "-"
+                                jenis = r.jenis ?: r.keterangan ?: "-",
+                                pertamaKonsumsi = r.pertamaKonsumsi
                             )
                         }
                     }
@@ -254,7 +273,8 @@ private fun RiwayatRow(
     lansiaNama: String,
     obatNama: String,
     waktuText: String,
-    jenis: String
+    jenis: String,
+    pertamaKonsumsi: String?
 ) {
     Row(
         modifier = Modifier
@@ -271,6 +291,7 @@ private fun RiwayatRow(
             Text("Obat: $obatNama", fontSize = 16.sp, color = Color.DarkGray)
             Text("Waktu: $waktuText", fontSize = 14.sp, color = Color.Gray)
             Text("Jenis: $jenis", fontSize = 14.sp, color = Color(0xFF555555))
+            Text("Pertama Konsumsi: ${pertamaKonsumsi ?: "-"}", fontSize = 14.sp, color = Color(0xFF777777))
         }
 
 
