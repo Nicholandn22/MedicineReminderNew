@@ -87,7 +87,7 @@ class AlarmPopupActivity : ComponentActivity() {
                             ringtone?.stop()
                             Log.d("AlarmPopup", "Ringtone dihentikan untuk snooze")
                         }
-=======
+
                         ringtone?.stop()
 
 
