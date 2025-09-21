@@ -77,6 +77,9 @@ fun RiwayatScreen(
         mutableStateOf(obatList.associate { it.id to (it.nama.ifBlank { "Nama tidak tersedia" }) })
     }
 
+    val warnaKrem = Krem.copy(alpha = 1.0f)
+    val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
     // Fetch riwayat langsung dari Firestore (ambil semua)
     LaunchedEffect(Unit) {
         isLoading = true
@@ -85,6 +88,8 @@ fun RiwayatScreen(
             val snap = db.collection("riwayat").get().await()
             val list = snap.documents.mapNotNull { doc ->
                 try {
+
+
                     // flexible parsing: accept "lansiaIds" list OR "lansiaId" single
                     val lansiaIds = when (val x = doc.get("lansiaIds")) {
                         is List<*> -> x.mapNotNull { it?.toString() }
@@ -160,7 +165,7 @@ fun RiwayatScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Krem)
+            .background(warnaKrem)
     ) {
         Column(
             modifier = Modifier
@@ -175,7 +180,7 @@ fun RiwayatScreen(
                 textAlign = TextAlign.Center,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = BiruTua
+                color = warnaBiru
             )
 
             val scrollState = rememberScrollState()
@@ -228,15 +233,7 @@ fun RiwayatScreen(
                                 lansiaNama = namaLansia,
                                 obatNama = namaObat,
                                 waktuText = waktuText,
-                                jenis = r.jenis ?: r.keterangan ?: "-",
-                                onDelete = {
-                                    riwayatToDelete = r.id
-                                    showDeleteDialog = true
-                                },
-                                onClick = {
-                                    // optional: navigasi ke detail riwayat
-                                    navController.navigate("detail_riwayat/${r.id}")
-                                }
+                                jenis = r.jenis ?: r.keterangan ?: "-"
                             )
                         }
                     }
@@ -246,59 +243,9 @@ fun RiwayatScreen(
             }
         }
 
-        // tombol tambah (opsional)
-        FloatingActionButton(
-            onClick = { navController.navigate("add_riwayat") },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 20.dp, bottom = 100.dp),
-            containerColor = BiruTua,
-            contentColor = Color.White
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "Tambah")
-        }
 
-        // dialog hapus
-        if (showDeleteDialog) {
-            AlertDialog(
-                onDismissRequest = { showDeleteDialog = false },
-                title = { Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda) },
-                text = { Text("Apakah Anda yakin ingin menghapus riwayat ini?") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        val id = riwayatToDelete
-                        if (id != null) {
-                            // hapus dokumen Firestore
-                            try {
-                                val db = FirebaseFirestore.getInstance()
-                                db.collection("riwayat").document(id).delete()
-                                    .addOnSuccessListener {
-                                        Log.d("RiwayatScreen", "Riwayat $id dihapus")
-                                        // refresh list (simple: reload)
-                                        // NOTE: bisa optimalkan dengan remove dari uiRiwayatList langsung
-                                        // tapi untuk kesederhanaan kita panggil ulang fetch dengan trigger
-                                        // => set uiRiwayatList = uiRiwayatList.filter { it.id != id }
-                                        uiRiwayatList = uiRiwayatList.filter { it.id != id }
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e("RiwayatScreen", "Gagal hapus riwayat $id: ${e.message}", e)
-                                    }
-                            } catch (e: Exception) {
-                                Log.e("RiwayatScreen", "Exception saat hapus: ${e.message}", e)
-                            }
-                        }
-                        showDeleteDialog = false
-                    }) {
-                        Text("Ya", color = Color.Red)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Tidak", color = BiruMuda)
-                    }
-                }
-            )
-        }
+
+
     }
 }
 
@@ -308,9 +255,7 @@ private fun RiwayatRow(
     lansiaNama: String,
     obatNama: String,
     waktuText: String,
-    jenis: String,
-    onDelete: () -> Unit,
-    onClick: () -> Unit
+    jenis: String
 ) {
     Row(
         modifier = Modifier
@@ -329,10 +274,6 @@ private fun RiwayatRow(
             Text("Jenis: $jenis", fontSize = 14.sp, color = Color(0xFF555555))
         }
 
-        Column(horizontalAlignment = Alignment.End) {
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Hapus", tint = Color.Red)
-            }
-        }
+
     }
 }

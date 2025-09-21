@@ -67,29 +67,26 @@ class AlarmPopupActivity : ComponentActivity() {
                         // 🔹 Update Firestore: statusIoT = "OFF"
                         matikanIoT(reminderId)
 
-                        // 🔹 Simpan riwayat
-                        simpanRiwayat(reminderId, lansiaList, obatList)
+                        // 🔹 Simpan riwayat dengan jenis "minum obat"
+                        simpanRiwayat(reminderId, lansiaList, obatList, jenisRiwayat = "minum obat")
 
                         // 🔹 Stop ringtone
                         if (ringtone?.isPlaying == true) {
                             ringtone?.stop()
                         }
 
+                        // 🔹 Batalkan alarm
                         cancelAlarm(this, reminderId)
                         finish()
                     },
                     onSnooze = {
                         Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan")
 
-
-                        // Hentikan ringtone saat ini
+                        // 🔹 Hentikan ringtone saat ini
                         if (ringtone?.isPlaying == true) {
                             ringtone?.stop()
                             Log.d("AlarmPopup", "Ringtone dihentikan untuk snooze")
                         }
-
-                        ringtone?.stop()
-
 
                         matikanIoT(reminderId)
 
@@ -104,6 +101,7 @@ class AlarmPopupActivity : ComponentActivity() {
                 )
             }
         }
+
     }
 
     // 🔹 Fungsi update Firestore
@@ -257,7 +255,7 @@ class AlarmPopupActivity : ComponentActivity() {
         }
     }
 
-    private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>) {
+    private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>,jenisRiwayat: String) {
         val db = FirebaseFirestore.getInstance()
         val riwayatId = db.collection("riwayat").document().id
 
@@ -267,7 +265,8 @@ class AlarmPopupActivity : ComponentActivity() {
             "lansiaIds" to lansiaList.map { it.id }, // ✅ pakai id dari Lansia
             "obatIds" to obatList.map { it.id },     // ✅ pakai id dari Obat
             "waktuDiminum" to System.currentTimeMillis(),
-            "status" to "SUDAH"
+            "status" to "SUDAH",
+            "jenis" to jenisRiwayat
         )
 
 
