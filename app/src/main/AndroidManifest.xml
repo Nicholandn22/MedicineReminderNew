@@ -36,6 +36,12 @@
             </intent-filter>
         </receiver>
 
+        <!-- ✅ TAMBAHAN: Receiver untuk menangani aksi "Sudah Diminum" -->
+        <receiver
+            android:name=".ui.alarm.MedicineTakenReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
         <receiver
             android:name=".ui.alarm.BootReceiver"
             android:enabled="true"
