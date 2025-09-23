@@ -44,7 +44,8 @@ class AlarmPopupActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
 
-        val reminderId = intent.getStringExtra("reminderId") ?: ""
+        val reminderId = intent.getStringExtra("reminderId") ?:
+                        intent.getStringExtra("reminder_id") ?: ""
         Log.d("AlarmPopup", "Reminder ID: $reminderId")
 
         // Putar suara alarm
@@ -76,7 +77,7 @@ class AlarmPopupActivity : ComponentActivity() {
                         }
 
                         // 🔹 Batalkan alarm
-                        cancelAlarm(this, reminderId)
+//                        cancelAlarm(this, reminderId)
                         finish()
                     },
                     onSnooze = {
@@ -91,7 +92,7 @@ class AlarmPopupActivity : ComponentActivity() {
                         matikanIoT(reminderId)
 
                         // 🔹 Update Firestore: tambah 5 menit ke waktu reminder
-                        tambah5MenitReminder(reminderId)
+//                        tambah5MenitReminder(reminderId)
 
                         // 🔹 Set alarm snooze
                         setSnoozeAlarm(this, reminderId)
@@ -184,41 +185,75 @@ class AlarmPopupActivity : ComponentActivity() {
 
     private fun setSnoozeAlarm(context: Context, reminderId: String) {
         try {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            // Hitung waktu 5 menit dari sekarang
+            val snoozeTime = System.currentTimeMillis() + (5 * 60 * 1000)
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                if (!alarmManager.canScheduleExactAlarms()) {
-                    Log.e("AlarmPopup", "Aplikasi tidak memiliki permission untuk schedule exact alarms")
-                    setRegularSnoozeAlarm(context, reminderId, alarmManager)
-                    return
-                }
-            }
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
             val intent = Intent(context, AlarmReceiver::class.java).apply {
                 putExtra("reminderId", reminderId)
+                putExtra("reminder_id", reminderId) // Support backward compatibility
                 putExtra("is_snooze", true)
                 putExtra("is_recurring", false)
+                action = "com.example.medicineremindernew.ALARM" // ✅ TAMBAHKAN ACTION
             }
 
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                reminderId.hashCode() + 1000,
+                reminderId.hashCode() + 1000, // ID berbeda untuk snooze
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            val triggerTime = System.currentTimeMillis() + (5 * 60 * 1000)
-
+            // ✅ GUNAKAN METODE YANG SAMA SEPERTI DI AlarmUtils
             try {
-                alarmManager.setExactAndAllowWhileIdle(
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    if (alarmManager.canScheduleExactAlarms()) {
+                        alarmManager.setExactAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            snoozeTime,
+                            pendingIntent
+                        )
+                        Log.d("AlarmPopup", "Exact snooze alarm scheduled for: ${java.util.Date(snoozeTime)}")
+                    } else {
+                        // Fallback ke inexact alarm
+                        alarmManager.setAndAllowWhileIdle(
+                            AlarmManager.RTC_WAKEUP,
+                            snoozeTime,
+                            pendingIntent
+                        )
+                        Log.w("AlarmPopup", "Exact alarm permission not available, using inexact snooze alarm")
+                    }
+                } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        snoozeTime,
+                        pendingIntent
+                    )
+                    Log.d("AlarmPopup", "Exact snooze alarm scheduled (API 23+)")
+                } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        snoozeTime,
+                        pendingIntent
+                    )
+                    Log.d("AlarmPopup", "Exact snooze alarm scheduled (API 19+)")
+                } else {
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        snoozeTime,
+                        pendingIntent
+                    )
+                    Log.d("AlarmPopup", "Basic snooze alarm scheduled")
+                }
+            } catch (se: SecurityException) {
+                Log.w("AlarmPopup", "SecurityException, fallback to inexact snooze alarm: ${se.message}")
+                // Final fallback
+                alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
-                    triggerTime,
+                    snoozeTime,
                     pendingIntent
                 )
-                Log.d("AlarmPopup", "Exact snooze alarm diset untuk reminder $reminderId dalam 5 menit")
-            } catch (se: SecurityException) {
-                Log.w("AlarmPopup", "SecurityException saat set exact alarm, fallback ke regular alarm: ${se.message}")
-                setRegularSnoozeAlarm(context, reminderId, alarmManager)
             }
 
         } catch (e: Exception) {
