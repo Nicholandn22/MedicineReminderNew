@@ -60,10 +60,9 @@ class AlarmReceiver : BroadcastReceiver() {
         // ✅ Trigger Firestore untuk ESP8266
         triggerActiveAlarm(reminderId, isSnooze)
 
-        // ✅ Jadwalkan alarm berikutnya jika ini recurring alarm
+        // Jadwalkan alarm berikutnya jika ini recurring alarm
         if (isRecurring && !recurrenceType.isNullOrEmpty() && !isSnooze) {
             if (originalTime > 0) {
-                // ✅ Gunakan fungsi baru dari AlarmUtils untuk akurasi yang lebih baik
                 AlarmUtils.scheduleNextRecurringAlarm(
                     context,
                     reminderId,
@@ -71,7 +70,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     recurrenceType
                 )
             } else if (intervalMillis > 0) {
-                // ✅ Fallback ke metode lama jika originalTime tidak ada
+                // Fallback ke metode lama jika originalTime tidak ada
                 scheduleNextRecurringAlarmLegacy(context, reminderId, intervalMillis, recurrenceType)
             }
         }
@@ -190,11 +189,33 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun playAlarmSound(context: Context) {
         try {
+            // ✅ Hentikan ringtone yang mungkin masih berjalan sebelum memutar yang baru
+//            AlarmPopupActivity.stopCurrentRingtone()
+
             val ringtoneManager = RingtoneManager.getRingtone(
                 context,
                 RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
             )
-            ringtoneManager?.play()
+
+            // ✅ Hanya putar jika belum ada yang sedang berbunyi
+            if (ringtoneManager != null && !ringtoneManager.isPlaying) {
+                ringtoneManager.play()
+                Log.d("AlarmReceiver", "Alarm sound started")
+
+                // ✅ TAMBAHAN: Hentikan suara otomatis setelah 30 detik sebagai safety
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    try {
+                        if (ringtoneManager.isPlaying) {
+                            ringtoneManager.stop()
+                            Log.d("AlarmReceiver", "Alarm sound stopped automatically after 30 seconds")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("AlarmReceiver", "Error stopping alarm sound automatically: ${e.message}")
+                    }
+                }, 60000) // 60 detik
+            } else {
+                Log.d("AlarmReceiver", "Ringtone is null or already playing, skipping")
+            }
         } catch (e: Exception) {
             Log.e("AlarmReceiver", "Failed to play alarm sound", e)
         }
