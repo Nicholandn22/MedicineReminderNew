@@ -47,15 +47,33 @@ class AlarmReceiver : BroadcastReceiver() {
 
         Log.d("AlarmReceiver", "Reminder ID: $reminderId, Recurring: $isRecurring, Type: $recurrenceType, Snooze: $isSnooze")
 
+        // ✅ Set sebagai alarm aktif SEBELUM menampilkan popup
+        AlarmPopupActivity.setActiveReminder(context, reminderId)
+
         // 🔔 Tampilkan notifikasi
         showNotification(context, reminderId, recurrenceType ?: "Sekali", isSnooze)
 
         // 🧠 Buka popup activity
         val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("reminderId", reminderId)
+            putExtra("reminder_id", reminderId) // Backward compatibility
         }
-        context.startActivity(popupIntent)
+
+        try {
+            context.startActivity(popupIntent)
+            Log.d("AlarmReceiver", "AlarmPopupActivity started successfully")
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Failed to start AlarmPopupActivity: ${e.message}")
+
+            // Fallback: show notification if popup fails
+            showFallbackNotification(context, reminderId, isSnooze)
+
+            // ✅ Jika popup gagal, baru putar suara sebagai fallback
+//            playFallbackAlarmSound(context)
+        }
 
         // ✅ Trigger Firestore untuk ESP8266
         triggerActiveAlarm(reminderId, isSnooze)
@@ -75,8 +93,12 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
 
+        // ✅ Play alarm sound hanya jika bukan snooze atau tidak ada alarm lain yang sedang berbunyi
+//        if (!isSnooze) {
+//            playAlarmSound(context)
+//        }
         // Opsional: Tambahkan suara alarm atau vibration
-        playAlarmSound(context)
+//        playAlarmSound(context)
     }
 
     private fun showNotification(context: Context, reminderId: String, recurrenceType: String, isSnooze: Boolean = false) {
@@ -91,6 +113,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("reminderId", reminderId)
+            putExtra("check_active_alarm", true) // ✅ Flag untuk check alarm aktif
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -115,7 +138,8 @@ class AlarmReceiver : BroadcastReceiver() {
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setDefaults(NotificationCompat.DEFAULT_VIBRATE) // ✅ Hanya vibration, bukan sound
+//            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
             .addAction(
@@ -142,6 +166,43 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
+    // ✅ Fallback notification jika popup gagal dibuka
+    private fun showFallbackNotification(context: Context, reminderId: String, isSnooze: Boolean) {
+        val notificationTitle = "Pengingat Obat - Buka Aplikasi"
+        val notificationText = "Ada alarm aktif. Buka aplikasi untuk melihat pengingat."
+
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra("reminderId", reminderId)
+            putExtra("check_active_alarm", true)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            reminderId.hashCode() + 2000,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.pill)
+            .setContentTitle(notificationTitle)
+            .setContentText(notificationText)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setAutoCancel(false) // Don't auto-cancel
+            .setContentIntent(pendingIntent)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .build()
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationId = reminderId.hashCode() + 2000
+
+        try {
+            manager.notify(notificationId, notification)
+        } catch (e: SecurityException) {
+            Log.e("AlarmReceiver", "Permission denied for fallback notification", e)
+        }
+    }
+
     private fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -151,7 +212,7 @@ class AlarmReceiver : BroadcastReceiver() {
             ).apply {
                 description = "Channel untuk alarm pengingat obat"
                 enableVibration(true)
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), null)
+//                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), null)
             }
 
             val notificationManager: NotificationManager =
@@ -212,7 +273,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     } catch (e: Exception) {
                         Log.e("AlarmReceiver", "Error stopping alarm sound automatically: ${e.message}")
                     }
-                }, 60000) // 60 detik
+                }, 30000) // 30 detik
             } else {
                 Log.d("AlarmReceiver", "Ringtone is null or already playing, skipping")
             }
@@ -320,8 +381,12 @@ class MedicineTakenReceiver : BroadcastReceiver() {
         // Batalkan notifikasi
         val notificationManager = NotificationManagerCompat.from(context)
         notificationManager.cancel(reminderId.hashCode())
+        notificationManager.cancel(reminderId.hashCode() + 1000) // Cancel snooze notification too
 
         Log.d("MedicineTakenReceiver", "Medicine taken for reminder: $reminderId")
+
+        // ✅ Clear active reminder
+        AlarmPopupActivity.clearActiveReminder(context)
 
         // ✅ Update Firestore bahwa obat sudah diminum
         updateMedicineTakenStatus(reminderId)
