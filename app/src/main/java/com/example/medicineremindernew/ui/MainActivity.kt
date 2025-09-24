@@ -76,7 +76,7 @@ class MainActivity : AppCompatActivity() {
     private val obatRepository by lazy { ObatRepository(firestoreRepository) }
     private val reminderRepository by lazy { ReminderRepository(firestoreRepository) }
     private val kunjunganRepository by lazy { KunjunganRepository(firestoreRepository) }
-    private val riwayatRepository by lazy { RiwayatRepository(firestoreRepository) }
+    private val riwayatRepository by lazy { RiwayatRepository() }
 
     // ✅ Hybrid ViewModels (akan diinisialisasi manual)
     private lateinit var hybridObatViewModel: HybridObatViewModel
