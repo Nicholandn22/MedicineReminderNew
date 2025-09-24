@@ -28,15 +28,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.medicineremindernew.ui.data.local.LocalDatabase
+import com.example.medicineremindernew.ui.data.model.Lansia
+import com.example.medicineremindernew.ui.data.model.Obat
+import com.example.medicineremindernew.ui.data.model.Riwayat
+import com.example.medicineremindernew.ui.data.network.NetworkUtils
+import com.example.medicineremindernew.ui.data.repository.HybridRiwayatRepository
+import com.example.medicineremindernew.ui.data.repository.RiwayatRepository
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridRiwayatViewModel
+import com.example.medicineremindernew.ui.ui.viewmodel.HybridRiwayatViewModelFactory
+import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -69,10 +81,7 @@ fun HomeScreen(
                 null
             }
         }
-        .filter { (_, dateTime) ->
-            dateTime.isAfter(now) || dateTime.isEqual(now)
-        }
-        .sortedBy { (_, dateTime) -> dateTime }
+        .sortedBy { (_, dateTime) -> dateTime } // tetap diurutkan
         .map { (reminder, _) -> reminder }
 
     // Reminder terdekat
@@ -80,8 +89,28 @@ fun HomeScreen(
         .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
         .firstOrNull()
 
+
     var showDeleteDialog by remember { mutableStateOf(false) }
     var reminderToDelete by remember { mutableStateOf<String?>(null) }
+
+    val db = LocalDatabase.getDatabase(context) // sesuaikan dengan nama DB-mu
+    val dao = db.riwayatDao()
+    val networkUtils = NetworkUtils(context)
+// ✅ bikin Firestore Repository dulu
+// ✅ bikin Firestore Repository dulu
+     val firestoreRepo = RiwayatRepository() // RiwayatRepository tidak perlu argumen
+    val repository = HybridRiwayatRepository(
+        riwayatRepository = firestoreRepo,
+        localDao = dao,
+        networkUtils = networkUtils,
+        context = context
+    )
+
+    val riwayatViewModel: HybridRiwayatViewModel = viewModel(
+        factory = HybridRiwayatViewModelFactory(repository)
+    )
+
+
 
     Box(
         modifier = Modifier
@@ -230,6 +259,30 @@ fun HomeScreen(
                         onDelete = {
                             reminderToDelete = reminder.id
                             showDeleteDialog = true
+                        },
+                        onSelesai = {
+                            val lansiaIdString = reminder.lansiaIds.joinToString(",")
+                            val obatIdString = reminder.obatIds.joinToString(",")
+
+                            val riwayat = Riwayat(
+                                idRiwayat = UUID.randomUUID().toString(),
+                                lansiaId = lansiaIdString,
+                                obatId = if (obatIdString.isNotEmpty()) obatIdString else null,
+                                kunjunganId = null,
+                                jenis = "selesai di home",
+                                keterangan = "Selesai via HomeScreen",
+                                tanggal = reminder.tanggal,
+                                waktu = reminder.waktu
+                            )
+
+                            riwayatViewModel.addRiwayat(riwayat) { success ->
+                                if (success) {
+                                    Log.d("HomeScreen", "Riwayat berhasil ditambahkan")
+                                    reminderViewModel.deleteReminder(reminder.id) {}
+                                } else {
+                                    Log.e("HomeScreen", "Gagal menambahkan riwayat")
+                                }
+                            }
                         }
                     )
                 }
@@ -298,7 +351,36 @@ fun HomeScreen(
                 }
             )
         }
+
+
+
     }
+}
+
+private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>,jenisRiwayat: String) {
+    val db = FirebaseFirestore.getInstance()
+    val riwayatId = db.collection("riwayat").document().id
+
+    val riwayatData = hashMapOf(
+        "idRiwayat" to riwayatId,
+        "reminderId" to reminderId,
+        "lansiaIds" to lansiaList.map { it.id }, // ✅ pakai id dari Lansia
+        "obatIds" to obatList.map { it.id },     // ✅ pakai id dari Obat
+        "waktuDiminum" to System.currentTimeMillis(),
+        "status" to "SUDAH",
+        "jenis" to jenisRiwayat
+    )
+
+
+    db.collection("riwayat")
+        .document(riwayatId)
+        .set(riwayatData)
+        .addOnSuccessListener {
+            Log.d("Riwayat", "Riwayat berhasil disimpan")
+        }
+        .addOnFailureListener { e ->
+            Log.e("Riwayat", "Gagal menyimpan riwayat", e)
+        }
 }
 
 @Composable
@@ -307,7 +389,8 @@ fun ReminderItem(
     obat: AnnotatedString,
     time: String,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onSelesai: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -330,6 +413,16 @@ fun ReminderItem(
             Row {
                 Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
                 Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
+            }
+
+            Button(
+                onClick = onSelesai,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            ) {
+                Text("Selesai", color = Color.White)
             }
         }
 
