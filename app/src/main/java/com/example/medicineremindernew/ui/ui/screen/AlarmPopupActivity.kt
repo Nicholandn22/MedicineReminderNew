@@ -34,6 +34,73 @@ import java.util.Calendar
 class AlarmPopupActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
 
+    companion object {
+        // SharedPreferences untuk tracking alarm aktif
+        private const val PREF_NAME = "AlarmPrefs"
+        private const val KEY_ACTIVE_REMINDER_ID = "active_reminder_id"
+
+        // ✅ Static ringtone manager untuk mencegah duplikasi suara
+        private var globalRingtone: Ringtone? = null
+
+        // Fungsi untuk set/get alarm aktif
+        fun setActiveReminder(context: Context, reminderId: String) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(KEY_ACTIVE_REMINDER_ID, reminderId).apply()
+            Log.d("AlarmPopup", "Set active reminder: $reminderId")
+        }
+
+        fun getActiveReminder(context: Context): String? {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            return prefs.getString(KEY_ACTIVE_REMINDER_ID, null)
+        }
+
+        fun clearActiveReminder(context: Context) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().remove(KEY_ACTIVE_REMINDER_ID).apply()
+            Log.d("AlarmPopup", "Cleared active reminder")
+        }
+
+        // ✅ Global ringtone management
+        fun stopGlobalRingtone() {
+            try {
+                if (globalRingtone?.isPlaying == true) {
+                    globalRingtone?.stop()
+                    Log.d("AlarmPopup", "Global ringtone stopped")
+                }
+                globalRingtone = null
+            } catch (e: Exception) {
+                Log.e("AlarmPopup", "Error stopping global ringtone: ${e.message}")
+            }
+        }
+
+        fun playGlobalRingtone(context: Context) {
+            try {
+                // Stop any existing ringtone first
+                stopGlobalRingtone()
+
+                val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                globalRingtone = RingtoneManager.getRingtone(context, alarmUri)
+                globalRingtone?.play()
+                Log.d("AlarmPopup", "Global ringtone started")
+            } catch (e: Exception) {
+                Log.e("AlarmPopup", "Error playing global ringtone: ${e.message}")
+            }
+        }
+
+        // Fungsi untuk check dan show popup jika ada alarm aktif
+        fun checkAndShowActiveAlarm(context: Context) {
+            val activeReminderId = getActiveReminder(context)
+            if (!activeReminderId.isNullOrBlank()) {
+                Log.d("AlarmPopup", "Found active alarm, showing popup for: $activeReminderId")
+                val intent = Intent(context, AlarmPopupActivity::class.java).apply {
+                    putExtra("reminderId", activeReminderId)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                context.startActivity(intent)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("AlarmPopup", "onCreate: AlarmPopupActivity dimulai")
@@ -48,14 +115,12 @@ class AlarmPopupActivity : ComponentActivity() {
                         intent.getStringExtra("reminder_id") ?: ""
         Log.d("AlarmPopup", "Reminder ID: $reminderId")
 
-        // Putar suara alarm
-        try {
-            val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ringtone = RingtoneManager.getRingtone(this, alarmUri)
-            ringtone?.play()
-            Log.d("AlarmPopup", "Ringtone mulai diputar")
-        } catch (e: Exception) {
-            Log.e("AlarmPopup", "Gagal memutar ringtone: ${e.message}")
+        // Set sebagai alarm aktif
+        setActiveReminder(this, reminderId)
+
+        // ✅ Gunakan global ringtone management - hanya play jika belum ada
+        if (globalRingtone?.isPlaying != true) {
+            playGlobalRingtone(this)
         }
 
         setContent {
@@ -72,9 +137,14 @@ class AlarmPopupActivity : ComponentActivity() {
                         simpanRiwayat(reminderId, lansiaList, obatList, jenisRiwayat = "minum obat")
 
                         // 🔹 Stop ringtone
-                        if (ringtone?.isPlaying == true) {
-                            ringtone?.stop()
-                        }
+                        stopRingtone()
+
+                        // 🔹 Clear active reminder
+                        clearActiveReminder(this@AlarmPopupActivity)
+
+                        // 🔹 Cancel any pending snooze alarms
+                        cancelSnoozeAlarm(this@AlarmPopupActivity, reminderId)
+
 
                         // 🔹 Batalkan alarm
 //                        cancelAlarm(this, reminderId)
@@ -84,25 +154,59 @@ class AlarmPopupActivity : ComponentActivity() {
                         Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan")
 
                         // 🔹 Hentikan ringtone saat ini
-                        if (ringtone?.isPlaying == true) {
-                            ringtone?.stop()
-                            Log.d("AlarmPopup", "Ringtone dihentikan untuk snooze")
-                        }
+                        stopRingtone()
+
 
                         matikanIoT(reminderId)
 
-                        // 🔹 Update Firestore: tambah 5 menit ke waktu reminder
-//                        tambah5MenitReminder(reminderId)
+                        // 🔹 Clear active reminder sementara
+                        clearActiveReminder(this@AlarmPopupActivity)
 
-                        // 🔹 Set alarm snooze
-                        setSnoozeAlarm(this, reminderId)
-
+                        // 🔹 Set alarm snooze (5 menit kemudian)
+                        setSnoozeAlarm(this@AlarmPopupActivity, reminderId)
                         finish()
                     }
                 )
             }
         }
 
+    }
+
+    private fun stopRingtone() {
+        try {
+            // Stop global ringtone
+            stopGlobalRingtone()
+
+            // Stop local ringtone jika ada
+            if (ringtone?.isPlaying == true) {
+                ringtone?.stop()
+                Log.d("AlarmPopup", "Local ringtone stopped")
+            }
+            ringtone = null
+
+            Log.d("AlarmPopup", "All ringtones stopped")
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Error stopping all ringtones: ${e.message}")
+        }
+    }
+
+    private fun cancelSnoozeAlarm(context: Context, reminderId: String) {
+        try {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                action = "com.example.medicineremindernew.ALARM"
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                reminderId.hashCode() + 1000, // Same ID as snooze alarm
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.cancel(pendingIntent)
+            Log.d("AlarmPopup", "Cancelled snooze alarm for reminder: $reminderId")
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Error cancelling snooze alarm: ${e.message}")
+        }
     }
 
     // 🔹 Fungsi update Firestore
@@ -192,10 +296,10 @@ class AlarmPopupActivity : ComponentActivity() {
 
             val intent = Intent(context, AlarmReceiver::class.java).apply {
                 putExtra("reminderId", reminderId)
-                putExtra("reminder_id", reminderId) // Support backward compatibility
+                putExtra("reminder_id", reminderId)
                 putExtra("is_snooze", true)
                 putExtra("is_recurring", false)
-                action = "com.example.medicineremindernew.ALARM" // ✅ TAMBAHKAN ACTION
+                action = "com.example.medicineremindernew.ALARM"
             }
 
             val pendingIntent = PendingIntent.getBroadcast(
@@ -205,7 +309,7 @@ class AlarmPopupActivity : ComponentActivity() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // ✅ GUNAKAN METODE YANG SAMA SEPERTI DI AlarmUtils
+            // GUNAKAN METODE YANG SAMA SEPERTI DI AlarmUtils
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     if (alarmManager.canScheduleExactAlarms()) {
@@ -261,35 +365,6 @@ class AlarmPopupActivity : ComponentActivity() {
         }
     }
 
-    private fun setRegularSnoozeAlarm(context: Context, reminderId: String, alarmManager: AlarmManager) {
-        try {
-            val intent = Intent(context, AlarmReceiver::class.java).apply {
-                putExtra("reminderId", reminderId)
-                putExtra("is_snooze", true)
-                putExtra("is_recurring", false)
-            }
-
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                reminderId.hashCode() + 1000,
-                intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            val triggerTime = System.currentTimeMillis() + (5 * 60 * 1000)
-
-            alarmManager.set(
-                AlarmManager.RTC_WAKEUP,
-                triggerTime,
-                pendingIntent
-            )
-
-            Log.d("AlarmPopup", "Regular snooze alarm diset untuk reminder $reminderId dalam 5 menit (non-exact)")
-        } catch (e: Exception) {
-            Log.e("AlarmPopup", "Gagal mengatur regular snooze alarm: ${e.message}")
-        }
-    }
-
     private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>,jenisRiwayat: String) {
         val db = FirebaseFirestore.getInstance()
         val riwayatId = db.collection("riwayat").document().id
@@ -317,12 +392,7 @@ class AlarmPopupActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        try {
-            ringtone?.stop()
-            Log.d("AlarmPopup", "Ringtone dihentikan di onDestroy()")
-        } catch (e: Exception) {
-            Log.e("AlarmPopup", "Gagal menghentikan ringtone di onDestroy(): ${e.message}")
-        }
+        stopRingtone()
         super.onDestroy()
     }
 }

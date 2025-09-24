@@ -53,6 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.medicineremindernew.R
+import com.example.medicineremindernew.ui.alarm.AlarmPopupActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -104,6 +105,11 @@ class MainActivity : AppCompatActivity() {
         // State untuk loading refresh
         var isRefreshing by remember { mutableStateOf(false) }
 
+        // ✅ Check active alarm saat pertama kali load
+        LaunchedEffect(Unit) {
+            Log.d("MainActivity", "Checking for active alarms on app start...")
+            AlarmPopupActivity.checkAndShowActiveAlarm(this@MainActivity)
+        }
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -270,9 +276,11 @@ class MainActivity : AppCompatActivity() {
             .create(HybridRiwayatViewModel::class.java)
 
 
+        // ✅ Create notification channel untuk alarm
+        createNotificationChannel(this)
 
-
-
+        // ✅ Check active alarm saat onCreate juga (fallback)
+        checkActiveAlarmFromIntent()
 
 
         // ✅ Observer perubahan koneksi untuk auto-sync
@@ -326,6 +334,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ✅ Check active alarm dari intent yang diterima
+    private fun checkActiveAlarmFromIntent() {
+        val checkActiveAlarm = intent?.getBooleanExtra("check_active_alarm", false) ?: false
+        val reminderId = intent?.getStringExtra("reminderId")
+
+        if (checkActiveAlarm && !reminderId.isNullOrBlank()) {
+            Log.d("MainActivity", "Notification clicked with reminder ID: $reminderId")
+            // Check dan show alarm jika ada
+            AlarmPopupActivity.checkAndShowActiveAlarm(this)
+        }
+
+        // Check juga jika ada active reminder yang tersimpan
+        AlarmPopupActivity.checkAndShowActiveAlarm(this)
+        Log.d("MainActivity", "Checked for active alarms from intent...")
+    }
+
+    // ✅ Handle onResume untuk check active alarm
+    override fun onResume() {
+        super.onResume()
+
+        // Check jika ada alarm aktif saat aplikasi dibuka/resumed
+        AlarmPopupActivity.checkAndShowActiveAlarm(this)
+        Log.d("MainActivity", "onResume - Checking for active alarms...")
+    }
+
+    // ✅ Handle new intent (saat app sudah berjalan dan mendapat intent baru)
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        checkActiveAlarmFromIntent()
+        Log.d("MainActivity", "onNewIntent - Checking for active alarms...")
+    }
+
     // ✅ Sinkronisasi semua data yang pending
     private suspend fun syncAllPendingData() {
         try {
@@ -356,10 +397,17 @@ class MainActivity : AppCompatActivity() {
                 "Alarm Reminder",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Channel untuk alarm pengingat"
+                description = "Channel untuk alarm pengingat obat"
+                enableVibration(true)
+                setSound(
+                    android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM),
+                    null
+                )
             }
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
+
+            Log.d("MainActivity", "Notification channel created successfully")
         }
     }
 }
