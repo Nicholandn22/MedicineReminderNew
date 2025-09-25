@@ -109,7 +109,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun showNotification(context: Context, reminderId: String, recurrenceType: String, isSnooze: Boolean = false) {
         // Tentukan title dan text berdasarkan status snooze
-        val notificationTitle = if (isSnooze) "Pengingat Obat (Snooze)" else "Pengingat Obat"
+        val notificationTitle = if (isSnooze) "Pengingat Obat" else "Pengingat Obat"
         val notificationText = if (isSnooze)
             "Waktunya minum obat! (Pengingat Snooze - ID: $reminderId)"
         else
@@ -129,15 +129,15 @@ class AlarmReceiver : BroadcastReceiver() {
         )
 
         // Intent untuk menandai sebagai sudah diminum
-        val takenIntent = Intent(context, MedicineTakenReceiver::class.java).apply {
-            putExtra("reminderId", reminderId)
-        }
-        val takenPendingIntent = PendingIntent.getBroadcast(
-            context,
-            reminderId.hashCode(),
-            takenIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+//        val takenIntent = Intent(context, MedicineTakenReceiver::class.java).apply {
+//            putExtra("reminderId", reminderId)
+//        }
+//        val takenPendingIntent = PendingIntent.getBroadcast(
+//            context,
+//            reminderId.hashCode(),
+//            takenIntent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.pill) // Sesuaikan dengan icon yang Anda punya
@@ -148,11 +148,11 @@ class AlarmReceiver : BroadcastReceiver() {
 //            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .addAction(
-                R.drawable.pill, // Ganti dengan icon check jika ada
-                "Sudah Diminum",
-                takenPendingIntent
-            )
+//            .addAction(
+//                R.drawable.pill, // Ganti dengan icon check jika ada
+//                "Sudah Diminum",
+//                takenPendingIntent
+//            )
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setFullScreenIntent(pendingIntent, true) // ✅ Tambahan untuk fullscreen popup
             .build()
