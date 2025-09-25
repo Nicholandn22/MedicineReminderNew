@@ -50,6 +50,15 @@ class AlarmReceiver : BroadcastReceiver() {
         // ✅ Set sebagai alarm aktif SEBELUM menampilkan popup
         AlarmPopupActivity.setActiveReminder(context, reminderId)
 
+        // ✅ PERBAIKAN UTAMA: Putar suara alarm SEBELUM popup/notifikasi
+        if (!isSnooze) {
+            // Hanya putar suara untuk alarm baru, tidak untuk snooze
+            AlarmPopupActivity.playGlobalRingtone(context)
+        } else {
+            // Untuk snooze, tetap putar tapi dengan volume yang sama
+            AlarmPopupActivity.playGlobalRingtone(context)
+        }
+
         // 🔔 Tampilkan notifikasi
         showNotification(context, reminderId, recurrenceType ?: "Sekali", isSnooze)
 
@@ -70,9 +79,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
             // Fallback: show notification if popup fails
             showFallbackNotification(context, reminderId, isSnooze)
-
-            // ✅ Jika popup gagal, baru putar suara sebagai fallback
-//            playFallbackAlarmSound(context)
         }
 
         // ✅ Trigger Firestore untuk ESP8266
@@ -137,7 +143,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setSmallIcon(R.drawable.pill) // Sesuaikan dengan icon yang Anda punya
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setDefaults(NotificationCompat.DEFAULT_VIBRATE) // ✅ Hanya vibration, bukan sound
 //            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
@@ -148,6 +154,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 takenPendingIntent
             )
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setFullScreenIntent(pendingIntent, true) // ✅ Tambahan untuk fullscreen popup
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
