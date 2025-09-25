@@ -49,6 +49,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import java.text.SimpleDateFormat
+import java.util.*
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -351,9 +354,6 @@ fun HomeScreen(
                 }
             )
         }
-
-
-
     }
 }
 
@@ -370,7 +370,6 @@ private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList
         "status" to "SUDAH",
         "jenis" to jenisRiwayat
     )
-
 
     db.collection("riwayat")
         .document(riwayatId)
@@ -392,6 +391,12 @@ fun ReminderItem(
     onDelete: () -> Unit,
     onSelesai: () -> Unit
 ) {
+    val today = remember {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+    }
+
+    var sudahDiminum by rememberSaveable{ mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -415,14 +420,31 @@ fun ReminderItem(
                 Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
             }
 
+//            Button(
+//                onClick = onSelesai,
+//                modifier = Modifier
+//                    .padding(top = 8.dp)
+//                    .fillMaxWidth(),
+//                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+//            ) {
+//                Text("Sudah Diminum", color = Color.White)
+//            }
+
             Button(
-                onClick = onSelesai,
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                onClick = {
+                    onSelesai()
+                    sudahDiminum = true
+                },
+                enabled = !sudahDiminum,
+                modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (sudahDiminum) Color.Gray else Color(0xFF4CAF50)
+                )
             ) {
-                Text("Selesai", color = Color.White)
+                Text(
+                    if(sudahDiminum) "Sudah Diminum ✓" else "Sudah Diminum",
+                    color = Color.White
+                )
             }
         }
 
