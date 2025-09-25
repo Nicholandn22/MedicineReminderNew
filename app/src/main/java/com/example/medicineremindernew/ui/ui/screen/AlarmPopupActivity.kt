@@ -474,26 +474,6 @@ fun AlarmPopupScreen(
             when {
                 isLoading -> CircularProgressIndicator()
                 reminder != null -> {
-                    // ✅ Tampilkan informasi recurrence type
-                    reminder?.pengulangan?.let { recurrenceType ->
-                        if (recurrenceType != "Sekali") {
-                            Text(
-                                text = "Jenis: $recurrenceType",
-                                fontSize = 14.sp,
-                                color = Color(0xFF027A7E),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                        }
-                    }
-
-                    // Tampilkan waktu alarm
-                    Text(
-                        text = "Waktu: ${reminder?.tanggal} ${reminder?.waktu}",
-                        fontSize = 16.sp,
-                        color = Color(0xFF011A27),
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
                     if (lansiaList.isNotEmpty()){
                         Text(
                             text = "Lansia:\n${lansiaList.joinToString(", "){ it.nama }}",
