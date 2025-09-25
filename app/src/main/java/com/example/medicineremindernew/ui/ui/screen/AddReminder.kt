@@ -90,7 +90,7 @@ fun AddReminderScreen(
     var tanggal by remember { mutableStateOf("") }
     var waktu by remember { mutableStateOf("") }
 
-    val pengulanganOptions = listOf("Harian", "Mingguan", "Bulanan")
+    val pengulanganOptions = listOf("Harian", "Mingguan", "Satu Kali")
     var selectedPengulangan by remember { mutableStateOf(pengulanganOptions.first()) }
 
     val snackbarHostState = remember { SnackbarHostState() }
