@@ -96,22 +96,22 @@ fun HomeScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var reminderToDelete by remember { mutableStateOf<String?>(null) }
 
-    val db = LocalDatabase.getDatabase(context) // sesuaikan dengan nama DB-mu
-    val dao = db.riwayatDao()
-    val networkUtils = NetworkUtils(context)
-// ✅ bikin Firestore Repository dulu
-// ✅ bikin Firestore Repository dulu
-     val firestoreRepo = RiwayatRepository() // RiwayatRepository tidak perlu argumen
-    val repository = HybridRiwayatRepository(
-        riwayatRepository = firestoreRepo,
-        localDao = dao,
-        networkUtils = networkUtils,
-        context = context
-    )
-
-    val riwayatViewModel: HybridRiwayatViewModel = viewModel(
-        factory = HybridRiwayatViewModelFactory(repository)
-    )
+//    val db = LocalDatabase.getDatabase(context) // sesuaikan dengan nama DB-mu
+//    val dao = db.riwayatDao()
+//    val networkUtils = NetworkUtils(context)
+//// ✅ bikin Firestore Repository dulu
+//// ✅ bikin Firestore Repository dulu
+//     val firestoreRepo = RiwayatRepository() // RiwayatRepository tidak perlu argumen
+//    val repository = HybridRiwayatRepository(
+//        riwayatRepository = firestoreRepo,
+//        localDao = dao,
+//        networkUtils = networkUtils,
+//        context = context
+//    )
+//
+//    val riwayatViewModel: HybridRiwayatViewModel = viewModel(
+//        factory = HybridRiwayatViewModelFactory(repository)
+//    )
 
 
 
@@ -262,31 +262,8 @@ fun HomeScreen(
                         onDelete = {
                             reminderToDelete = reminder.id
                             showDeleteDialog = true
-                        },
-                        onSelesai = {
-                            val lansiaIdString = reminder.lansiaIds.joinToString(",")
-                            val obatIdString = reminder.obatIds.joinToString(",")
-
-                            val riwayat = Riwayat(
-                                idRiwayat = UUID.randomUUID().toString(),
-                                lansiaId = lansiaIdString,
-                                obatId = if (obatIdString.isNotEmpty()) obatIdString else null,
-                                kunjunganId = null,
-                                jenis = "selesai di home",
-                                keterangan = "Selesai via HomeScreen",
-                                tanggal = reminder.tanggal,
-                                waktu = reminder.waktu
-                            )
-
-                            riwayatViewModel.addRiwayat(riwayat) { success ->
-                                if (success) {
-                                    Log.d("HomeScreen", "Riwayat berhasil ditambahkan")
-                                    reminderViewModel.deleteReminder(reminder.id) {}
-                                } else {
-                                    Log.e("HomeScreen", "Gagal menambahkan riwayat")
-                                }
-                            }
                         }
+
                     )
                 }
 
@@ -357,30 +334,7 @@ fun HomeScreen(
     }
 }
 
-private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>,jenisRiwayat: String) {
-    val db = FirebaseFirestore.getInstance()
-    val riwayatId = db.collection("riwayat").document().id
 
-    val riwayatData = hashMapOf(
-        "idRiwayat" to riwayatId,
-        "reminderId" to reminderId,
-        "lansiaIds" to lansiaList.map { it.id }, // ✅ pakai id dari Lansia
-        "obatIds" to obatList.map { it.id },     // ✅ pakai id dari Obat
-        "waktuDiminum" to System.currentTimeMillis(),
-        "status" to "SUDAH",
-        "jenis" to jenisRiwayat
-    )
-
-    db.collection("riwayat")
-        .document(riwayatId)
-        .set(riwayatData)
-        .addOnSuccessListener {
-            Log.d("Riwayat", "Riwayat berhasil disimpan")
-        }
-        .addOnFailureListener { e ->
-            Log.e("Riwayat", "Gagal menyimpan riwayat", e)
-        }
-}
 
 @Composable
 fun ReminderItem(
@@ -388,8 +342,7 @@ fun ReminderItem(
     obat: AnnotatedString,
     time: String,
     onClick: () -> Unit,
-    onDelete: () -> Unit,
-    onSelesai: () -> Unit
+    onDelete: () -> Unit
 ) {
     val today = remember {
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -430,22 +383,7 @@ fun ReminderItem(
 //                Text("Sudah Diminum", color = Color.White)
 //            }
 
-            Button(
-                onClick = {
-                    onSelesai()
-                    sudahDiminum = true
-                },
-                enabled = !sudahDiminum,
-                modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (sudahDiminum) Color.Gray else Color(0xFF4CAF50)
-                )
-            ) {
-                Text(
-                    if(sudahDiminum) "Sudah Diminum ✓" else "Sudah Diminum",
-                    color = Color.White
-                )
-            }
+
         }
 
         IconButton(onClick = onDelete) {
