@@ -7,6 +7,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
 import java.util.*
 
 object AlarmUtils {
@@ -45,107 +47,178 @@ object AlarmUtils {
 //        }
 
         try {
-            // ✅ Periksa dan jadwalkan alarm berdasarkan kemampuan device
+            // ✅ Jadwalkan alarm pertama kali
             scheduleAlarmSafely(alarmManager, timeInMillis, pendingIntent)
-
-            Log.d("AlarmUtils", "Recurring alarm scheduled for $reminderId with type: $recurrenceType at ${Date(timeInMillis)}")
+            Log.d("AlarmUtils", "Initial alarm scheduled for $reminderId with type: $recurrenceType at ${Date(timeInMillis)}")
         } catch (e: Exception) {
             Log.e("AlarmUtils", "Failed to schedule recurring alarm", e)
         }
     }
 
     /**
+     * Update alarm ke waktu berikutnya setelah obat diminum
+     * Dipanggil setelah user mengkonfirmasi "sudah diminum"
+     */
+    fun updateToNextAlarmTime(
+        context: Context,
+        reminderId: String,
+        recurrenceType: String,
+        currentDateStr: String,  // Format: "2025-07-24"
+        currentTimeStr: String   // Format: "15:00"
+    ) {
+        if (recurrenceType == "Sekali") {
+            // Jika hanya sekali, hapus alarm dan jangan buat ulang
+            cancelRecurringAlarm(context, reminderId)
+            Log.d("AlarmUtils", "One-time alarm completed for $reminderId")
+            return
+        }
+
+        try {
+            // Parse current date dan time
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+            val currentDate = dateFormat.parse(currentDateStr)
+            val currentTime = timeFormat.parse(currentTimeStr)
+
+            if (currentDate != null && currentTime != null) {
+                // Gabungkan date dan time
+                val calendar = Calendar.getInstance()
+                calendar.time = currentDate
+
+                val timeCalendar = Calendar.getInstance()
+                timeCalendar.time = currentTime
+
+                calendar.set(Calendar.HOUR_OF_DAY, timeCalendar.get(Calendar.HOUR_OF_DAY))
+                calendar.set(Calendar.MINUTE, timeCalendar.get(Calendar.MINUTE))
+                calendar.set(Calendar.SECOND, 0)
+                calendar.set(Calendar.MILLISECOND, 0)
+
+                // Hitung waktu alarm berikutnya
+                val nextAlarmTime = calculateNextAlarmTime(calendar.timeInMillis, recurrenceType)
+
+                // Update ke Firestore
+                updateAlarmInFirestore(reminderId, nextAlarmTime, recurrenceType)
+
+                // Jadwalkan alarm berikutnya
+                scheduleNextAlarmAfterTaken(context, reminderId, nextAlarmTime, recurrenceType)
+
+                Log.d("AlarmUtils", "Alarm updated to next occurrence for $reminderId: ${Date(nextAlarmTime)}")
+            }
+        } catch (e: Exception) {
+            Log.e("AlarmUtils", "Failed to update alarm to next time", e)
+        }
+    }
+
+    /**
      * Menghitung waktu alarm berikutnya berdasarkan jenis recurrence
      */
-    fun calculateNextAlarmTime(originalTimeInMillis: Long, recurrenceType: String): Long {
-        val calendar = Calendar.getInstance()
-        val originalCalendar = Calendar.getInstance().apply {
-            timeInMillis = originalTimeInMillis
+    private fun calculateNextAlarmTime(currentTimeInMillis: Long, recurrenceType: String): Long {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = currentTimeInMillis
         }
 
         return when (recurrenceType) {
             "Harian" -> {
-                // Untuk harian: ambil jam dan menit dari alarm original
-                calendar.apply {
-                    set(Calendar.HOUR_OF_DAY, originalCalendar.get(Calendar.HOUR_OF_DAY))
-                    set(Calendar.MINUTE, originalCalendar.get(Calendar.MINUTE))
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-
-                    // Jika waktu sudah terlewat hari ini, jadwalkan untuk besok
-                    if (timeInMillis <= System.currentTimeMillis()) {
-                        add(Calendar.DAY_OF_MONTH, 1)
-                    }
-                }.timeInMillis
+                // Tambah 1 hari
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                calendar.timeInMillis
             }
 
             "Mingguan" -> {
-                // Untuk mingguan: ambil hari, jam, dan menit dari alarm original
-                calendar.apply {
-                    set(Calendar.DAY_OF_WEEK, originalCalendar.get(Calendar.DAY_OF_WEEK))
-                    set(Calendar.HOUR_OF_DAY, originalCalendar.get(Calendar.HOUR_OF_DAY))
-                    set(Calendar.MINUTE, originalCalendar.get(Calendar.MINUTE))
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-
-                    // Jika waktu sudah terlewat minggu ini, jadwalkan untuk minggu depan
-                    if (timeInMillis <= System.currentTimeMillis()) {
-                        add(Calendar.WEEK_OF_YEAR, 1)
-                    }
-                }.timeInMillis
+                // Tambah 7 hari
+                calendar.add(Calendar.DAY_OF_MONTH, 7)
+                calendar.timeInMillis
             }
 
-            "Bulanan" -> {
-                // Untuk bulanan: ambil tanggal, jam, dan menit dari alarm original
-                calendar.apply {
-                    val originalDay = originalCalendar.get(Calendar.DAY_OF_MONTH)
-                    set(Calendar.DAY_OF_MONTH, 1) // Set ke tanggal 1 dulu
-                    set(Calendar.HOUR_OF_DAY, originalCalendar.get(Calendar.HOUR_OF_DAY))
-                    set(Calendar.MINUTE, originalCalendar.get(Calendar.MINUTE))
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-
-                    // Pastikan tanggal valid untuk bulan ini
-                    val maxDayInMonth = getActualMaximum(Calendar.DAY_OF_MONTH)
-                    val targetDay = if (originalDay <= maxDayInMonth) originalDay else maxDayInMonth
-                    set(Calendar.DAY_OF_MONTH, targetDay)
-
-                    // Jika waktu sudah terlewat bulan ini, jadwalkan untuk bulan depan
-                    if (timeInMillis <= System.currentTimeMillis()) {
-                        add(Calendar.MONTH, 1)
-                        // Periksa lagi untuk bulan berikutnya
-                        val nextMaxDay = getActualMaximum(Calendar.DAY_OF_MONTH)
-                        val nextTargetDay = if (originalDay <= nextMaxDay) originalDay else nextMaxDay
-                        set(Calendar.DAY_OF_MONTH, nextTargetDay)
-                    }
-                }.timeInMillis
-            }
+//            "Bulanan" -> {
+//                // Tambah 1 bulan
+//                val originalDay = calendar.get(Calendar.DAY_OF_MONTH)
+//                calendar.add(Calendar.MONTH, 1)
+//
+//                // Handle case dimana tanggal tidak ada di bulan berikutnya (misal 31 Januari -> 28/29 Februari)
+//                val maxDayInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+//                if (originalDay > maxDayInMonth) {
+//                    calendar.set(Calendar.DAY_OF_MONTH, maxDayInMonth)
+//                }
+//
+//                calendar.timeInMillis
+//            }
 
             else -> {
-                // Default ke harian
-                calculateNextAlarmTime(originalTimeInMillis, "Harian")
+                // Default ke harian jika tidak dikenal
+                calendar.add(Calendar.DAY_OF_MONTH, 1)
+                calendar.timeInMillis
             }
         }
     }
 
     /**
-     * Menjadwalkan alarm berikutnya setelah alarm saat ini berbunyi
-     * Dipanggil dari AlarmReceiver
+     * Update data alarm di Firestore dengan tanggal dan waktu baru
      */
-    fun scheduleNextRecurringAlarm(
-        context: Context,
+    private fun updateAlarmInFirestore(
         reminderId: String,
-        originalTimeInMillis: Long,
+        nextTimeInMillis: Long,
         recurrenceType: String
     ) {
-        val nextTimeInMillis = calculateNextAlarmTime(originalTimeInMillis, recurrenceType)
+        try {
+            val db = FirebaseFirestore.getInstance()
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = nextTimeInMillis
+            }
 
+            // Format tanggal dan waktu untuk Firestore
+            val newDate = String.format(
+                "%04d-%02d-%02d",
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH) + 1,
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+
+            val newTime = String.format(
+                "%02d:%02d",
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE)
+            )
+
+            // Update document di Firestore
+            val updateData = hashMapOf<String, Any>(
+                "tanggal" to newDate,
+                "waktu" to newTime,
+                "statusIoT" to "ON", // Reset status untuk alarm berikutnya
+                "lastUpdated" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+            )
+
+            db.collection("reminders").document(reminderId)
+                .update(updateData)
+                .addOnSuccessListener {
+                    Log.d("AlarmUtils", "Firestore updated for $reminderId: $newDate $newTime")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("AlarmUtils", "Failed to update Firestore for $reminderId", e)
+                }
+
+        } catch (e: Exception) {
+            Log.e("AlarmUtils", "Exception updating Firestore", e)
+        }
+    }
+
+    /**
+     * Jadwalkan alarm berikutnya setelah obat diminum
+     */
+    private fun scheduleNextAlarmAfterTaken(
+        context: Context,
+        reminderId: String,
+        nextTimeInMillis: Long,
+        recurrenceType: String
+    ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("reminder_id", reminderId)
+            putExtra("reminderId", reminderId)
             putExtra("recurrence_type", recurrenceType)
-            putExtra("original_time", originalTimeInMillis)
+            putExtra("original_time", nextTimeInMillis)
             putExtra("is_recurring", true)
             action = "com.example.medicineremindernew.ALARM"
         }
@@ -159,27 +232,33 @@ object AlarmUtils {
 
         try {
             scheduleAlarmSafely(alarmManager, nextTimeInMillis, pendingIntent)
-            Log.d("AlarmUtils", "Next recurring alarm scheduled for $reminderId at ${Date(nextTimeInMillis)}")
+            Log.d("AlarmUtils", "Next alarm scheduled after medicine taken: ${Date(nextTimeInMillis)}")
         } catch (e: Exception) {
-            Log.e("AlarmUtils", "Failed to schedule next recurring alarm", e)
+            Log.e("AlarmUtils", "Failed to schedule next alarm after taken", e)
         }
     }
 
-
     /**
      * Menjadwalkan alarm berikutnya setelah alarm saat ini berbunyi
+     * Dipanggil dari AlarmReceiver - hanya untuk fallback
      */
-//    fun scheduleNextAlarm(
-//        context: Context,
-//        reminderId: String,
-//        intervalMillis: Long,
-//        recurrenceType: String
-//    ) {
-//        val nextTimeInMillis = System.currentTimeMillis() + intervalMillis
-//        scheduleNextExactAlarm(context, reminderId, nextTimeInMillis, intervalMillis, recurrenceType)
-//
-//        Log.d("AlarmUtils", "Next alarm scheduled for: ${Date(nextTimeInMillis)}")
-//    }
+    fun scheduleNextRecurringAlarm(
+        context: Context,
+        reminderId: String,
+        originalTimeInMillis: Long,
+        recurrenceType: String
+    ) {
+        // ✅ PENTING: Ini hanya fallback jika somehow alarm tidak diupdate via updateToNextAlarmTime
+        // Normalnya, alarm diupdate saat user menekan "sudah diminum"
+
+        if (recurrenceType == "Sekali") {
+            Log.d("AlarmUtils", "One-time alarm, no need to schedule next")
+            return
+        }
+
+        val nextTimeInMillis = calculateNextAlarmTime(originalTimeInMillis, recurrenceType)
+        scheduleNextAlarmAfterTaken(context, reminderId, nextTimeInMillis, recurrenceType)
+    }
 
     /**
      * Membatalkan alarm berulang
@@ -214,6 +293,8 @@ object AlarmUtils {
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("reminder_id", reminderId)
+            putExtra("reminderId", reminderId)
+            putExtra("recurrence_type", "Sekali")
             putExtra("is_recurring", false)
             action = "com.example.medicineremindernew.ALARM"
         }
@@ -247,6 +328,44 @@ object AlarmUtils {
             PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
         )
         return pendingIntent != null
+    }
+
+    /**
+     * Helper function untuk mendapatkan data reminder dari Firestore
+     * dan melakukan update alarm berdasarkan data terbaru
+     */
+    fun updateAlarmFromFirestore(context: Context, reminderId: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        db.collection("reminders").document(reminderId).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val tanggal = document.getString("tanggal") ?: ""
+                    val waktu = document.getString("waktu") ?: ""
+                    val recurrenceType = document.getString("recurrenceType") ?: "Sekali"
+
+                    if (tanggal.isNotEmpty() && waktu.isNotEmpty()) {
+                        // Parse dan schedule alarm baru berdasarkan data terbaru
+                        try {
+                            val dateTimeStr = "$tanggal $waktu"
+                            val format = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                            val date = format.parse(dateTimeStr)
+
+                            if (date != null) {
+                                scheduleRecurringReminder(context, reminderId, date.time, recurrenceType)
+                                Log.d("AlarmUtils", "Alarm refreshed from Firestore: $dateTimeStr")
+                            }
+                        } catch (e: Exception) {
+                            Log.e("AlarmUtils", "Error parsing date/time from Firestore", e)
+                        }
+                    }
+                } else {
+                    Log.w("AlarmUtils", "Reminder document not found: $reminderId")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("AlarmUtils", "Error fetching reminder from Firestore", e)
+            }
     }
 
     /**
