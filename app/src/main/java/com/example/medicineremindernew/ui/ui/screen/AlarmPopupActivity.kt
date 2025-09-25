@@ -127,7 +127,7 @@ class AlarmPopupActivity : ComponentActivity() {
             MedicineReminderNewTheme {
                 AlarmPopupScreen(
                     reminderId = reminderId,
-                    onDismiss = { lansiaList, obatList ->
+                    onDismiss = { reminder, lansiaList, obatList ->
                         Log.d("AlarmPopup", "Tombol 'Sudah Diminum' ditekan")
 
                         // 🔹 Update Firestore: statusIoT = "OFF"
@@ -135,6 +135,18 @@ class AlarmPopupActivity : ComponentActivity() {
 
                         // 🔹 Simpan riwayat dengan jenis "minum obat"
                         simpanRiwayat(reminderId, lansiaList, obatList, jenisRiwayat = "minum obat")
+
+                        // ✅ PERBAIKAN UTAMA: Update alarm ke waktu berikutnya jika recurring
+                        if (reminder != null) {
+                            AlarmUtils.updateToNextAlarmTime(
+                                context = this@AlarmPopupActivity,
+                                reminderId = reminderId,
+                                recurrenceType = reminder.pengulangan ?: "Sekali",
+                                currentDateStr = reminder.tanggal ?: "",
+                                currentTimeStr = reminder.waktu ?: ""
+                            )
+                            Log.d("AlarmPopup", "Alarm updated for next occurrence: ${reminder.pengulangan}")
+                        }
 
                         // 🔹 Stop ringtone
                         stopRingtone()
@@ -400,7 +412,7 @@ class AlarmPopupActivity : ComponentActivity() {
 @Composable
 fun AlarmPopupScreen(
     reminderId: String,
-    onDismiss: (lansiaList: List<Lansia>, obatList: List<Obat>) -> Unit,
+    onDismiss: (reminder: Reminder?, lansiaList: List<Lansia>, obatList: List<Obat>) -> Unit,
     onSnooze: () -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
@@ -487,7 +499,7 @@ fun AlarmPopupScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { onDismiss(lansiaList, obatList) },
+                    onClick = { onDismiss(reminder, lansiaList, obatList) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF027A7E),

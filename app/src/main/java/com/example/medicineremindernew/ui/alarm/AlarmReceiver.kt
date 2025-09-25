@@ -50,6 +50,15 @@ class AlarmReceiver : BroadcastReceiver() {
         // ✅ Set sebagai alarm aktif SEBELUM menampilkan popup
         AlarmPopupActivity.setActiveReminder(context, reminderId)
 
+        // ✅ PERBAIKAN UTAMA: Putar suara alarm SEBELUM popup/notifikasi
+        if (!isSnooze) {
+            // Hanya putar suara untuk alarm baru, tidak untuk snooze
+            AlarmPopupActivity.playGlobalRingtone(context)
+        } else {
+            // Untuk snooze, tetap putar tapi dengan volume yang sama
+            AlarmPopupActivity.playGlobalRingtone(context)
+        }
+
         // 🔔 Tampilkan notifikasi
         showNotification(context, reminderId, recurrenceType ?: "Sekali", isSnooze)
 
@@ -70,9 +79,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
             // Fallback: show notification if popup fails
             showFallbackNotification(context, reminderId, isSnooze)
-
-            // ✅ Jika popup gagal, baru putar suara sebagai fallback
-//            playFallbackAlarmSound(context)
         }
 
         // ✅ Trigger Firestore untuk ESP8266
@@ -103,7 +109,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun showNotification(context: Context, reminderId: String, recurrenceType: String, isSnooze: Boolean = false) {
         // Tentukan title dan text berdasarkan status snooze
-        val notificationTitle = if (isSnooze) "Pengingat Obat (Snooze)" else "Pengingat Obat"
+        val notificationTitle = if (isSnooze) "Pengingat Obat" else "Pengingat Obat"
         val notificationText = if (isSnooze)
             "Waktunya minum obat! (Pengingat Snooze - ID: $reminderId)"
         else
@@ -123,31 +129,32 @@ class AlarmReceiver : BroadcastReceiver() {
         )
 
         // Intent untuk menandai sebagai sudah diminum
-        val takenIntent = Intent(context, MedicineTakenReceiver::class.java).apply {
-            putExtra("reminderId", reminderId)
-        }
-        val takenPendingIntent = PendingIntent.getBroadcast(
-            context,
-            reminderId.hashCode(),
-            takenIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+//        val takenIntent = Intent(context, MedicineTakenReceiver::class.java).apply {
+//            putExtra("reminderId", reminderId)
+//        }
+//        val takenPendingIntent = PendingIntent.getBroadcast(
+//            context,
+//            reminderId.hashCode(),
+//            takenIntent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.pill) // Sesuaikan dengan icon yang Anda punya
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setDefaults(NotificationCompat.DEFAULT_VIBRATE) // ✅ Hanya vibration, bukan sound
 //            .setDefaults(NotificationCompat.DEFAULT_ALL)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .addAction(
-                R.drawable.pill, // Ganti dengan icon check jika ada
-                "Sudah Diminum",
-                takenPendingIntent
-            )
+//            .addAction(
+//                R.drawable.pill, // Ganti dengan icon check jika ada
+//                "Sudah Diminum",
+//                takenPendingIntent
+//            )
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setFullScreenIntent(pendingIntent, true) // ✅ Tambahan untuk fullscreen popup
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
