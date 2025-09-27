@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,28 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.medicineremindernew.ui.data.local.LocalDatabase
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.model.Riwayat
-import com.example.medicineremindernew.ui.data.network.NetworkUtils
-import com.example.medicineremindernew.ui.data.repository.HybridRiwayatRepository
-import com.example.medicineremindernew.ui.data.repository.RiwayatRepository
 import com.example.medicineremindernew.ui.ui.theme.BiruMuda
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridLansiaViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridObatViewModel
 import com.example.medicineremindernew.ui.ui.viewmodel.HybridReminderViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.HybridRiwayatViewModel
-import com.example.medicineremindernew.ui.ui.viewmodel.HybridRiwayatViewModelFactory
-import com.google.firebase.firestore.FirebaseFirestore
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
-import java.text.SimpleDateFormat
 import java.util.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import java.text.SimpleDateFormat
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -69,11 +61,10 @@ fun HomeScreen(
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
 
-    // Waktu sekarang
     val now = remember { LocalDateTime.now() }
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
-    // Filter hanya reminder yang >= sekarang
+    // ✅ Filter hanya reminder >= sekarang
     val filteredReminders = reminders
         .mapNotNull { reminder ->
             try {
@@ -84,36 +75,27 @@ fun HomeScreen(
                 null
             }
         }
-        .sortedBy { (_, dateTime) -> dateTime } // tetap diurutkan
+        .sortedBy { (_, dateTime) -> dateTime }
         .map { (reminder, _) -> reminder }
 
-    // Reminder terdekat
+    // ✅ Reminder terdekat
     val reminderTerdekat = filteredReminders
         .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
         .firstOrNull()
 
+    // ✅ Reminder jam 11 - 12 siang
+    val reminderJam11to12 = filteredReminders.filter { reminder ->
+        try {
+            val dateTime = LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)
+            val jam = dateTime.toLocalTime()
+            jam >= java.time.LocalTime.of(11, 0) && jam < java.time.LocalTime.of(12, 0)
+        } catch (e: Exception) {
+            false
+        }
+    }
 
     var showDeleteDialog by remember { mutableStateOf(false) }
     var reminderToDelete by remember { mutableStateOf<String?>(null) }
-
-//    val db = LocalDatabase.getDatabase(context) // sesuaikan dengan nama DB-mu
-//    val dao = db.riwayatDao()
-//    val networkUtils = NetworkUtils(context)
-//// ✅ bikin Firestore Repository dulu
-//// ✅ bikin Firestore Repository dulu
-//     val firestoreRepo = RiwayatRepository() // RiwayatRepository tidak perlu argumen
-//    val repository = HybridRiwayatRepository(
-//        riwayatRepository = firestoreRepo,
-//        localDao = dao,
-//        networkUtils = networkUtils,
-//        context = context
-//    )
-//
-//    val riwayatViewModel: HybridRiwayatViewModel = viewModel(
-//        factory = HybridRiwayatViewModelFactory(repository)
-//    )
-
-
 
     Box(
         modifier = Modifier
@@ -149,7 +131,7 @@ fun HomeScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 40.dp),
+                        .padding(bottom = 20.dp),
                     elevation = CardDefaults.cardElevation(8.dp),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -175,25 +157,13 @@ fun HomeScreen(
                                 .filter { it.id in reminderTerdekat.obatIds }
                                 .joinToString(", ") { it.nama }
 
-                            Text(
-                                text = lansiaName,
-                                color = Color.Black,
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(top = 5.dp)
-                            )
-
-                            Text(
-                                text = obatName,
-                                color = Color.Black,
-                                fontSize = 16.sp,
-                                modifier = Modifier.padding(top = 5.dp)
-                            )
-
+                            Text(lansiaName, color = Color.Black, fontSize = 16.sp)
+                            Text(obatName, color = Color.Black, fontSize = 16.sp)
                             Text(
                                 text = "${reminderTerdekat.waktu} - ${reminderTerdekat.tanggal}",
                                 color = Color(0xFF666666),
                                 fontSize = 14.sp,
-                                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+                                modifier = Modifier.padding(bottom = 10.dp)
                             )
 
                             Row(
@@ -227,13 +197,63 @@ fun HomeScreen(
                                 text = "Tidak ada reminder terdekat",
                                 color = Color.Gray,
                                 fontSize = 14.sp,
-                                modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+                                modifier = Modifier.padding(bottom = 10.dp)
                             )
                         }
                     }
                 }
 
-                // ✅ List Semua Reminder (hanya reminder >= sekarang)
+                // ✅ Card Reminder Jam 11 - 12 (selalu tampil)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    elevation = CardDefaults.cardElevation(8.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = "List Lansia yang minum obat sebelum makan siang",
+                            color = warnaBiru,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        if (reminderJam11to12.isNotEmpty()) {
+                            reminderJam11to12.forEach { reminder ->
+                                val lansiaName = lansiaList
+                                    .filter { it.id in reminder.lansiaIds }
+                                    .joinToString(", ") { it.nama }
+                                val obatName = obatList
+                                    .filter { it.id in reminder.obatIds }
+                                    .joinToString(", ") { it.nama }
+
+                                Column(
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Text("Lansia: $lansiaName", fontSize = 16.sp, color = Color.Black)
+                                    Text("Obat: $obatName", fontSize = 16.sp, color = Color.Black)
+                                    Text("Waktu: ${reminder.waktu} - ${reminder.tanggal}", fontSize = 14.sp, color = Color.Gray)
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "Tidak ada Lansia yang minum obat sebelum makan siang",
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    }
+                }
+
+                // ✅ List Semua Reminder (>= sekarang)
                 filteredReminders.forEach { reminder ->
                     val lansiaName = lansiaList
                         .filter { it.id in reminder.lansiaIds }
@@ -263,7 +283,6 @@ fun HomeScreen(
                             reminderToDelete = reminder.id
                             showDeleteDialog = true
                         }
-
                     )
                 }
 
@@ -281,7 +300,7 @@ fun HomeScreen(
             }
         )
 
-        // ✅ Dialog Konfirmasi Hapus
+        // ✅ Dialog Hapus
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = {
@@ -289,34 +308,23 @@ fun HomeScreen(
                     reminderToDelete = null
                 },
                 title = {
-                    Text(
-                        text = "Konfirmasi Hapus",
-                        fontWeight = FontWeight.Bold,
-                        color = BiruMuda.copy(alpha = 1.0f)
-                    )
+                    Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda)
                 },
-                text = {
-                    Text("Apakah Anda yakin ingin menghapus reminder ini?")
-                },
+                text = { Text("Apakah Anda yakin ingin menghapus reminder ini?") },
                 confirmButton = {
                     TextButton(
                         onClick = {
                             reminderToDelete?.let { id ->
                                 reminderViewModel.deleteReminder(id) { success ->
-                                    if (success) {
-                                        Log.d("HomeScreen", "Reminder berhasil dihapus")
-                                    } else {
-                                        Log.e("HomeScreen", "Gagal menghapus reminder")
-                                    }
+                                    if (success) Log.d("HomeScreen", "Reminder dihapus")
+                                    else Log.e("HomeScreen", "Gagal hapus")
                                 }
                             }
                             showDeleteDialog = false
                             reminderToDelete = null
                         },
                         colors = ButtonDefaults.textButtonColors(contentColor = Color.Red)
-                    ) {
-                        Text("Ya")
-                    }
+                    ) { Text("Ya") }
                 },
                 dismissButton = {
                     TextButton(
@@ -324,17 +332,13 @@ fun HomeScreen(
                             showDeleteDialog = false
                             reminderToDelete = null
                         },
-                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f))
-                    ) {
-                        Text("Tidak")
-                    }
+                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda)
+                    ) { Text("Tidak") }
                 }
             )
         }
     }
 }
-
-
 
 @Composable
 fun ReminderItem(
@@ -347,8 +351,7 @@ fun ReminderItem(
     val today = remember {
         SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
     }
-
-    var sudahDiminum by rememberSaveable{ mutableStateOf(false) }
+    var sudahDiminum by rememberSaveable { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
@@ -362,28 +365,12 @@ fun ReminderItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Column(modifier = Modifier.weight(1f)) {
+            Text(text = lansia, fontSize = 20.sp, color = Color.Black)
+            Text(text = obat, fontSize = 20.sp, color = Color.Black)
             Row {
-                Text(text = lansia, fontSize = 20.sp, color = Color.Black)
+                Text("Waktu : ", fontSize = 16.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+                Text(time, fontSize = 16.sp, color = Color.DarkGray)
             }
-            Row {
-                Text(text = obat, fontSize = 20.sp, color = Color.Black)
-            }
-            Row {
-                Text(text = "Waktu : ", fontSize = 16.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
-                Text(text = time, fontSize = 16.sp, color = Color.DarkGray)
-            }
-
-//            Button(
-//                onClick = onSelesai,
-//                modifier = Modifier
-//                    .padding(top = 8.dp)
-//                    .fillMaxWidth(),
-//                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-//            ) {
-//                Text("Sudah Diminum", color = Color.White)
-//            }
-
-
         }
 
         IconButton(onClick = onDelete) {
@@ -398,20 +385,4 @@ fun ReminderItem(
 }
 
 @Composable
-fun AddButton(
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    FloatingActionButton(
-        onClick = onClick,
-        modifier = modifier,
-        containerColor = BiruTua.copy(alpha = 1.0f),
-        contentColor = Color.White
-    ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            contentDescription = "Tambah",
-            modifier = Modifier.size(30.dp)
-        )
-    }
-}
+fun AddButton( modifier: Modifier = Modifier, onClick: () -> Unit ) { FloatingActionButton( onClick = onClick, modifier = modifier, containerColor = BiruTua.copy(alpha = 1.0f), contentColor = Color.White ) { Icon( imageVector = Icons.Default.Add, contentDescription = "Tambah", modifier = Modifier.size(30.dp) ) } }
