@@ -16,6 +16,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,10 +26,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.example.medicineremindernew.ui.data.model.Lansia
 import com.example.medicineremindernew.ui.data.model.Obat
 import com.example.medicineremindernew.ui.data.model.Reminder
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.Calendar
 
@@ -37,27 +41,80 @@ class AlarmPopupActivity : ComponentActivity() {
     companion object {
         // SharedPreferences untuk tracking alarm aktif
         private const val PREF_NAME = "AlarmPrefs"
-        private const val KEY_ACTIVE_REMINDER_ID = "active_reminder_id"
+        private const val KEY_ACTIVE_REMINDER_IDS = "active_reminder_ids" // Changed to support multiple IDs
 
         // ✅ Static ringtone manager untuk mencegah duplikasi suara
         private var globalRingtone: Ringtone? = null
 
-        // Fungsi untuk set/get alarm aktif
-        fun setActiveReminder(context: Context, reminderId: String) {
-            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            prefs.edit().putString(KEY_ACTIVE_REMINDER_ID, reminderId).apply()
-            Log.d("AlarmPopup", "Set active reminder: $reminderId")
+        // Check if ringtone is currently playing
+        fun isRingtoneCurrentlyPlaying(): Boolean {
+            return globalRingtone?.isPlaying == true
         }
 
-        fun getActiveReminder(context: Context): String? {
+        // Fungsi untuk set/get alarm aktif (support multiple reminders)
+        fun addActiveReminder(context: Context, reminderId: String) {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            return prefs.getString(KEY_ACTIVE_REMINDER_ID, null)
+            val currentIds = getActiveReminderIds(context).toMutableSet()
+            currentIds.add(reminderId)
+            prefs.edit().putStringSet(KEY_ACTIVE_REMINDER_IDS, currentIds).apply()
+            Log.d("AlarmPopup", "Added active reminder: $reminderId, total: ${currentIds.size}")
         }
 
-        fun clearActiveReminder(context: Context) {
+        fun getActiveReminderIds(context: Context): Set<String> {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            prefs.edit().remove(KEY_ACTIVE_REMINDER_ID).apply()
-            Log.d("AlarmPopup", "Cleared active reminder")
+            return prefs.getStringSet(KEY_ACTIVE_REMINDER_IDS, emptySet()) ?: emptySet()
+        }
+
+        fun removeActiveReminder(context: Context, reminderId: String) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val currentIds = getActiveReminderIds(context).toMutableSet()
+            currentIds.remove(reminderId)
+            if (currentIds.isEmpty()) {
+                prefs.edit().remove(KEY_ACTIVE_REMINDER_IDS).apply()
+            } else {
+                prefs.edit().putStringSet(KEY_ACTIVE_REMINDER_IDS, currentIds).apply()
+            }
+            Log.d("AlarmPopup", "Removed active reminder: $reminderId, remaining: ${currentIds.size}")
+        }
+
+        fun clearAllActiveReminders(context: Context) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            prefs.edit().remove(KEY_ACTIVE_REMINDER_IDS).apply()
+            Log.d("AlarmPopup", "Cleared all active reminders")
+        }
+
+        // Check if there are active reminders with same time
+        suspend fun findSimultaneousReminders(context: Context, currentReminderId: String): List<String> {
+            val db = FirebaseFirestore.getInstance()
+            val reminderIds = mutableSetOf<String>()
+
+            try {
+                // Get current reminder data
+                val currentReminderSnap = db.collection("reminders").document(currentReminderId).get().await()
+                if (!currentReminderSnap.exists()) return listOf(currentReminderId)
+
+                val currentReminder = currentReminderSnap.toObject(Reminder::class.java) ?: return listOf(currentReminderId)
+                val currentTime = "${currentReminder.tanggal} ${currentReminder.waktu}"
+
+                // Find all reminders with same time
+                val allReminders = db.collection("reminders").get().await()
+                for (document in allReminders.documents) {
+                    val reminder = document.toObject(Reminder::class.java)
+                    if (reminder != null) {
+                        val reminderTime = "${reminder.tanggal} ${reminder.waktu}"
+                        if (reminderTime == currentTime) {
+                            reminderIds.add(document.id)
+                        }
+                    }
+                }
+
+                Log.d("AlarmPopup", "Found ${reminderIds.size} reminders at time: $currentTime")
+                return reminderIds.toList()
+
+            } catch (e: Exception) {
+                Log.e("AlarmPopup", "Error finding simultaneous reminders: ${e.message}")
+                return listOf(currentReminderId)
+            }
         }
 
         // ✅ Global ringtone management
@@ -87,13 +144,18 @@ class AlarmPopupActivity : ComponentActivity() {
             }
         }
 
-        // Fungsi untuk check dan show popup jika ada alarm aktif
-        fun checkAndShowActiveAlarm(context: Context) {
-            val activeReminderId = getActiveReminder(context)
-            if (!activeReminderId.isNullOrBlank()) {
-                Log.d("AlarmPopup", "Found active alarm, showing popup for: $activeReminderId")
+        // Backward compatibility function for single reminder (used by original AlarmReceiver calls)
+        fun setActiveReminders(context: Context, reminderId: String) {
+            addActiveReminder(context, reminderId)
+        }
+
+        // Modified function to check and show popup for multiple reminders
+        fun checkAndShowActiveAlarms(context: Context) {
+            val activeReminderIds = getActiveReminderIds(context)
+            if (activeReminderIds.isNotEmpty()) {
+                Log.d("AlarmPopup", "Found ${activeReminderIds.size} active alarms, showing popup")
                 val intent = Intent(context, AlarmPopupActivity::class.java).apply {
-                    putExtra("reminderId", activeReminderId)
+                    putStringArrayListExtra("reminderIds", ArrayList(activeReminderIds))
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 }
                 context.startActivity(intent)
@@ -111,12 +173,31 @@ class AlarmPopupActivity : ComponentActivity() {
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
         )
 
-        val reminderId = intent.getStringExtra("reminderId") ?:
-                        intent.getStringExtra("reminder_id") ?: ""
-        Log.d("AlarmPopup", "Reminder ID: $reminderId")
+        // Handle both single and multiple reminder IDs
+        val singleReminderId = intent.getStringExtra("reminderId") ?: intent.getStringExtra("reminder_id")
+        val multipleReminderIds = intent.getStringArrayListExtra("reminderIds")
 
-        // Set sebagai alarm aktif
-        setActiveReminder(this, reminderId)
+        val reminderIds = when {
+            !multipleReminderIds.isNullOrEmpty() -> multipleReminderIds
+            !singleReminderId.isNullOrBlank() -> {
+                // For single reminder, find all simultaneous reminders
+                lifecycleScope.launch {
+                    val simultaneousIds = findSimultaneousReminders(this@AlarmPopupActivity, singleReminderId)
+                    simultaneousIds.forEach { id ->
+                        addActiveReminder(this@AlarmPopupActivity, id)
+                    }
+                }
+                listOf(singleReminderId)
+            }
+            else -> emptyList()
+        }
+
+        Log.d("AlarmPopup", "Processing ${reminderIds.size} reminder IDs: $reminderIds")
+
+        // Add all reminders to active list
+        reminderIds.forEach { id ->
+            addActiveReminder(this, id)
+        }
 
         // ✅ Gunakan global ringtone management - hanya play jika belum ada
         if (globalRingtone?.isPlaying != true) {
@@ -126,68 +207,68 @@ class AlarmPopupActivity : ComponentActivity() {
         setContent {
             MedicineReminderNewTheme {
                 AlarmPopupScreen(
-                    reminderId = reminderId,
-                    onDismiss = { reminder, lansiaList, obatList ->
-                        Log.d("AlarmPopup", "Tombol 'Sudah Diminum' ditekan")
+                    reminderIds = reminderIds,
+                    onDismiss = { reminders, allLansia, allObat ->
+                        Log.d("AlarmPopup", "Tombol 'Sudah Diminum' ditekan untuk ${reminders.size} reminders")
 
-                        // 🔹 Update Firestore: statusIoT = "OFF"
-                        matikanIoT(reminderId)
+                        // Process each reminder
+                        reminders.forEach { reminder ->
+                            // 🔹 Update Firestore: statusIoT = "OFF"
+                            matikanIoT(reminder.id ?: "")
 
-                        // 🔹 Simpan riwayat dengan jenis "minum obat"
-                        simpanRiwayat(reminderId, lansiaList, obatList, jenisRiwayat = "minum obat")
+                            // 🔹 Simpan riwayat dengan jenis "minum obat"
+                            val reminderLansia = allLansia.filter { it.id in (reminder.lansiaIds ?: emptyList()) }
+                            val reminderObat = allObat.filter { it.id in (reminder.obatIds ?: emptyList()) }
+                            simpanRiwayat(reminder.id ?: "", reminderLansia, reminderObat, jenisRiwayat = "minum obat")
 
-                        // ✅ PERBAIKAN UTAMA: Update alarm ke waktu berikutnya jika recurring
-                        if (reminder != null) {
+                            // ✅ Update alarm ke waktu berikutnya jika recurring
                             AlarmUtils.updateToNextAlarmTime(
                                 context = this@AlarmPopupActivity,
-                                reminderId = reminderId,
+                                reminderId = reminder.id ?: "",
                                 recurrenceType = reminder.pengulangan ?: "Sekali",
                                 currentDateStr = reminder.tanggal ?: "",
                                 currentTimeStr = reminder.waktu ?: ""
                             )
-                            Log.d("AlarmPopup", "Alarm updated for next occurrence: ${reminder.pengulangan}")
+
+                            // 🔹 Cancel any pending snooze alarms
+                            cancelSnoozeAlarm(this@AlarmPopupActivity, reminder.id ?: "")
                         }
 
                         // 🔹 Stop ringtone
                         stopRingtone()
 
-                        // 🔹 Clear active reminder
-                        clearActiveReminder(this@AlarmPopupActivity)
+                        // 🔹 Clear all active reminders
+                        clearAllActiveReminders(this@AlarmPopupActivity)
 
-                        // 🔹 Cancel any pending snooze alarms
-                        cancelSnoozeAlarm(this@AlarmPopupActivity, reminderId)
-
-
-                        // 🔹 Batalkan alarm
-//                        cancelAlarm(this, reminderId)
                         finish()
                     },
-                    onSnooze = {
-                        Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan")
+                    onSnooze = { reminderIds ->
+                        Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan untuk ${reminderIds.size} reminders")
 
                         // 🔹 Hentikan ringtone saat ini
                         stopRingtone()
 
+                        // Process each reminder for snooze
+                        reminderIds.forEach { reminderId ->
+                            matikanIoT(reminderId)
+                            // 🔹 Set alarm snooze (5 menit kemudian)
+                            setSnoozeAlarm(this@AlarmPopupActivity, reminderId)
+                        }
 
-                        matikanIoT(reminderId)
+                        // 🔹 Clear all active reminders
+                        clearAllActiveReminders(this@AlarmPopupActivity)
 
-                        // 🔹 Clear active reminder sementara
-                        clearActiveReminder(this@AlarmPopupActivity)
-
-                        // 🔹 Set alarm snooze (5 menit kemudian)
-                        setSnoozeAlarm(this@AlarmPopupActivity, reminderId)
                         finish()
                     }
                 )
             }
         }
-
     }
 
     private fun stopRingtone() {
         try {
-            // Stop global ringtone
-            stopGlobalRingtone()
+            // Stop global ringtone using companion function
+            Companion.stopGlobalRingtone()
 
             // Stop local ringtone jika ada
             if (ringtone?.isPlaying == true) {
@@ -236,66 +317,6 @@ class AlarmPopupActivity : ComponentActivity() {
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Gagal update statusIoT", e)
-            }
-    }
-
-    private fun tambah5MenitReminder(reminderId: String) {
-        val db = FirebaseFirestore.getInstance()
-
-        db.collection("reminders").document(reminderId).get()
-            .addOnSuccessListener { doc ->
-                if (doc.exists()) {
-                    val reminder = doc.toObject(Reminder::class.java)
-                    val tanggal = reminder?.tanggal  // "2025-08-27"
-                    val waktu = reminder?.waktu      // "11:45"
-
-                    if (tanggal != null && waktu != null) {
-                        try {
-                            // Gabungkan tanggal + waktu jadi satu string
-                            val dateTimeStr = "$tanggal $waktu"  // "2025-08-27 11:45"
-                            val format = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-                            val date = format.parse(dateTimeStr)
-
-                            // Tambah 5 menit
-                            val calendar = Calendar.getInstance()
-                            calendar.time = date!!
-                            calendar.add(Calendar.MINUTE, 5)
-
-                            // Pisahkan lagi jadi tanggal & waktu
-                            val newTanggal = String.format(
-                                "%04d-%02d-%02d",
-                                calendar.get(Calendar.YEAR),
-                                calendar.get(Calendar.MONTH) + 1,
-                                calendar.get(Calendar.DAY_OF_MONTH)
-                            )
-                            val newWaktu = String.format(
-                                "%02d:%02d",
-                                calendar.get(Calendar.HOUR_OF_DAY),
-                                calendar.get(Calendar.MINUTE)
-                            )
-
-                            // Update ke Firestore
-                            db.collection("reminders").document(reminderId)
-                                .update(
-                                    mapOf(
-                                        "tanggal" to newTanggal,
-                                        "waktu" to newWaktu
-                                    )
-                                )
-                                .addOnSuccessListener {
-                                    Log.d("AlarmPopup", "Reminder diupdate: $newTanggal $newWaktu")
-                                }
-                                .addOnFailureListener { e ->
-                                    Log.e("AlarmPopup", "Gagal update reminder: ${e.message}")
-                                }
-                        } catch (e: Exception) {
-                            Log.e("AlarmPopup", "Error parsing waktu: ${e.message}")
-                        }
-                    }
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("AlarmPopup", "Gagal ambil reminder: ${e.message}")
             }
     }
 
@@ -377,7 +398,7 @@ class AlarmPopupActivity : ComponentActivity() {
         }
     }
 
-    private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>,jenisRiwayat: String) {
+    private fun simpanRiwayat(reminderId: String, lansiaList: List<Lansia>, obatList: List<Obat>, jenisRiwayat: String) {
         val db = FirebaseFirestore.getInstance()
         val riwayatId = db.collection("riwayat").document().id
 
@@ -391,15 +412,14 @@ class AlarmPopupActivity : ComponentActivity() {
             "jenis" to jenisRiwayat
         )
 
-
         db.collection("riwayat")
             .document(riwayatId)
             .set(riwayatData)
             .addOnSuccessListener {
-                Log.d("Riwayat", "Riwayat berhasil disimpan")
+                Log.d("Riwayat", "Riwayat berhasil disimpan untuk reminder: $reminderId")
             }
             .addOnFailureListener { e ->
-                Log.e("Riwayat", "Gagal menyimpan riwayat", e)
+                Log.e("Riwayat", "Gagal menyimpan riwayat untuk reminder: $reminderId", e)
             }
     }
 
@@ -409,112 +429,211 @@ class AlarmPopupActivity : ComponentActivity() {
     }
 }
 
+// Data class to group reminder with its associated lansia and obat
+data class ReminderGroup(
+    val reminder: Reminder,
+    val lansiaList: List<Lansia>,
+    val obatList: List<Obat>
+)
+
 @Composable
 fun AlarmPopupScreen(
-    reminderId: String,
-    onDismiss: (reminder: Reminder?, lansiaList: List<Lansia>, obatList: List<Obat>) -> Unit,
-    onSnooze: () -> Unit
+    reminderIds: List<String>,
+    onDismiss: (reminders: List<Reminder>, allLansia: List<Lansia>, allObat: List<Obat>) -> Unit,
+    onSnooze: (reminderIds: List<String>) -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
 
-    var reminder by remember { mutableStateOf<Reminder?>(null) }
-    var obatList by remember { mutableStateOf<List<Obat>>(emptyList()) }
-    var lansiaList by remember { mutableStateOf<List<Lansia>>(emptyList()) }
+    var reminderGroups by remember { mutableStateOf<List<ReminderGroup>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(reminderId) {
-        Log.d("AlarmPopup", "Memulai fetch reminder dengan ID: $reminderId")
+    LaunchedEffect(reminderIds) {
+        Log.d("AlarmPopup", "Memulai fetch ${reminderIds.size} reminders")
         try {
-            val reminderSnap = db.collection("reminders").document(reminderId).get().await()
-            if (reminderSnap.exists()) {
-                val fetchedReminder = reminderSnap.toObject(Reminder::class.java)
-                reminder = fetchedReminder
+            val groups = mutableListOf<ReminderGroup>()
 
-                if (fetchedReminder != null) {
-                    val obatTempList = mutableListOf<Obat>()
-                    fetchedReminder.obatIds.forEach { obatId ->
-                        val obatSnap = db.collection("obat").document(obatId).get().await()
-                        obatSnap.toObject(Obat::class.java)?.let { obatTempList.add(it) }
-                    }
-                    obatList = obatTempList
+            for (reminderId in reminderIds) {
+                try {
+                    val reminderSnap = db.collection("reminders").document(reminderId).get().await()
+                    if (reminderSnap.exists()) {
+                        val reminder = reminderSnap.toObject(Reminder::class.java)
+                        if (reminder != null) {
+                            // Fetch obat
+                            val obatTempList = mutableListOf<Obat>()
+                            reminder.obatIds?.forEach { obatId ->
+                                try {
+                                    val obatSnap = db.collection("obat").document(obatId).get().await()
+                                    obatSnap.toObject(Obat::class.java)?.let { obatTempList.add(it) }
+                                } catch (e: Exception) {
+                                    Log.w("AlarmPopup", "Failed to fetch obat $obatId: ${e.message}")
+                                }
+                            }
 
-                    val lansiaTempList = mutableListOf<Lansia>()
-                    fetchedReminder.lansiaIds.forEach { lansiaId ->
-                        val lansiaSnap = db.collection("lansia").document(lansiaId).get().await()
-                        lansiaSnap.toObject(Lansia::class.java)?.let { lansiaTempList.add(it) }
+                            // Fetch lansia
+                            val lansiaTempList = mutableListOf<Lansia>()
+                            reminder.lansiaIds?.forEach { lansiaId ->
+                                try {
+                                    val lansiaSnap = db.collection("lansia").document(lansiaId).get().await()
+                                    lansiaSnap.toObject(Lansia::class.java)?.let { lansiaTempList.add(it) }
+                                } catch (e: Exception) {
+                                    Log.w("AlarmPopup", "Failed to fetch lansia $lansiaId: ${e.message}")
+                                }
+                            }
+
+                            groups.add(ReminderGroup(reminder, lansiaTempList, obatTempList))
+                            Log.d("AlarmPopup", "Successfully loaded reminder $reminderId with ${lansiaTempList.size} lansia and ${obatTempList.size} obat")
+                        }
+                    } else {
+                        Log.w("AlarmPopup", "Reminder $reminderId not found in Firestore")
                     }
-                    lansiaList = lansiaTempList
+                } catch (e: Exception) {
+                    Log.e("AlarmPopup", "Error fetching reminder $reminderId: ${e.message}")
                 }
-            } else {
-                Log.e("AlarmPopup", "Reminder dengan ID $reminderId tidak ditemukan di Firestore")
             }
-        } catch (e: Exception){
-            Log.e("AlarmPopup", "Gagal mengambil data: ${e.message}")
+
+            reminderGroups = groups
+            Log.d("AlarmPopup", "Successfully loaded ${groups.size} reminder groups")
+
+        } catch (e: Exception) {
+            Log.e("AlarmPopup", "Fatal error loading reminders: ${e.message}")
+            errorMessage = "Gagal memuat data reminder: ${e.message}"
         } finally {
             isLoading = false
         }
     }
 
     Box(
-        modifier = Modifier.wrapContentSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
-                .padding(24.dp)
+                .wrapContentSize()
                 .clip(RoundedCornerShape(16.dp))
                 .border(4.dp, Color(0xFF027A7E), RoundedCornerShape(16.dp))
                 .background(Color.White)
                 .padding(24.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text("Saatnya Minum Obat!", fontSize = 22.sp, color = Color(0xFF011A27))
+            Text(
+                text = "Saatnya Minum Obat!",
+                fontSize = 22.sp,
+                color = Color(0xFF011A27)
+            )
             Spacer(modifier = Modifier.height(12.dp))
 
             when {
-                isLoading -> CircularProgressIndicator()
-                reminder != null -> {
-                    if (lansiaList.isNotEmpty()){
-                        Text(
-                            text = "Lansia:\n${lansiaList.joinToString(", "){ it.nama }}",
-                            fontSize = 18.sp,
-                            color = Color(0xFF011A27)
+                isLoading -> {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Memuat data...", fontSize = 14.sp, color = Color(0xFF011A27))
                     }
-                    if (obatList.isNotEmpty()){
-                        obatList.forEach { obat ->
-                            Text("Obat: ${obat.nama}", fontSize = 16.sp, color = Color(0xFF011A27))
-                            Text("Dosis: ${obat.dosis}", fontSize = 14.sp, color = Color(0xFF011A27))
-                            Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                errorMessage != null -> {
+                    Text(
+                        text = errorMessage!!,
+                        fontSize = 14.sp,
+                        color = Color.Red
+                    )
+                }
+
+                reminderGroups.isNotEmpty() -> {
+                    Column(
+                        modifier = Modifier
+                            .heightIn(max = 400.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        reminderGroups.forEachIndexed { index, group ->
+                            // Display lansia names for this reminder
+                            if (group.lansiaList.isNotEmpty()) {
+                                Text(
+                                    text = "Lansia: ${group.lansiaList.joinToString(", ") { it.nama ?: "Unknown" }}",
+                                    fontSize = 16.sp,
+                                    color = Color(0xFF011A27)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+
+                            // Display obat for this reminder
+                            if (group.obatList.isNotEmpty()) {
+                                group.obatList.forEach { obat ->
+                                    Text(
+                                        text = "Obat: ${obat.nama ?: "Unknown"}",
+                                        fontSize = 14.sp,
+                                        color = Color(0xFF011A27)
+                                    )
+                                    Text(
+                                        text = "Dosis: ${obat.dosis ?: "Unknown"}",
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF666666)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
+                            }
+
+                            // Add separator between reminder groups (except for the last one)
+                            if (index < reminderGroups.size - 1) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                HorizontalDivider(
+                                    color = Color(0xFFE0E0E0),
+                                    thickness = 1.dp
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                            }
                         }
                     }
                 }
-                else -> Text("Data reminder tidak tersedia", color = Color.Red)
+
+                else -> {
+                    Text(
+                        text = "Data reminder tidak tersedia",
+                        fontSize = 14.sp,
+                        color = Color.Red
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { onDismiss(reminder, lansiaList, obatList) },
+                    onClick = {
+                        val allReminders = reminderGroups.map { it.reminder }
+                        val allLansia = reminderGroups.flatMap { it.lansiaList }.distinctBy { it.id }
+                        val allObat = reminderGroups.flatMap { it.obatList }.distinctBy { it.id }
+                        onDismiss(allReminders, allLansia, allObat)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF027A7E),
                         contentColor = Color.White
-                    )
+                    ),
+                    enabled = reminderGroups.isNotEmpty()
                 ) {
                     Text("Sudah Diminum", fontSize = 12.sp)
                 }
+
                 Button(
-                    onClick = onSnooze,
+                    onClick = { onSnooze(reminderIds) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF9800),
                         contentColor = Color.White
-                    )
+                    ),
+                    enabled = reminderGroups.isNotEmpty()
                 ) {
                     Text("5 Menit Lagi", fontSize = 12.sp)
                 }

@@ -14,8 +14,15 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.ui.MainActivity
+import com.example.medicineremindernew.ui.data.model.Reminder
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.*
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -47,79 +54,248 @@ class AlarmReceiver : BroadcastReceiver() {
 
         Log.d("AlarmReceiver", "Reminder ID: $reminderId, Recurring: $isRecurring, Type: $recurrenceType, Snooze: $isSnooze")
 
-        // ✅ Set sebagai alarm aktif SEBELUM menampilkan popup
-        AlarmPopupActivity.setActiveReminder(context, reminderId)
-
-        // ✅ PERBAIKAN UTAMA: Putar suara alarm SEBELUM popup/notifikasi
-        if (!isSnooze) {
-            // Hanya putar suara untuk alarm baru, tidak untuk snooze
-            AlarmPopupActivity.playGlobalRingtone(context)
-        } else {
-            // Untuk snooze, tetap putar tapi dengan volume yang sama
-            AlarmPopupActivity.playGlobalRingtone(context)
+        if (reminderId == "Unknown" || reminderId.isBlank()) {
+            Log.e("AlarmReceiver", "Invalid reminder ID, cannot process alarm")
+            return
         }
 
-        // 🔔 Tampilkan notifikasi
-        showNotification(context, reminderId, recurrenceType ?: "Sekali", isSnooze)
+        // Launch coroutine untuk menangani operasi async
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (isSnooze) {
+                    // Untuk snooze alarm, langsung tampilkan popup untuk reminder tunggal
+                    handleSnoozeAlarm(context, reminderId)
+                } else {
+                    // Untuk alarm reguler, cari semua reminder dengan waktu yang sama
+                    handleRegularAlarm(context, reminderId, recurrenceType, originalTime, intervalMillis, isRecurring)
+                }
+            } catch (e: Exception) {
+                Log.e("AlarmReceiver", "Error handling alarm: ${e.message}")
+                // Fallback ke single reminder jika ada error
+                handleSingleReminder(context, reminderId, isSnooze)
+            }
+        }
+    }
 
-        // 🧠 Buka popup activity
+    private suspend fun handleRegularAlarm(
+        context: Context,
+        currentReminderId: String,
+        recurrenceType: String?,
+        originalTime: Long,
+        intervalMillis: Long,
+        isRecurring: Boolean
+    ) {
+        try {
+            // Cari semua reminder dengan waktu yang sama
+            val simultaneousReminderIds = findSimultaneousReminders(context, currentReminderId)
+            Log.d("AlarmReceiver", "Found ${simultaneousReminderIds.size} simultaneous reminders: $simultaneousReminderIds")
+
+            // Tambahkan semua reminder ke active list
+            simultaneousReminderIds.forEach { id ->
+                AlarmPopupActivity.addActiveReminder(context, id)
+            }
+
+            // ✅ Putar suara alarm hanya sekali untuk semua reminder bersamaan
+            AlarmPopupActivity.playGlobalRingtone(context)
+
+            // Tampilkan notifikasi untuk semua reminder
+            showMultipleRemindersNotification(context, simultaneousReminderIds, false)
+
+            // Buka popup activity dengan semua reminder bersamaan
+            val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putStringArrayListExtra("reminderIds", ArrayList(simultaneousReminderIds))
+            }
+
+            try {
+                context.startActivity(popupIntent)
+                Log.d("AlarmReceiver", "AlarmPopupActivity started successfully for ${simultaneousReminderIds.size} reminders")
+            } catch (e: Exception) {
+                Log.e("AlarmReceiver", "Failed to start AlarmPopupActivity: ${e.message}")
+                showFallbackNotification(context, currentReminderId, false)
+            }
+
+            // Trigger Firestore untuk ESP8266 untuk semua reminder
+            simultaneousReminderIds.forEach { reminderId ->
+                triggerActiveAlarm(reminderId, false)
+            }
+
+            // Jadwalkan alarm berikutnya untuk recurring alarms
+            if (isRecurring && !recurrenceType.isNullOrEmpty()) {
+                simultaneousReminderIds.forEach { reminderId ->
+                    if (originalTime > 0) {
+                        AlarmUtils.scheduleNextRecurringAlarm(
+                            context,
+                            reminderId,
+                            originalTime,
+                            recurrenceType
+                        )
+                    } else if (intervalMillis > 0) {
+                        scheduleNextRecurringAlarmLegacy(context, reminderId, intervalMillis, recurrenceType)
+                    }
+                }
+            }
+
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Error handling regular alarm: ${e.message}")
+            handleSingleReminder(context, currentReminderId, false)
+        }
+    }
+
+    private suspend fun handleSnoozeAlarm(context: Context, reminderId: String) {
+        try {
+            // Untuk snooze alarm, hanya tangani reminder tunggal
+            AlarmPopupActivity.addActiveReminder(context, reminderId)
+            AlarmPopupActivity.playGlobalRingtone(context)
+
+            showNotification(context, reminderId, "Snooze", true)
+
+            val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putStringArrayListExtra("reminderIds", arrayListOf(reminderId))
+            }
+
+            try {
+                context.startActivity(popupIntent)
+                Log.d("AlarmReceiver", "AlarmPopupActivity started for snooze reminder: $reminderId")
+            } catch (e: Exception) {
+                Log.e("AlarmReceiver", "Failed to start AlarmPopupActivity for snooze: ${e.message}")
+                showFallbackNotification(context, reminderId, true)
+            }
+
+            triggerActiveAlarm(reminderId, true)
+
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Error handling snooze alarm: ${e.message}")
+            handleSingleReminder(context, reminderId, true)
+        }
+    }
+
+    private fun handleSingleReminder(context: Context, reminderId: String, isSnooze: Boolean) {
+        // Fallback untuk menangani single reminder jika ada error
+        AlarmPopupActivity.addActiveReminder(context, reminderId)
+        AlarmPopupActivity.playGlobalRingtone(context)
+        showNotification(context, reminderId, if (isSnooze) "Snooze" else "Sekali", isSnooze)
+        triggerActiveAlarm(reminderId, isSnooze)
+
         val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra("reminderId", reminderId)
-            putExtra("reminder_id", reminderId) // Backward compatibility
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putStringArrayListExtra("reminderIds", arrayListOf(reminderId))
         }
 
         try {
             context.startActivity(popupIntent)
-            Log.d("AlarmReceiver", "AlarmPopupActivity started successfully")
         } catch (e: Exception) {
-            Log.e("AlarmReceiver", "Failed to start AlarmPopupActivity: ${e.message}")
-
-            // Fallback: show notification if popup fails
+            Log.e("AlarmReceiver", "Failed to start single reminder popup: ${e.message}")
             showFallbackNotification(context, reminderId, isSnooze)
         }
+    }
 
-        // ✅ Trigger Firestore untuk ESP8266
-        triggerActiveAlarm(reminderId, isSnooze)
+    // Fungsi untuk mencari reminder dengan waktu yang sama
+    private suspend fun findSimultaneousReminders(context: Context, currentReminderId: String): List<String> {
+        val db = FirebaseFirestore.getInstance()
+        val reminderIds = mutableSetOf<String>()
 
-        // Jadwalkan alarm berikutnya jika ini recurring alarm
-        if (isRecurring && !recurrenceType.isNullOrEmpty() && !isSnooze) {
-            if (originalTime > 0) {
-                AlarmUtils.scheduleNextRecurringAlarm(
-                    context,
-                    reminderId,
-                    originalTime,
-                    recurrenceType
-                )
-            } else if (intervalMillis > 0) {
-                // Fallback ke metode lama jika originalTime tidak ada
-                scheduleNextRecurringAlarmLegacy(context, reminderId, intervalMillis, recurrenceType)
+        try {
+            // Get current reminder data
+            val currentReminderSnap = db.collection("reminders").document(currentReminderId).get().await()
+            if (!currentReminderSnap.exists()) {
+                Log.w("AlarmReceiver", "Current reminder not found: $currentReminderId")
+                return listOf(currentReminderId)
             }
+
+            val currentReminder = currentReminderSnap.toObject(Reminder::class.java)
+            if (currentReminder == null) {
+                Log.w("AlarmReceiver", "Current reminder data is null: $currentReminderId")
+                return listOf(currentReminderId)
+            }
+
+            val currentDateTime = "${currentReminder.tanggal} ${currentReminder.waktu}"
+            Log.d("AlarmReceiver", "Looking for reminders at time: $currentDateTime")
+
+            // Find all reminders with same date and time
+            val allReminders = db.collection("reminders").get().await()
+            for (document in allReminders.documents) {
+                val reminder = document.toObject(Reminder::class.java)
+                if (reminder != null && reminder.tanggal != null && reminder.waktu != null) {
+                    val reminderDateTime = "${reminder.tanggal} ${reminder.waktu}"
+                    if (reminderDateTime == currentDateTime) {
+                        reminderIds.add(document.id)
+                        Log.d("AlarmReceiver", "Found matching reminder: ${document.id}")
+                    }
+                }
+            }
+
+            Log.d("AlarmReceiver", "Total simultaneous reminders found: ${reminderIds.size}")
+            return reminderIds.toList()
+
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Error finding simultaneous reminders: ${e.message}")
+            return listOf(currentReminderId)
+        }
+    }
+
+    private fun showMultipleRemindersNotification(context: Context, reminderIds: List<String>, isSnooze: Boolean) {
+        val notificationTitle = if (isSnooze) "Pengingat Obat (Snooze)" else "Pengingat Obat"
+        val notificationText = if (reminderIds.size == 1) {
+            "Saatnya minum obat!"
+        } else {
+            "Ada ${reminderIds.size} pengingat obat yang harus diminum!"
         }
 
-        // ✅ Play alarm sound hanya jika bukan snooze atau tidak ada alarm lain yang sedang berbunyi
-//        if (!isSnooze) {
-//            playAlarmSound(context)
-//        }
-        // Opsional: Tambahkan suara alarm atau vibration
-//        playAlarmSound(context)
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putStringArrayListExtra("reminderIds", ArrayList(reminderIds))
+            putExtra("check_active_alarms", true)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            reminderIds.hashCode(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.pill)
+            .setContentTitle(notificationTitle)
+            .setContentText(notificationText)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setFullScreenIntent(pendingIntent, true)
+            .build()
+
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationId = if (isSnooze) {
+            (reminderIds.hashCode() + 1000)
+        } else {
+            reminderIds.hashCode()
+        }
+
+        try {
+            manager.notify(notificationId, notification)
+        } catch (e: SecurityException) {
+            Log.e("AlarmReceiver", "Permission denied for notification", e)
+        }
     }
 
     private fun showNotification(context: Context, reminderId: String, recurrenceType: String, isSnooze: Boolean = false) {
-        // Tentukan title dan text berdasarkan status snooze
-        val notificationTitle = if (isSnooze) "Pengingat Obat" else "Pengingat Obat"
+        val notificationTitle = if (isSnooze) "Pengingat Obat (Snooze)" else "Pengingat Obat"
         val notificationText = if (isSnooze)
-            "Waktunya minum obat! (Pengingat Snooze - ID: $reminderId)"
+            "Waktunya minum obat! (Pengingat Snooze)"
         else
-            "Saatnya minum obat - $recurrenceType (ID: $reminderId)"
+            "Saatnya minum obat - $recurrenceType"
 
-        // Intent untuk membuka aplikasi ketika notifikasi diklik
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             putExtra("reminderId", reminderId)
-            putExtra("check_active_alarm", true) // ✅ Flag untuk check alarm aktif
+            putExtra("check_active_alarm", true)
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -128,38 +304,19 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Intent untuk menandai sebagai sudah diminum
-//        val takenIntent = Intent(context, MedicineTakenReceiver::class.java).apply {
-//            putExtra("reminderId", reminderId)
-//        }
-//        val takenPendingIntent = PendingIntent.getBroadcast(
-//            context,
-//            reminderId.hashCode(),
-//            takenIntent,
-//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//        )
-
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.pill) // Sesuaikan dengan icon yang Anda punya
+            .setSmallIcon(R.drawable.pill)
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
             .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setDefaults(NotificationCompat.DEFAULT_VIBRATE) // ✅ Hanya vibration, bukan sound
-//            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setDefaults(NotificationCompat.DEFAULT_VIBRATE)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-//            .addAction(
-//                R.drawable.pill, // Ganti dengan icon check jika ada
-//                "Sudah Diminum",
-//                takenPendingIntent
-//            )
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
-            .setFullScreenIntent(pendingIntent, true) // ✅ Tambahan untuk fullscreen popup
+            .setFullScreenIntent(pendingIntent, true)
             .build()
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        // Gunakan ID yang berbeda untuk snooze notifications agar tidak menimpa notifikasi asli
         val notificationId = if (isSnooze) {
             (reminderId.hashCode() + 1000)
         } else {
@@ -173,7 +330,6 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    // ✅ Fallback notification jika popup gagal dibuka
     private fun showFallbackNotification(context: Context, reminderId: String, isSnooze: Boolean) {
         val notificationTitle = "Pengingat Obat - Buka Aplikasi"
         val notificationText = "Ada alarm aktif. Buka aplikasi untuk melihat pengingat."
@@ -195,7 +351,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
             .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setAutoCancel(false) // Don't auto-cancel
+            .setAutoCancel(false)
             .setContentIntent(pendingIntent)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .build()
@@ -219,7 +375,6 @@ class AlarmReceiver : BroadcastReceiver() {
             ).apply {
                 description = "Channel untuk alarm pengingat obat"
                 enableVibration(true)
-//                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM), null)
             }
 
             val notificationManager: NotificationManager =
@@ -255,41 +410,6 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun playAlarmSound(context: Context) {
-        try {
-            // ✅ Hentikan ringtone yang mungkin masih berjalan sebelum memutar yang baru
-//            AlarmPopupActivity.stopCurrentRingtone()
-
-            val ringtoneManager = RingtoneManager.getRingtone(
-                context,
-                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            )
-
-            // ✅ Hanya putar jika belum ada yang sedang berbunyi
-            if (ringtoneManager != null && !ringtoneManager.isPlaying) {
-                ringtoneManager.play()
-                Log.d("AlarmReceiver", "Alarm sound started")
-
-                // ✅ TAMBAHAN: Hentikan suara otomatis setelah 30 detik sebagai safety
-                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                    try {
-                        if (ringtoneManager.isPlaying) {
-                            ringtoneManager.stop()
-                            Log.d("AlarmReceiver", "Alarm sound stopped automatically after 30 seconds")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("AlarmReceiver", "Error stopping alarm sound automatically: ${e.message}")
-                    }
-                }, 30000) // 30 detik
-            } else {
-                Log.d("AlarmReceiver", "Ringtone is null or already playing, skipping")
-            }
-        } catch (e: Exception) {
-            Log.e("AlarmReceiver", "Failed to play alarm sound", e)
-        }
-    }
-
-    // ✅ Fallback method untuk backward compatibility dengan sistem lama
     @SuppressLint("ScheduleExactAlarm")
     private fun scheduleNextRecurringAlarmLegacy(
         context: Context,
@@ -318,7 +438,6 @@ class AlarmReceiver : BroadcastReceiver() {
                 android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
             )
 
-            // ✅ Gunakan fungsi aman dari AlarmUtils
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     if (alarmManager.canScheduleExactAlarms()) {
@@ -337,7 +456,6 @@ class AlarmReceiver : BroadcastReceiver() {
                         }
                         Log.d("AlarmReceiver", "Next exact recurring alarm scheduled for: ${java.util.Date(nextTimeInMillis)}")
                     } else {
-                        // Fallback ke alarm biasa
                         alarmManager.setAndAllowWhileIdle(
                             android.app.AlarmManager.RTC_WAKEUP,
                             nextTimeInMillis,
@@ -346,7 +464,6 @@ class AlarmReceiver : BroadcastReceiver() {
                         Log.w("AlarmReceiver", "Exact alarm permission not available, using inexact alarm")
                     }
                 } else {
-                    // Android < 12
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         alarmManager.setExactAndAllowWhileIdle(
                             android.app.AlarmManager.RTC_WAKEUP,
@@ -364,7 +481,6 @@ class AlarmReceiver : BroadcastReceiver() {
                 }
             } catch (se: SecurityException) {
                 Log.w("AlarmReceiver", "SecurityException saat set exact recurring alarm, fallback ke regular alarm: ${se.message}")
-                // Fallback final ke alarm biasa
                 alarmManager.set(
                     android.app.AlarmManager.RTC_WAKEUP,
                     nextTimeInMillis,
@@ -385,18 +501,24 @@ class MedicineTakenReceiver : BroadcastReceiver() {
         val reminderId = intent.getStringExtra("reminderId") ?:
         intent.getStringExtra("reminder_id") ?: return
 
-        // Batalkan notifikasi
+        val reminderIds = intent.getStringArrayListExtra("reminderIds") ?: listOf(reminderId)
+
+        // Batalkan notifikasi untuk semua reminder
         val notificationManager = NotificationManagerCompat.from(context)
-        notificationManager.cancel(reminderId.hashCode())
-        notificationManager.cancel(reminderId.hashCode() + 1000) // Cancel snooze notification too
+        reminderIds.forEach { id ->
+            notificationManager.cancel(id.hashCode())
+            notificationManager.cancel(id.hashCode() + 1000) // Cancel snooze notification too
+        }
 
-        Log.d("MedicineTakenReceiver", "Medicine taken for reminder: $reminderId")
+        Log.d("MedicineTakenReceiver", "Medicine taken for ${reminderIds.size} reminders: $reminderIds")
 
-        // ✅ Clear active reminder
-        AlarmPopupActivity.clearActiveReminder(context)
+        // ✅ Clear all active reminders
+        AlarmPopupActivity.clearAllActiveReminders(context)
 
-        // ✅ Update Firestore bahwa obat sudah diminum
-        updateMedicineTakenStatus(reminderId)
+        // ✅ Update Firestore bahwa obat sudah diminum untuk semua reminder
+        reminderIds.forEach { id ->
+            updateMedicineTakenStatus(id)
+        }
     }
 
     private fun updateMedicineTakenStatus(reminderId: String) {
