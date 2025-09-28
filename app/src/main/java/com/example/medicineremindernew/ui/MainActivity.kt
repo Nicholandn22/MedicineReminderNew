@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         // ✅ Check active alarm saat pertama kali load
         LaunchedEffect(Unit) {
             Log.d("MainActivity", "Checking for active alarms on app start...")
-            AlarmPopupActivity.checkAndShowActiveAlarm(this@MainActivity)
+            AlarmPopupActivity.checkAndShowActiveAlarms(this@MainActivity)
         }
         Scaffold(
             topBar = {
@@ -334,20 +334,31 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Check active alarm dari intent yang diterima
+    // ✅ UPDATED: Check active alarm dari intent yang diterima - Support multiple reminders
     private fun checkActiveAlarmFromIntent() {
+        // Check for multiple reminders
+        val checkActiveAlarms = intent?.getBooleanExtra("check_active_alarms", false) ?: false
+        val reminderIds = intent?.getStringArrayListExtra("reminderIds")
+
+        // Check for single reminder (backward compatibility)
         val checkActiveAlarm = intent?.getBooleanExtra("check_active_alarm", false) ?: false
         val reminderId = intent?.getStringExtra("reminderId")
 
-        if (checkActiveAlarm && !reminderId.isNullOrBlank()) {
-            Log.d("MainActivity", "Notification clicked with reminder ID: $reminderId")
-            // Check dan show alarm jika ada
-            AlarmPopupActivity.checkAndShowActiveAlarm(this)
+        when {
+            checkActiveAlarms && !reminderIds.isNullOrEmpty() -> {
+                Log.d("MainActivity", "Notification clicked with ${reminderIds.size} reminder IDs: $reminderIds")
+                AlarmPopupActivity.checkAndShowActiveAlarms(this)
+            }
+            checkActiveAlarm && !reminderId.isNullOrBlank() -> {
+                Log.d("MainActivity", "Notification clicked with single reminder ID: $reminderId")
+                AlarmPopupActivity.checkAndShowActiveAlarms(this)
+            }
+            else -> {
+                // Check jika ada active reminder yang tersimpan
+                AlarmPopupActivity.checkAndShowActiveAlarms(this)
+                Log.d("MainActivity", "Checked for stored active alarms...")
+            }
         }
-
-        // Check juga jika ada active reminder yang tersimpan
-        AlarmPopupActivity.checkAndShowActiveAlarm(this)
-        Log.d("MainActivity", "Checked for active alarms from intent...")
     }
 
     // ✅ Handle onResume untuk check active alarm
@@ -355,16 +366,37 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         // Check jika ada alarm aktif saat aplikasi dibuka/resumed
-        AlarmPopupActivity.checkAndShowActiveAlarm(this)
+        AlarmPopupActivity.checkAndShowActiveAlarms(this)
         Log.d("MainActivity", "onResume - Checking for active alarms...")
     }
 
-    // ✅ Handle new intent (saat app sudah berjalan dan mendapat intent baru)
+    // ✅ UPDATED: Handle new intent - Support multiple reminders
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        setIntent(intent)
-        checkActiveAlarmFromIntent()
-        Log.d("MainActivity", "onNewIntent - Checking for active alarms...")
+        setIntent(intent) // Important: Update the intent
+
+        // Check for multiple reminders
+        val checkActiveAlarms = intent?.getBooleanExtra("check_active_alarms", false) ?: false
+        val reminderIds = intent?.getStringArrayListExtra("reminderIds")
+
+        // Check for single reminder (backward compatibility)
+        val checkActiveAlarm = intent?.getBooleanExtra("check_active_alarm", false) ?: false
+        val singleReminderId = intent?.getStringExtra("reminderId")
+
+        when {
+            checkActiveAlarms && !reminderIds.isNullOrEmpty() -> {
+                Log.d("MainActivity", "onNewIntent - Detected ${reminderIds.size} active reminders from notification: $reminderIds")
+                AlarmPopupActivity.checkAndShowActiveAlarms(this)
+            }
+            checkActiveAlarm && !singleReminderId.isNullOrBlank() -> {
+                Log.d("MainActivity", "onNewIntent - Detected single active reminder from notification: $singleReminderId")
+                AlarmPopupActivity.checkAndShowActiveAlarms(this)
+            }
+            else -> {
+                Log.d("MainActivity", "onNewIntent - Checking for any stored active alarms...")
+                AlarmPopupActivity.checkAndShowActiveAlarms(this)
+            }
+        }
     }
 
     // ✅ Sinkronisasi semua data yang pending
