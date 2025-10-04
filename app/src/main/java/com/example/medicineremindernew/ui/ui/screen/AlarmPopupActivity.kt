@@ -235,13 +235,9 @@ class AlarmPopupActivity : ComponentActivity() {
             addActiveReminder(this, id)
         }
 
-        // ✅ PERBAIKAN: Hanya play ringtone jika bukan dari snooze dan belum ada yang playing
-        // Ringtone hanya diputar oleh AlarmReceiver, bukan oleh AlarmPopupActivity
-        // Ini mencegah duplikasi suara saat popup dibuka
-        if (!isSnooze && globalRingtone?.isPlaying != true) {
-            // Sebenarnya ringtone sudah diputar oleh AlarmReceiver
-            // Jadi kita skip bagian ini untuk mencegah duplikasi
-            Log.d("AlarmPopup", "Ringtone already managed by AlarmReceiver")
+        // ✅ Gunakan global ringtone management - hanya play jika belum ada
+        if (globalRingtone?.isPlaying != true) {
+            playGlobalRingtone(this)
         }
 
         setContent {
