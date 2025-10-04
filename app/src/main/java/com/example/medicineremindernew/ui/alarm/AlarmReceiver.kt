@@ -42,37 +42,61 @@ class AlarmReceiver : BroadcastReceiver() {
 
         createNotificationChannel(context)
 
-        // ✅ Ambil data untuk recurring alarm - support kedua format untuk backward compatibility
-        val reminderId = intent.getStringExtra("reminderId") ?:
-        intent.getStringExtra("reminder_id") ?: "Unknown"
+        // ✅ Ambil data dari intent - support multiple reminder IDs
+        val singleReminderId = intent.getStringExtra("reminderId")
+            ?: intent.getStringExtra("reminder_id")
+        val multipleReminderIds = intent.getStringArrayListExtra("reminderIds")
 
         val recurrenceType = intent.getStringExtra("recurrence_type")
         val originalTime = intent.getLongExtra("original_time", 0L)
         val intervalMillis = intent.getLongExtra("interval_millis", 0L)
         val isRecurring = intent.getBooleanExtra("is_recurring", false)
         val isSnooze = intent.getBooleanExtra("is_snooze", false)
+        val snoozeTime = intent.getLongExtra("snooze_time", 0L)
 
-        Log.d("AlarmReceiver", "Reminder ID: $reminderId, Recurring: $isRecurring, Type: $recurrenceType, Snooze: $isSnooze")
+        Log.d("AlarmReceiver", "Received - Single ID: $singleReminderId, Multiple: ${multipleReminderIds?.size}, Snooze: $isSnooze, SnoozeTime: $snoozeTime")
 
-        if (reminderId == "Unknown" || reminderId.isBlank()) {
-            Log.e("AlarmReceiver", "Invalid reminder ID, cannot process alarm")
-            return
+        // Determine which reminder IDs to process
+        val reminderIds = when {
+            // 🆕 Jika snooze dengan snooze_time, ambil dari saved group
+            isSnooze && snoozeTime > 0L -> {
+                val savedGroup = AlarmPopupActivity.getSnoozeGroup(context, snoozeTime)
+                if (savedGroup.isNotEmpty()) {
+                    Log.d("AlarmReceiver", "Retrieved snooze group: ${savedGroup.size} reminders")
+                    savedGroup.toList()
+                } else if (!multipleReminderIds.isNullOrEmpty()) {
+                    multipleReminderIds
+                } else if (!singleReminderId.isNullOrBlank()) {
+                    listOf(singleReminderId)
+                } else {
+                    Log.e("AlarmReceiver", "No reminder IDs found for snooze alarm")
+                    return
+                }
+            }
+            !multipleReminderIds.isNullOrEmpty() -> multipleReminderIds
+            !singleReminderId.isNullOrBlank() -> listOf(singleReminderId)
+            else -> {
+                Log.e("AlarmReceiver", "No reminder IDs provided")
+                return
+            }
         }
+
+        Log.d("AlarmReceiver", "Processing ${reminderIds.size} reminder IDs: $reminderIds")
 
         // Launch coroutine untuk menangani operasi async
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 if (isSnooze) {
-                    // Untuk snooze alarm, langsung tampilkan popup untuk reminder tunggal
-                    handleSnoozeAlarm(context, reminderId)
+                    // Untuk snooze alarm, handle multiple reminders
+                    handleSnoozeAlarm(context, reminderIds, snoozeTime)
                 } else {
                     // Untuk alarm reguler, cari semua reminder dengan waktu yang sama
-                    handleRegularAlarm(context, reminderId, recurrenceType, originalTime, intervalMillis, isRecurring)
+                    handleRegularAlarm(context, reminderIds[0], recurrenceType, originalTime, intervalMillis, isRecurring)
                 }
             } catch (e: Exception) {
                 Log.e("AlarmReceiver", "Error handling alarm: ${e.message}")
-                // Fallback ke single reminder jika ada error
-                handleSingleReminder(context, reminderId, isSnooze)
+                // Fallback ke handling reminders yang ada
+                handleMultipleReminders(context, reminderIds, isSnooze, snoozeTime)
             }
         }
     }
@@ -107,6 +131,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putStringArrayListExtra("reminderIds", ArrayList(simultaneousReminderIds))
+                putExtra("is_snooze", false)
             }
 
             try {
@@ -140,42 +165,90 @@ class AlarmReceiver : BroadcastReceiver() {
 
         } catch (e: Exception) {
             Log.e("AlarmReceiver", "Error handling regular alarm: ${e.message}")
-            handleSingleReminder(context, currentReminderId, false)
+            handleSingleReminder(context, currentReminderId, false, 0L)
         }
     }
 
-    private suspend fun handleSnoozeAlarm(context: Context, reminderId: String) {
+    // 🆕 FUNGSI BARU: Handle snooze alarm untuk multiple reminders
+    private suspend fun handleSnoozeAlarm(context: Context, reminderIds: List<String>, snoozeTime: Long) {
         try {
-            // Untuk snooze alarm, hanya tangani reminder tunggal
-            AlarmPopupActivity.addActiveReminder(context, reminderId)
+            Log.d("AlarmReceiver", "Handling snooze for ${reminderIds.size} reminders")
+
+            // Tambahkan semua reminder ke active list
+            reminderIds.forEach { id ->
+                AlarmPopupActivity.addActiveReminder(context, id)
+            }
+
+            // ✅ Putar suara alarm hanya sekali
             AlarmPopupActivity.playGlobalRingtone(context)
 
-            showNotification(context, reminderId, "Snooze", true)
+            // Tampilkan notifikasi
+            showMultipleRemindersNotification(context, reminderIds, true)
 
+            // Buka popup activity dengan semua reminder
             val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP
-                putStringArrayListExtra("reminderIds", arrayListOf(reminderId))
+                putStringArrayListExtra("reminderIds", ArrayList(reminderIds))
+                putExtra("is_snooze", true)
+                putExtra("snooze_time", snoozeTime)
             }
 
             try {
                 context.startActivity(popupIntent)
-                Log.d("AlarmReceiver", "AlarmPopupActivity started for snooze reminder: $reminderId")
+                Log.d("AlarmReceiver", "AlarmPopupActivity started for ${reminderIds.size} snooze reminders")
             } catch (e: Exception) {
                 Log.e("AlarmReceiver", "Failed to start AlarmPopupActivity for snooze: ${e.message}")
-                showFallbackNotification(context, reminderId, true)
+                reminderIds.forEach { id ->
+                    showFallbackNotification(context, id, true)
+                }
             }
 
-            triggerActiveAlarm(reminderId, true)
+            // Trigger alarm untuk semua reminder
+            reminderIds.forEach { reminderId ->
+                triggerActiveAlarm(reminderId, true)
+            }
 
         } catch (e: Exception) {
             Log.e("AlarmReceiver", "Error handling snooze alarm: ${e.message}")
-            handleSingleReminder(context, reminderId, true)
+            handleMultipleReminders(context, reminderIds, true, snoozeTime)
         }
     }
 
-    private fun handleSingleReminder(context: Context, reminderId: String, isSnooze: Boolean) {
+    // 🆕 FUNGSI BARU: Handle multiple reminders secara langsung
+    private fun handleMultipleReminders(context: Context, reminderIds: List<String>, isSnooze: Boolean, snoozeTime: Long) {
+        // Tambahkan semua ke active list
+        reminderIds.forEach { id ->
+            AlarmPopupActivity.addActiveReminder(context, id)
+        }
+
+        AlarmPopupActivity.playGlobalRingtone(context)
+        showMultipleRemindersNotification(context, reminderIds, isSnooze)
+
+        reminderIds.forEach { reminderId ->
+            triggerActiveAlarm(reminderId, isSnooze)
+        }
+
+        val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putStringArrayListExtra("reminderIds", ArrayList(reminderIds))
+            putExtra("is_snooze", isSnooze)
+            putExtra("snooze_time", snoozeTime)
+        }
+
+        try {
+            context.startActivity(popupIntent)
+            Log.d("AlarmReceiver", "Multiple reminders popup started for ${reminderIds.size} reminders")
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Failed to start multiple reminders popup: ${e.message}")
+            reminderIds.forEach { id ->
+                showFallbackNotification(context, id, isSnooze)
+            }
+        }
+    }
+
+    private fun handleSingleReminder(context: Context, reminderId: String, isSnooze: Boolean, snoozeTime: Long) {
         // Fallback untuk menangani single reminder jika ada error
         AlarmPopupActivity.addActiveReminder(context, reminderId)
         AlarmPopupActivity.playGlobalRingtone(context)
@@ -185,6 +258,8 @@ class AlarmReceiver : BroadcastReceiver() {
         val popupIntent = Intent(context, AlarmPopupActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             putStringArrayListExtra("reminderIds", arrayListOf(reminderId))
+            putExtra("is_snooze", isSnooze)
+            putExtra("snooze_time", snoozeTime)
         }
 
         try {
@@ -498,10 +573,15 @@ class AlarmReceiver : BroadcastReceiver() {
 // Receiver untuk menangani aksi "Sudah Diminum"
 class MedicineTakenReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        val reminderId = intent.getStringExtra("reminderId") ?:
-        intent.getStringExtra("reminder_id") ?: return
+        val reminderId = intent.getStringExtra("reminderId")
+            ?: intent.getStringExtra("reminder_id")
+        val reminderIds = intent.getStringArrayListExtra("reminderIds")
+            ?: (if (reminderId != null) listOf(reminderId) else emptyList())
 
-        val reminderIds = intent.getStringArrayListExtra("reminderIds") ?: listOf(reminderId)
+        if (reminderIds.isEmpty()) {
+            Log.w("MedicineTakenReceiver", "No reminder IDs provided")
+            return
+        }
 
         // Batalkan notifikasi untuk semua reminder
         val notificationManager = NotificationManagerCompat.from(context)

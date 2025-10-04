@@ -41,7 +41,8 @@ class AlarmPopupActivity : ComponentActivity() {
     companion object {
         // SharedPreferences untuk tracking alarm aktif
         private const val PREF_NAME = "AlarmPrefs"
-        private const val KEY_ACTIVE_REMINDER_IDS = "active_reminder_ids" // Changed to support multiple IDs
+        private const val KEY_ACTIVE_REMINDER_IDS = "active_reminder_ids"
+        private const val KEY_SNOOZE_GROUP_PREFIX = "snooze_group_" // New: untuk tracking snooze groups
 
         // ✅ Static ringtone manager untuk mencegah duplikasi suara
         private var globalRingtone: Ringtone? = null
@@ -81,6 +82,29 @@ class AlarmPopupActivity : ComponentActivity() {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             prefs.edit().remove(KEY_ACTIVE_REMINDER_IDS).apply()
             Log.d("AlarmPopup", "Cleared all active reminders")
+        }
+
+        // 🆕 Fungsi untuk menyimpan snooze group
+        fun saveSnoozeGroup(context: Context, reminderIds: List<String>, snoozeTime: Long) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val groupKey = "$KEY_SNOOZE_GROUP_PREFIX$snoozeTime"
+            prefs.edit().putStringSet(groupKey, reminderIds.toSet()).apply()
+            Log.d("AlarmPopup", "Saved snooze group with ${reminderIds.size} reminders for time: $snoozeTime")
+        }
+
+        // 🆕 Fungsi untuk mendapatkan snooze group
+        fun getSnoozeGroup(context: Context, snoozeTime: Long): Set<String> {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val groupKey = "$KEY_SNOOZE_GROUP_PREFIX$snoozeTime"
+            return prefs.getStringSet(groupKey, emptySet()) ?: emptySet()
+        }
+
+        // 🆕 Fungsi untuk menghapus snooze group
+        fun removeSnoozeGroup(context: Context, snoozeTime: Long) {
+            val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val groupKey = "$KEY_SNOOZE_GROUP_PREFIX$snoozeTime"
+            prefs.edit().remove(groupKey).apply()
+            Log.d("AlarmPopup", "Removed snooze group for time: $snoozeTime")
         }
 
         // Check if there are active reminders with same time
@@ -176,8 +200,20 @@ class AlarmPopupActivity : ComponentActivity() {
         // Handle both single and multiple reminder IDs
         val singleReminderId = intent.getStringExtra("reminderId") ?: intent.getStringExtra("reminder_id")
         val multipleReminderIds = intent.getStringArrayListExtra("reminderIds")
+        val isSnooze = intent.getBooleanExtra("is_snooze", false)
+        val snoozeTime = intent.getLongExtra("snooze_time", 0L)
 
         val reminderIds = when {
+            // 🆕 Jika dari snooze, ambil dari saved group
+            isSnooze && snoozeTime > 0L -> {
+                val savedGroup = getSnoozeGroup(this, snoozeTime)
+                if (savedGroup.isNotEmpty()) {
+                    Log.d("AlarmPopup", "Retrieved snooze group with ${savedGroup.size} reminders")
+                    savedGroup.toList()
+                } else {
+                    listOf(singleReminderId ?: "")
+                }
+            }
             !multipleReminderIds.isNullOrEmpty() -> multipleReminderIds
             !singleReminderId.isNullOrBlank() -> {
                 // For single reminder, find all simultaneous reminders
@@ -199,9 +235,13 @@ class AlarmPopupActivity : ComponentActivity() {
             addActiveReminder(this, id)
         }
 
-        // ✅ Gunakan global ringtone management - hanya play jika belum ada
-        if (globalRingtone?.isPlaying != true) {
-            playGlobalRingtone(this)
+        // ✅ PERBAIKAN: Hanya play ringtone jika bukan dari snooze dan belum ada yang playing
+        // Ringtone hanya diputar oleh AlarmReceiver, bukan oleh AlarmPopupActivity
+        // Ini mencegah duplikasi suara saat popup dibuka
+        if (!isSnooze && globalRingtone?.isPlaying != true) {
+            // Sebenarnya ringtone sudah diputar oleh AlarmReceiver
+            // Jadi kita skip bagian ini untuk mencegah duplikasi
+            Log.d("AlarmPopup", "Ringtone already managed by AlarmReceiver")
         }
 
         setContent {
@@ -210,6 +250,11 @@ class AlarmPopupActivity : ComponentActivity() {
                     reminderIds = reminderIds,
                     onDismiss = { reminders, allLansia, allObat ->
                         Log.d("AlarmPopup", "Tombol 'Sudah Diminum' ditekan untuk ${reminders.size} reminders")
+
+                        // 🆕 Hapus snooze group jika ada
+                        if (isSnooze && snoozeTime > 0L) {
+                            removeSnoozeGroup(this@AlarmPopupActivity, snoozeTime)
+                        }
 
                         // Process each reminder
                         reminders.forEach { reminder ->
@@ -234,7 +279,7 @@ class AlarmPopupActivity : ComponentActivity() {
                             cancelSnoozeAlarm(this@AlarmPopupActivity, reminder.id ?: "")
                         }
 
-                        // 🔹 Stop ringtone
+                        // 🔹 Stop ringtone - DIPINDAHKAN SEBELUM finish()
                         stopRingtone()
 
                         // 🔹 Clear all active reminders
@@ -243,17 +288,22 @@ class AlarmPopupActivity : ComponentActivity() {
                         finish()
                     },
                     onSnooze = { reminderIds ->
+                        // 🔹 PERBAIKAN: Hentikan ringtone PERTAMA SEKALI sebelum log atau proses apapun
+                        stopRingtone()
+
                         Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan untuk ${reminderIds.size} reminders")
 
-                        // 🔹 Hentikan ringtone saat ini
-                        stopRingtone()
+                        // 🆕 Simpan snooze group
+                        val snoozeTime = System.currentTimeMillis() + (5 * 60 * 1000)
+                        saveSnoozeGroup(this@AlarmPopupActivity, reminderIds, snoozeTime)
 
                         // Process each reminder for snooze
                         reminderIds.forEach { reminderId ->
                             matikanIoT(reminderId)
-                            // 🔹 Set alarm snooze (5 menit kemudian)
-                            setSnoozeAlarm(this@AlarmPopupActivity, reminderId)
                         }
+
+                        // 🆕 Set SATU alarm untuk semua reminder dengan snooze group
+                        setSnoozeAlarmForGroup(this@AlarmPopupActivity, reminderIds, snoozeTime)
 
                         // 🔹 Clear all active reminders
                         clearAllActiveReminders(this@AlarmPopupActivity)
@@ -320,24 +370,25 @@ class AlarmPopupActivity : ComponentActivity() {
             }
     }
 
-    private fun setSnoozeAlarm(context: Context, reminderId: String) {
+    // 🆕 FUNGSI BARU: Set snooze alarm untuk group reminders
+    private fun setSnoozeAlarmForGroup(context: Context, reminderIds: List<String>, snoozeTime: Long) {
         try {
-            // Hitung waktu 5 menit dari sekarang
-            val snoozeTime = System.currentTimeMillis() + (5 * 60 * 1000)
-
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
             val intent = Intent(context, AlarmReceiver::class.java).apply {
-                putExtra("reminderId", reminderId)
-                putExtra("reminder_id", reminderId)
+                putStringArrayListExtra("reminderIds", ArrayList(reminderIds))
                 putExtra("is_snooze", true)
+                putExtra("snooze_time", snoozeTime)
                 putExtra("is_recurring", false)
                 action = "com.example.medicineremindernew.ALARM"
             }
 
+            // Gunakan snoozeTime sebagai unique ID untuk group
+            val requestCode = (snoozeTime / 1000).toInt()
+
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                reminderId.hashCode() + 1000, // ID berbeda untuk snooze
+                requestCode,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
@@ -351,7 +402,7 @@ class AlarmPopupActivity : ComponentActivity() {
                             snoozeTime,
                             pendingIntent
                         )
-                        Log.d("AlarmPopup", "Exact snooze alarm scheduled for: ${java.util.Date(snoozeTime)}")
+                        Log.d("AlarmPopup", "Exact snooze alarm scheduled for ${reminderIds.size} reminders at: ${java.util.Date(snoozeTime)}")
                     } else {
                         // Fallback ke inexact alarm
                         alarmManager.setAndAllowWhileIdle(
@@ -394,7 +445,7 @@ class AlarmPopupActivity : ComponentActivity() {
             }
 
         } catch (e: Exception) {
-            Log.e("AlarmPopup", "Gagal mengatur snooze alarm: ${e.message}")
+            Log.e("AlarmPopup", "Gagal mengatur snooze alarm untuk group: ${e.message}")
         }
     }
 
