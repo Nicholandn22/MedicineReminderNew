@@ -308,7 +308,7 @@ fun HomeScreen(
                     reminderToDelete = null
                 },
                 title = {
-                    Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda)
+                    Text("Konfirmasi Hapus", fontWeight = FontWeight.Bold, color = BiruMuda.copy(alpha = 1.0f))
                 },
                 text = { Text("Apakah Anda yakin ingin menghapus reminder ini?") },
                 confirmButton = {
@@ -332,7 +332,7 @@ fun HomeScreen(
                             showDeleteDialog = false
                             reminderToDelete = null
                         },
-                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda)
+                        colors = ButtonDefaults.textButtonColors(contentColor = BiruMuda.copy(alpha = 1.0f))
                     ) { Text("Tidak") }
                 }
             )
