@@ -193,3 +193,195 @@
 //
 //    biometricPrompt.authenticate(promptInfo)
 //}
+
+package com.example.medicineremindernew.ui.ui.screen
+
+import android.util.Log
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.medicineremindernew.R
+import com.example.medicineremindernew.ui.ui.theme.BiruTua
+import com.example.medicineremindernew.ui.ui.theme.Krem
+
+@Composable
+fun LoginScreen(
+    onLoginSuccess: () -> Unit
+) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val focusManager = LocalFocusManager.current
+
+    val warnaKrem = Krem.copy(alpha = 1.0f)
+    val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(warnaKrem)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Logo
+            Image(
+                painter = painterResource(id = R.mipmap.logo),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(16.dp))
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "MedTime",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = warnaBiru
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = {
+                    username = it
+                    errorMessage = ""
+                },
+                placeholder = { Text("Username") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = warnaBiru,
+                    focusedPlaceholderColor = Color.Gray,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.DarkGray
+                )
+
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    errorMessage = ""
+                },
+                placeholder = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                        if (username.isNotEmpty() && password.isNotEmpty()) {
+                            isLoading = true
+                            if (username == "admin" && password == "admin") {
+                                onLoginSuccess()
+                            } else {
+                                isLoading = false
+                                errorMessage = "Username atau password salah!"
+                            }
+                        }
+                    }
+                ),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = warnaBiru,
+                    focusedPlaceholderColor = Color.Gray,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.DarkGray
+                )
+
+            )
+
+            if (errorMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = errorMessage,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = {
+                    if (username.isEmpty() || password.isEmpty()) {
+                        errorMessage = "Username dan password tidak boleh kosong!"
+                    } else {
+                        isLoading = true
+                        if (username == "admin" && password == "admin") {
+                            onLoginSuccess()
+                        } else {
+                            isLoading = false
+                            errorMessage = "Username atau password salah!"
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = warnaBiru
+                ),
+                shape = RoundedCornerShape(12.dp),
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Login",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}

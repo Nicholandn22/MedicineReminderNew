@@ -43,6 +43,7 @@ import com.example.medicineremindernew.ui.ui.screen.SplashScreen
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.MedicineReminderNewTheme
 import com.example.medicineremindernew.ui.ui.viewmodel.*
+import com.example.medicineremindernew.ui.ui.screen.LoginScreen
 import com.google.firebase.FirebaseApp
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
@@ -301,33 +302,48 @@ class MainActivity : AppCompatActivity() {
         setContent {
             MedicineReminderNewTheme {
                 var showSplash by remember { mutableStateOf(true) }
+                var showLogin by remember { mutableStateOf(true) }
+                var isLoggedIn by remember { mutableStateOf(false) }
 
-                if (showSplash) {
-                    SplashScreen(
-                        onSplashFinished = { showSplash = false }
-                    )
-                } else {
-                    val navController = rememberNavController()
-
-                    // State untuk animasi fade-in
-                    var fadeIn by remember { mutableStateOf(false) }
-                    val alphaAnim by animateFloatAsState(
-                        targetValue = if (fadeIn) 1f else 0f,
-                        animationSpec = tween(durationMillis = 500)
-                    )
-
-                    // Mulai fade-in setelah composable muncul
-                    LaunchedEffect(Unit) {
-                        fadeIn = true
+                when {
+                    showSplash -> {
+                        SplashScreen(
+                            onSplashFinished = {
+                                showSplash = false
+                            }
+                        )
                     }
+                    !isLoggedIn -> {
+                        LoginScreen(
+                            onLoginSuccess = {
+                                isLoggedIn = true
+                                Log.d("MainActivity", "Login berhasil")
+                            }
+                        )
+                    }
+                    else -> {
+                        val navController = rememberNavController()
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(BiruTua.copy(alpha = 1.0f))
-                            .alpha(alphaAnim)
-                    ) {
-                        MainApp(navController)
+                        // State untuk animasi fade-in
+                        var fadeIn by remember { mutableStateOf(false) }
+                        val alphaAnim by animateFloatAsState(
+                            targetValue = if (fadeIn) 1f else 0f,
+                            animationSpec = tween(durationMillis = 500)
+                        )
+
+                        // Mulai fade-in setelah composable muncul
+                        LaunchedEffect(Unit) {
+                            fadeIn = true
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(BiruTua.copy(alpha = 1.0f))
+                                .alpha(alphaAnim)
+                        ) {
+                            MainApp(navController)
+                        }
                     }
                 }
             }
