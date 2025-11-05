@@ -34,7 +34,7 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d("AlarmReceiver", "Alarm diterima!")
 
-        // ✅ Periksa action untuk memastikan ini adalah alarm yang benar
+        // Periksa action untuk memastikan ini adalah alarm yang benar
         if (intent?.action != "com.example.medicineremindernew.ALARM") {
             Log.d("AlarmReceiver", "Received intent with wrong action: ${intent?.action}")
             return
@@ -42,7 +42,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         createNotificationChannel(context)
 
-        // ✅ Ambil data dari intent - support multiple reminder IDs
+        // Ambil data dari intent - support multiple reminder IDs
         val singleReminderId = intent.getStringExtra("reminderId")
             ?: intent.getStringExtra("reminder_id")
         val multipleReminderIds = intent.getStringArrayListExtra("reminderIds")
@@ -58,7 +58,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         // Determine which reminder IDs to process
         val reminderIds = when {
-            // 🆕 Jika snooze dengan snooze_time, ambil dari saved group
+            // Jika snooze dengan snooze_time, ambil dari saved group
             isSnooze && snoozeTime > 0L -> {
                 val savedGroup = AlarmPopupActivity.getSnoozeGroup(context, snoozeTime)
                 if (savedGroup.isNotEmpty()) {
@@ -119,7 +119,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 AlarmPopupActivity.addActiveReminder(context, id)
             }
 
-            // ✅ Putar suara alarm hanya sekali untuk semua reminder bersamaan
+            // Putar suara alarm hanya sekali untuk semua reminder bersamaan
             AlarmPopupActivity.playGlobalRingtone(context)
 
             // Tampilkan notifikasi untuk semua reminder
@@ -169,7 +169,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    // 🆕 FUNGSI BARU: Handle snooze alarm untuk multiple reminders
+    //  Handle snooze alarm untuk multiple reminders
     private suspend fun handleSnoozeAlarm(context: Context, reminderIds: List<String>, snoozeTime: Long) {
         try {
             Log.d("AlarmReceiver", "Handling snooze for ${reminderIds.size} reminders")
@@ -179,7 +179,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 AlarmPopupActivity.addActiveReminder(context, id)
             }
 
-            // ✅ Putar suara alarm hanya sekali
+            // Putar suara alarm hanya sekali
             AlarmPopupActivity.playGlobalRingtone(context)
 
             // Tampilkan notifikasi
@@ -216,7 +216,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    // 🆕 FUNGSI BARU: Handle multiple reminders secara langsung
+    // Handle multiple reminders secara langsung
     private fun handleMultipleReminders(context: Context, reminderIds: List<String>, isSnooze: Boolean, snoozeTime: Long) {
         // Tambahkan semua ke active list
         reminderIds.forEach { id ->
@@ -592,10 +592,10 @@ class MedicineTakenReceiver : BroadcastReceiver() {
 
         Log.d("MedicineTakenReceiver", "Medicine taken for ${reminderIds.size} reminders: $reminderIds")
 
-        // ✅ Clear all active reminders
+        // Clear all active reminders
         AlarmPopupActivity.clearAllActiveReminders(context)
 
-        // ✅ Update Firestore bahwa obat sudah diminum untuk semua reminder
+        // Update Firestore bahwa obat sudah diminum untuk semua reminder
         reminderIds.forEach { id ->
             updateMedicineTakenStatus(id)
         }

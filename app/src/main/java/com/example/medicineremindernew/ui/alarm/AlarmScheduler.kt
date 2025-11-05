@@ -26,7 +26,7 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
         }
     }
 
-    // ✅ SUPER AGGRESSIVE CANCEL - Coba semua kemungkinan kombinasi
+    // SUPER AGGRESSIVE CANCEL - Coba semua kemungkinan kombinasi
     Log.d("AlarmScheduler", "=== SUPER AGGRESSIVE CANCEL FOR $reminderId ===")
 
     // Semua kemungkinan requestCode yang pernah digunakan
@@ -76,7 +76,7 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
                         alarmManager.cancel(cancelPendingIntent)
                         cancelPendingIntent.cancel()
                         totalCancelled++
-                        Log.d("AlarmScheduler", "✅ CANCELLED: reqCode=$reqCode, action=$action, data=$dataUri")
+                        Log.d("AlarmScheduler", "CANCELLED: reqCode=$reqCode, action=$action, data=$dataUri")
                     }
                 } catch (e: Exception) {
                     // Ignore individual errors, continue with other combinations
@@ -87,7 +87,7 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
 
     Log.d("AlarmScheduler", "Total alarms cancelled: $totalCancelled")
 
-    // ✅ Tunggu lebih lama untuk memastikan cancel selesai
+    // Tunggu lebih lama untuk memastikan cancel selesai
     Thread.sleep(500)
 
     Log.d("AlarmScheduler", "=== CREATING NEW ALARM FOR $reminderId ===")
@@ -112,7 +112,7 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
         pendingIntent
     )
 
-    Log.d("AlarmScheduler", "✅ NEW ALARM SCHEDULED: $reminderId at ${Date(timeInMillis)} with requestCode=${reminderId.hashCode()}")
+    Log.d("AlarmScheduler", "NEW ALARM SCHEDULED: $reminderId at ${Date(timeInMillis)} with requestCode=${reminderId.hashCode()}")
 }
 
 fun cancelAlarm(context: Context, reminderId: String) {
@@ -166,7 +166,7 @@ fun cancelAlarm(context: Context, reminderId: String) {
                         alarmManager.cancel(pendingIntent)
                         pendingIntent.cancel()
                         totalCancelled++
-                        Log.d("AlarmScheduler", "✅ CANCELLED: reqCode=$reqCode, action=$action, data=$dataUri")
+                        Log.d("AlarmScheduler", "CANCELLED: reqCode=$reqCode, action=$action, data=$dataUri")
                     }
                 } catch (e: Exception) {
                     // Continue with other combinations
@@ -176,9 +176,9 @@ fun cancelAlarm(context: Context, reminderId: String) {
     }
 
     if (totalCancelled > 0) {
-        Log.d("AlarmScheduler", "✅ TOTAL CANCELLED: $totalCancelled alarms for $reminderId")
+        Log.d("AlarmScheduler", "TOTAL CANCELLED: $totalCancelled alarms for $reminderId")
     } else {
-        Log.d("AlarmScheduler", "❌ NO ACTIVE ALARMS FOUND for $reminderId")
+        Log.d("AlarmScheduler", "NO ACTIVE ALARMS FOUND for $reminderId")
     }
 }
 

@@ -44,7 +44,7 @@ class AlarmPopupActivity : ComponentActivity() {
         private const val KEY_ACTIVE_REMINDER_IDS = "active_reminder_ids"
         private const val KEY_SNOOZE_GROUP_PREFIX = "snooze_group_" // New: untuk tracking snooze groups
 
-        // ✅ Static ringtone manager untuk mencegah duplikasi suara
+        // Static ringtone manager untuk mencegah duplikasi suara
         private var globalRingtone: Ringtone? = null
 
         // Check if ringtone is currently playing
@@ -84,7 +84,7 @@ class AlarmPopupActivity : ComponentActivity() {
             Log.d("AlarmPopup", "Cleared all active reminders")
         }
 
-        // 🆕 Fungsi untuk menyimpan snooze group
+        // Fungsi untuk menyimpan snooze group
         fun saveSnoozeGroup(context: Context, reminderIds: List<String>, snoozeTime: Long) {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             val groupKey = "$KEY_SNOOZE_GROUP_PREFIX$snoozeTime"
@@ -92,14 +92,14 @@ class AlarmPopupActivity : ComponentActivity() {
             Log.d("AlarmPopup", "Saved snooze group with ${reminderIds.size} reminders for time: $snoozeTime")
         }
 
-        // 🆕 Fungsi untuk mendapatkan snooze group
+        // Fungsi untuk mendapatkan snooze group
         fun getSnoozeGroup(context: Context, snoozeTime: Long): Set<String> {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             val groupKey = "$KEY_SNOOZE_GROUP_PREFIX$snoozeTime"
             return prefs.getStringSet(groupKey, emptySet()) ?: emptySet()
         }
 
-        // 🆕 Fungsi untuk menghapus snooze group
+        // Fungsi untuk menghapus snooze group
         fun removeSnoozeGroup(context: Context, snoozeTime: Long) {
             val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
             val groupKey = "$KEY_SNOOZE_GROUP_PREFIX$snoozeTime"
@@ -141,7 +141,7 @@ class AlarmPopupActivity : ComponentActivity() {
             }
         }
 
-        // ✅ Global ringtone management
+        // Global ringtone management
         fun stopGlobalRingtone() {
             try {
                 if (globalRingtone?.isPlaying == true) {
@@ -204,7 +204,7 @@ class AlarmPopupActivity : ComponentActivity() {
         val snoozeTime = intent.getLongExtra("snooze_time", 0L)
 
         val reminderIds = when {
-            // 🆕 Jika dari snooze, ambil dari saved group
+            // Jika dari snooze, ambil dari saved group
             isSnooze && snoozeTime > 0L -> {
                 val savedGroup = getSnoozeGroup(this, snoozeTime)
                 if (savedGroup.isNotEmpty()) {
@@ -235,7 +235,7 @@ class AlarmPopupActivity : ComponentActivity() {
             addActiveReminder(this, id)
         }
 
-        // ✅ Gunakan global ringtone management - hanya play jika belum ada
+        // Gunakan global ringtone management - hanya play jika belum ada
         if (globalRingtone?.isPlaying != true) {
             playGlobalRingtone(this)
         }
@@ -247,22 +247,22 @@ class AlarmPopupActivity : ComponentActivity() {
                     onDismiss = { reminders, allLansia, allObat ->
                         Log.d("AlarmPopup", "Tombol 'Sudah Diminum' ditekan untuk ${reminders.size} reminders")
 
-                        // 🆕 Hapus snooze group jika ada
+                        // Hapus snooze group jika ada
                         if (isSnooze && snoozeTime > 0L) {
                             removeSnoozeGroup(this@AlarmPopupActivity, snoozeTime)
                         }
 
                         // Process each reminder
                         reminders.forEach { reminder ->
-                            // 🔹 Update Firestore: statusIoT = "OFF"
+                            // Update Firestore: statusIoT = "OFF"
                             matikanIoT(reminder.id ?: "")
 
-                            // 🔹 Simpan riwayat dengan jenis "minum obat"
+                            // Simpan riwayat dengan jenis "minum obat"
                             val reminderLansia = allLansia.filter { it.id in (reminder.lansiaIds ?: emptyList()) }
                             val reminderObat = allObat.filter { it.id in (reminder.obatIds ?: emptyList()) }
                             simpanRiwayat(reminder.id ?: "", reminderLansia, reminderObat, jenisRiwayat = "minum obat")
 
-                            // ✅ Update alarm ke waktu berikutnya jika recurring
+                            // Update alarm ke waktu berikutnya jika recurring
                             AlarmUtils.updateToNextAlarmTime(
                                 context = this@AlarmPopupActivity,
                                 reminderId = reminder.id ?: "",
@@ -271,25 +271,25 @@ class AlarmPopupActivity : ComponentActivity() {
                                 currentTimeStr = reminder.waktu ?: ""
                             )
 
-                            // 🔹 Cancel any pending snooze alarms
+                            // Cancel any pending snooze alarms
                             cancelSnoozeAlarm(this@AlarmPopupActivity, reminder.id ?: "")
                         }
 
-                        // 🔹 Stop ringtone - DIPINDAHKAN SEBELUM finish()
+                        // Stop ringtone
                         stopRingtone()
 
-                        // 🔹 Clear all active reminders
+                        // Clear all active reminders
                         clearAllActiveReminders(this@AlarmPopupActivity)
 
                         finish()
                     },
                     onSnooze = { reminderIds ->
-                        // 🔹 PERBAIKAN: Hentikan ringtone PERTAMA SEKALI sebelum log atau proses apapun
+                        // Hentikan ringtone PERTAMA SEKALI sebelum log atau proses apapun
                         stopRingtone()
 
                         Log.d("AlarmPopup", "Tombol 'Bunyikan 5 Menit Lagi' ditekan untuk ${reminderIds.size} reminders")
 
-                        // 🆕 Simpan snooze group
+                        // Simpan snooze group
                         val snoozeTime = System.currentTimeMillis() + (5 * 60 * 1000)
                         saveSnoozeGroup(this@AlarmPopupActivity, reminderIds, snoozeTime)
 
@@ -298,10 +298,10 @@ class AlarmPopupActivity : ComponentActivity() {
                             matikanIoT(reminderId)
                         }
 
-                        // 🆕 Set SATU alarm untuk semua reminder dengan snooze group
+                        // Set SATU alarm untuk semua reminder dengan snooze group
                         setSnoozeAlarmForGroup(this@AlarmPopupActivity, reminderIds, snoozeTime)
 
-                        // 🔹 Clear all active reminders
+                        // Clear all active reminders
                         clearAllActiveReminders(this@AlarmPopupActivity)
 
                         finish()
@@ -348,7 +348,7 @@ class AlarmPopupActivity : ComponentActivity() {
         }
     }
 
-    // 🔹 Fungsi update Firestore
+    //  Fungsi update Firestore
     private fun matikanIoT(reminderId: String) {
         if (reminderId.isBlank()) {
             Log.e("Firestore", "Reminder ID tidak valid")
@@ -366,7 +366,7 @@ class AlarmPopupActivity : ComponentActivity() {
             }
     }
 
-    // 🆕 FUNGSI BARU: Set snooze alarm untuk group reminders
+    // Set snooze alarm untuk group reminders
     private fun setSnoozeAlarmForGroup(context: Context, reminderIds: List<String>, snoozeTime: Long) {
         try {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -389,7 +389,7 @@ class AlarmPopupActivity : ComponentActivity() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // GUNAKAN METODE YANG SAMA SEPERTI DI AlarmUtils
+            //metode sama kek AlarmUtils
             try {
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                     if (alarmManager.canScheduleExactAlarms()) {
@@ -452,8 +452,8 @@ class AlarmPopupActivity : ComponentActivity() {
         val riwayatData = hashMapOf(
             "idRiwayat" to riwayatId,
             "reminderId" to reminderId,
-            "lansiaIds" to lansiaList.map { it.id }, // ✅ pakai id dari Lansia
-            "obatIds" to obatList.map { it.id },     // ✅ pakai id dari Obat
+            "lansiaIds" to lansiaList.map { it.id }, // dari Lansia
+            "obatIds" to obatList.map { it.id },     // id dari Obat
             "waktuDiminum" to System.currentTimeMillis(),
             "status" to "SUDAH",
             "jenis" to jenisRiwayat

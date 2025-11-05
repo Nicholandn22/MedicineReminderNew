@@ -12,6 +12,6 @@ data class Obat(
     val waktuMinum: String = "",
     val catatan: String = "",
     val pertamaKonsumsi: Timestamp? = null,
-    val stok: Int = 0 // ✅ Tambahan baru
+    val stok: Int = 0
 )
 

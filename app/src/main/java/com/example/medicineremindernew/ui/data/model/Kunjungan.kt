@@ -11,7 +11,7 @@ data class Kunjungan(
     val lansiaIds: List<String> = emptyList(),      // ID Lansia
     val waktu: String = "",         // "08:00"
     val tanggal: String = "" ,      // "2025-07-14"
-    val jenisKunjungan: String = "" // 🔹 field baru
+    val jenisKunjungan: String = ""
 
 
 )

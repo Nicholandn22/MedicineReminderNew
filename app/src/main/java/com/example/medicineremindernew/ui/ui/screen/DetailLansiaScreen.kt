@@ -55,7 +55,7 @@ fun DetailLansiaScreen(
         return
     }
 
-    // ✅ State yang akan diisi ulang ketika data lansia berubah
+    // State yang akan diisi ulang ketika data lansia berubah
     var selectedObat by remember { mutableStateOf(listOf<String>()) }
     var namaLansia by remember { mutableStateOf("") }
     var golonganDarah by remember { mutableStateOf("") }
@@ -64,7 +64,7 @@ fun DetailLansiaScreen(
 //    var nomorWali by remember { mutableStateOf("") }
     var tanggalLahir by remember { mutableStateOf(Date()) }
 
-    // ✅ Isi ulang state ketika data lansia masuk
+    // Isi ulang state ketika data lansia masuk
     LaunchedEffect(lansia) {
         lansia?.let {
             selectedObat = it.obatIds.toMutableList()
@@ -106,7 +106,7 @@ fun DetailLansiaScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -126,7 +126,7 @@ fun DetailLansiaScreen(
             Text("Update Lansia", color = Color.White, fontSize = 20.sp)
         }
 
-        // ✅ Form Card
+        // Form Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -144,7 +144,7 @@ fun DetailLansiaScreen(
                         .padding(bottom = 16.dp)
                 )
 
-                // ✅ Golongan Darah
+                // Golongan Darah
                 Text("Golongan Darah", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 ExposedDropdownMenuBox(
                     expanded = expandedGolongan,
@@ -172,7 +172,7 @@ fun DetailLansiaScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ✅ Gender
+                // Gender
                 Text("Jenis Kelamin", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 ExposedDropdownMenuBox(
                     expanded = expandedGender,
@@ -200,7 +200,7 @@ fun DetailLansiaScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ✅ Penyakit
+                // Penyakit
                 OutlinedTextField(
                     value = penyakit,
                     onValueChange = { penyakit = it },
@@ -210,7 +210,7 @@ fun DetailLansiaScreen(
                         .padding(bottom = 16.dp)
                 )
 
-//                // ✅ Nomor Wali
+//                // Nomor Wali
 //                OutlinedTextField(
 //                    value = nomorWali,
 //                    onValueChange = { if (it.all { c -> c.isDigit() }) nomorWali = it },
@@ -220,7 +220,7 @@ fun DetailLansiaScreen(
 //                        .padding(bottom = 16.dp)
 //                )
 
-                // ✅ Tanggal Lahir
+                // Tanggal Lahir
                 Text("Tanggal Lahir", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 OutlinedButton(
                     onClick = { datePickerDialog.show() },
@@ -242,7 +242,7 @@ fun DetailLansiaScreen(
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // ✅ Pilih Obat
+                // Pilih Obat
                 Text("Obat untuk Lansia", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -267,7 +267,7 @@ fun DetailLansiaScreen(
             }
         }
 
-        // ✅ Buttons
+        // Buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
