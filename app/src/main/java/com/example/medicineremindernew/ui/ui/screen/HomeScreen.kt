@@ -127,7 +127,7 @@ fun HomeScreen(
             ) {
                 Spacer(modifier = Modifier.height(5.dp))
 
-                // ✅ Card Reminder Terdekat
+                // Card Reminder Terdekat
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -203,7 +203,7 @@ fun HomeScreen(
                     }
                 }
 
-                // ✅ Card Reminder Jam 11 - 12 (selalu tampil)
+                // Card Reminder Jam 11 - 12 (selalu tampil)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -253,7 +253,7 @@ fun HomeScreen(
                     }
                 }
 
-                // ✅ List Semua Reminder (>= sekarang)
+                // List Semua Reminder (>= sekarang)
                 filteredReminders.forEach { reminder ->
                     val lansiaName = lansiaList
                         .filter { it.id in reminder.lansiaIds }
@@ -290,7 +290,7 @@ fun HomeScreen(
             }
         }
 
-        // ✅ Tombol Tambah Reminder
+        // Tombol Tambah Reminder
         AddButton(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -300,7 +300,7 @@ fun HomeScreen(
             }
         )
 
-        // ✅ Dialog Hapus
+        // Dialog Hapus
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = {

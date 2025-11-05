@@ -50,7 +50,7 @@ fun AddLansiaScreen(
     val genderOptions = listOf("Laki-Laki", "Perempuan")
     val blueColor = BiruMuda.copy(alpha = 1.0f)
 
-    // ✅ Ambil list obat dari ViewModel
+    // Ambil list obat dari ViewModel
     val obatList by obatViewModel.obatList.collectAsState(initial = emptyList())
     var selectedObatIds by remember { mutableStateOf(setOf<String>()) }
 
@@ -71,7 +71,7 @@ fun AddLansiaScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,7 +91,7 @@ fun AddLansiaScreen(
             Text("Tambah Lansia", color = Color.White, fontSize = 20.sp)
         }
 
-        // ✅ Form Lansia
+        // Form Lansia
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -171,7 +171,7 @@ fun AddLansiaScreen(
             }
         }
 
-        // ✅ Pilih Obat (checkbox)
+        // Pilih Obat (checkbox)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -204,7 +204,7 @@ fun AddLansiaScreen(
             }
         }
 
-        // ✅ Tombol Save & Clear
+        // Tombol Save & Clear
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -226,7 +226,7 @@ fun AddLansiaScreen(
                             lahir = Timestamp(tanggalLahir!!),
 //                            nomorwali = nomorWali.toInt(),
                             penyakit = penyakit,
-                            obatIds = selectedObatIds.toList() // ✅ simpan id obat
+                            obatIds = selectedObatIds.toList() // simpan id obat
                         )
 
                         viewModel.addLansia(lansia) { success ->

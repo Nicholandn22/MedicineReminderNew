@@ -86,7 +86,7 @@ fun DetailObatScreen(
         return
     }
 
-    // ✅ Amanin null saat inisialisasi state
+    // Amanin null saat inisialisasi state
     var namaObat by remember(obat?.id) { mutableStateOf(obat?.nama.orEmpty()) }
     var jenisObat by remember(obat?.id) { mutableStateOf(obat?.jenis.orEmpty()) }
     var satuanDosis by remember(obat?.id) { mutableStateOf(obat?.dosis.orEmpty()) }
@@ -120,7 +120,7 @@ fun DetailObatScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -140,7 +140,7 @@ fun DetailObatScreen(
             Text("Update Obat", color = Color.White, fontSize = 20.sp)
         }
 
-        // ✅ FORM
+        // form
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -337,7 +337,7 @@ fun DetailObatScreen(
             }
         }
 
-        // ✅ Buttons
+        // Buttons
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.Center

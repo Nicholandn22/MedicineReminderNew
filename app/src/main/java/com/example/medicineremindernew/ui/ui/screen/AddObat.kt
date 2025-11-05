@@ -87,7 +87,7 @@ fun AddObatScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -328,7 +328,7 @@ fun AddObatScreen(
                         }
                     } else {
                         val newObat = Obat(
-                            id = UUID.randomUUID().toString(), // ✅ Tambahkan ini
+                            id = UUID.randomUUID().toString(),
                             nama = namaObat,
                             jenis = jenisObat,
                             deskripsi = deskripsi,
@@ -336,7 +336,7 @@ fun AddObatScreen(
                             waktuMinum = waktuMinum,
                             pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) },
                             catatan = notes,
-                            stok = stok.toIntOrNull() ?: 0 // ✅ simpan stok
+                            stok = stok.toIntOrNull() ?: 0 // simpan stok
 
                         )
 

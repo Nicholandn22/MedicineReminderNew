@@ -210,6 +210,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -219,6 +220,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.fragment.app.FragmentActivity
+import androidx.core.content.ContextCompat
 import com.example.medicineremindernew.R
 import com.example.medicineremindernew.ui.ui.theme.BiruTua
 import com.example.medicineremindernew.ui.ui.theme.Krem
@@ -231,11 +236,82 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
+    var showBiometricPrompt by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
+
+    // Biometrik
+    val biometricPrompt = remember {
+        BiometricPrompt(
+            context as FragmentActivity,
+            ContextCompat.getMainExecutor(context),
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    isLoading = false
+                    errorMessage = "Autentikasi gagal: $errString"
+                    Log.e("BiometricAuth", "Error: $errString")
+                }
+
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    isLoading = false
+                    onLoginSuccess()
+                    Log.d("BiometricAuth", "Authentication succeeded")
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    errorMessage = "Sidik jari tidak dikenali"
+                    Log.e("BiometricAuth", "Authentication failed")
+                }
+            }
+        )
+    }
+
+    val promptInfo = remember {
+        BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Verifikasi Sidik Jari")
+            .setSubtitle("Gunakan sidik jari untuk masuk ke MedTime")
+            .setNegativeButtonText("Batal")
+            .build()
+    }
+
+    // Cek ada biometrik gk
+    val biometricManager = BiometricManager.from(context)
+    val canUseBiometric = remember {
+        when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+            BiometricManager.BIOMETRIC_SUCCESS -> true
+            else -> false
+        }
+    }
+
+    // login
+    fun handleLogin() {
+        if (username.isEmpty() || password.isEmpty()) {
+            errorMessage = "Username dan password tidak boleh kosong!"
+            return
+        }
+
+        isLoading = true
+
+        // kalo user ma pass bener langsung biometrik
+        if (username == "admin" && password == "admin") {
+            if (canUseBiometric) {
+                biometricPrompt.authenticate(promptInfo)
+            } else {
+                isLoading = false
+                errorMessage = "Sidik jari tidak tersedia di perangkat ini"
+            }
+        } else {
+            isLoading = false
+            errorMessage = "Username atau password salah!"
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -291,7 +367,6 @@ fun LoginScreen(
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.DarkGray
                 )
-
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -313,15 +388,7 @@ fun LoginScreen(
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
-                        if (username.isNotEmpty() && password.isNotEmpty()) {
-                            isLoading = true
-                            if (username == "admin" && password == "admin") {
-                                onLoginSuccess()
-                            } else {
-                                isLoading = false
-                                errorMessage = "Username atau password salah!"
-                            }
-                        }
+                        handleLogin()
                     }
                 ),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -330,7 +397,6 @@ fun LoginScreen(
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.DarkGray
                 )
-
             )
 
             if (errorMessage.isNotEmpty()) {
@@ -346,19 +412,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = {
-                    if (username.isEmpty() || password.isEmpty()) {
-                        errorMessage = "Username dan password tidak boleh kosong!"
-                    } else {
-                        isLoading = true
-                        if (username == "admin" && password == "admin") {
-                            onLoginSuccess()
-                        } else {
-                            isLoading = false
-                            errorMessage = "Username atau password salah!"
-                        }
-                    }
-                },
+                onClick = { handleLogin() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -381,6 +435,16 @@ fun LoginScreen(
                         color = Color.White
                     )
                 }
+            }
+
+            if (canUseBiometric) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Login memerlukan verifikasi sidik jari",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

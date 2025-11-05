@@ -50,13 +50,13 @@ fun AddKunjunganScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // 🔹 Firestore Repository
+    // Firestore Repository
     val firestoreRepo = remember { FirestoreRepository() }
 
     val warnaKrem = Krem.copy(alpha = 1.0f)
     val warnaBiru = BiruTua.copy(alpha = 1.0f)
 
-    // 🔹 HybridLansiaRepository
+    // HybridLansiaRepository
     val lansiaRepository = remember {
         val firestoreLansiaRepo = LansiaRepository(firestoreRepository = firestoreRepo)
         HybridLansiaRepository(
@@ -66,14 +66,14 @@ fun AddKunjunganScreen(
         )
     }
 
-    // 🔹 HybridLansiaViewModel
+    // HybridLansiaViewModel
     val lansiaViewModel: HybridLansiaViewModel = viewModel(
         factory = HybridLansiaViewModelFactory(lansiaRepository)
     )
 
     val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle()
 
-    // 🔹 HybridKunjunganViewModel
+    // HybridKunjunganViewModel
     val kunjunganViewModel: HybridKunjunganViewModel = viewModel(
         factory = HybridKunjunganViewModelFactory(
             context = context,
@@ -212,7 +212,7 @@ fun AddKunjunganScreen(
                         .border(1.dp, biru, shape = RoundedCornerShape(30.dp))
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                         .clickable { expandedJenis = true },
-                    contentAlignment = Alignment.Center // ✅ teks di tengah
+                    contentAlignment = Alignment.Center // teks center
                 ) {
                     Text(
                         text = if (selectedJenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else selectedJenisKunjungan,

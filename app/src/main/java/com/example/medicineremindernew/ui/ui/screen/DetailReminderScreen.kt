@@ -43,8 +43,8 @@ import java.util.*
 fun DetailReminderScreen(
     reminderId: String,
     navController: NavController,
-    reminderViewModel: HybridReminderViewModel, // ✅ Ubah ke Hybrid
-    lansiaViewModel: HybridLansiaViewModel,     // ✅ Ubah ke Hybrid
+    reminderViewModel: HybridReminderViewModel,
+    lansiaViewModel: HybridLansiaViewModel,
     obatViewModel: HybridObatViewModel,
     onBackClick: () -> Unit = {},
     onUpdateClick: () -> Unit = {}
@@ -116,7 +116,7 @@ fun DetailReminderScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -250,7 +250,7 @@ fun DetailReminderScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
-        // ✅ Buttons
+        // Buttons
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.Center

@@ -113,7 +113,7 @@ fun DetailKunjunganScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // ✅ Header
+        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -205,7 +205,7 @@ fun DetailKunjunganScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Jenis Kunjungan", fontWeight = FontWeight.Bold)
 
-                Spacer(modifier = Modifier.height(10.dp)) // ✅ kasih jarak 8dp
+                Spacer(modifier = Modifier.height(10.dp)) // kasih jarak 8dp
 
                 Box(
                     modifier = Modifier
@@ -213,7 +213,7 @@ fun DetailKunjunganScreen(
                         .border(1.dp, biru, shape = RoundedCornerShape(30.dp))
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                         .clickable { expandedJenis = true },
-                    contentAlignment = Alignment.Center // ✅ teks di tengah
+                    contentAlignment = Alignment.Center // teks center
                 ) {
                     Text(
                         text = if (jenisKunjungan.isEmpty()) "Pilih Jenis Kunjungan" else jenisKunjungan,
@@ -254,7 +254,7 @@ fun DetailKunjunganScreen(
                             lansiaIds = listOf(selectedLansia!!),
                             tanggal = tanggal,
                             waktu = waktu,
-                            jenisKunjungan = jenisKunjungan // ✅ ikut disimpan
+                            jenisKunjungan = jenisKunjungan // ikut disimpan
 
                         )
                         kunjunganViewModel.updateKunjungan(updatedKunjungan) { success ->

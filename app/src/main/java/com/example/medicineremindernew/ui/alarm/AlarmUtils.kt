@@ -47,7 +47,7 @@ object AlarmUtils {
 //        }
 
         try {
-            // ✅ Jadwalkan alarm pertama kali
+            // Jadwalkan alarm pertama kali
             scheduleAlarmSafely(alarmManager, timeInMillis, pendingIntent)
             Log.d("AlarmUtils", "Initial alarm scheduled for $reminderId with type: $recurrenceType at ${Date(timeInMillis)}")
         } catch (e: Exception) {
@@ -248,7 +248,7 @@ object AlarmUtils {
         originalTimeInMillis: Long,
         recurrenceType: String
     ) {
-        // ✅ PENTING: Ini hanya fallback jika somehow alarm tidak diupdate via updateToNextAlarmTime
+        // PENTING: Ini hanya fallback jika somehow alarm tidak diupdate via updateToNextAlarmTime
         // Normalnya, alarm diupdate saat user menekan "sudah diminum"
 
         if (recurrenceType == "Sekali") {
@@ -377,7 +377,7 @@ object AlarmUtils {
         pendingIntent: PendingIntent
     ) {
         try {
-            // ✅ Android 12+ (API 31+) - Periksa permission exact alarm
+            // Android 12+ (API 31+) - Periksa permission exact alarm
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 if (alarmManager.canScheduleExactAlarms()) {
                     // Ada permission untuk exact alarm
@@ -397,7 +397,7 @@ object AlarmUtils {
                     Log.w("AlarmUtils", "Exact alarm permission not granted, using inexact alarm")
                 }
             }
-            // ✅ Android 6.0-11 (API 23-30)
+            // Android 6.0-11 (API 23-30)
             else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
@@ -406,7 +406,7 @@ object AlarmUtils {
                 )
                 Log.d("AlarmUtils", "Exact alarm scheduled (API 23-30)")
             }
-            // ✅ Android 4.4-5.x (API 19-22)
+            // Android 4.4-5.x (API 19-22)
             else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 alarmManager.setExact(
                     AlarmManager.RTC_WAKEUP,
@@ -415,7 +415,7 @@ object AlarmUtils {
                 )
                 Log.d("AlarmUtils", "Exact alarm scheduled (API 19-22)")
             }
-            // ✅ Android < 4.4 (API < 19)
+            // Android < 4.4 (API < 19)
             else {
                 alarmManager.set(
                     AlarmManager.RTC_WAKEUP,
@@ -425,7 +425,7 @@ object AlarmUtils {
                 Log.d("AlarmUtils", "Basic alarm scheduled (API < 19)")
             }
         } catch (securityException: SecurityException) {
-            // ✅ Handle SecurityException untuk exact alarm
+            // Handle SecurityException untuk exact alarm
             Log.w("AlarmUtils", "SecurityException scheduling exact alarm, falling back to inexact", securityException)
             fallbackToInexactAlarm(alarmManager, timeInMillis, pendingIntent)
         } catch (e: Exception) {

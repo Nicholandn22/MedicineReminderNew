@@ -85,7 +85,7 @@ fun AddReminderScreen(
     val lansiaList by lansiaViewModel.lansiaList.collectAsStateWithLifecycle()
     val obatList by obatViewModel.obatList.collectAsStateWithLifecycle()
 
-    var selectedLansia by remember { mutableStateOf<String?>(null) } // ✅ hanya 1 lansia
+    var selectedLansia by remember { mutableStateOf<String?>(null) }
     var selectedObat by remember { mutableStateOf(setOf<String>()) }
     var tanggal by remember { mutableStateOf("") }
     var waktu by remember { mutableStateOf("") }
@@ -107,7 +107,7 @@ fun AddReminderScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // ✅ Header
+            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,7 +128,7 @@ fun AddReminderScreen(
 
             val biru = BiruMuda.copy(alpha = 1.0f)
 
-            // ✅ Section: Pilih Tanggal & Waktu
+            // Section: Pilih Tanggal & Waktu
             SectionTitle("Pengingat")
             CardSection {
                 val calendar = remember { Calendar.getInstance() }
@@ -196,7 +196,7 @@ fun AddReminderScreen(
                 }
             }
 
-            // ✅ Section Lansia
+            // Section Lansia
             SectionWithAddButton("Lansia", navController = navController)
             CardSection {
                 if (lansiaList.isEmpty()) {
@@ -215,7 +215,7 @@ fun AddReminderScreen(
                 }
             }
 
-            // ✅ Section Obat
+            // Section Obat
             SectionWithAddButton("Obat", navController = navController)
             CardSection {
                 if (selectedLansia == null) {
@@ -254,7 +254,7 @@ fun AddReminderScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ✅ Buttons Save & Clear
+            // Buttons Save & Clear
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -290,7 +290,7 @@ fun AddReminderScreen(
                                 reminderViewModel.addReminder(reminder) { success ->
                                     if (success) {
                                         coroutineScope.launch {
-                                            // ✅ Cek permission exact alarm (Android 12+)
+                                            // Cek permission exact alarm (Android 12+)
                                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                                                 val alarmManager = context.getSystemService(android.content.Context.ALARM_SERVICE) as android.app.AlarmManager
                                                 if (!alarmManager.canScheduleExactAlarms()) {
@@ -301,7 +301,7 @@ fun AddReminderScreen(
                                                 }
                                             }
 
-                                            // ✅ Jadwalkan alarm berulang
+                                            // Jadwalkan alarm berulang
                                             com.example.medicineremindernew.ui.alarm.AlarmUtils.scheduleRecurringReminder(
                                                 context = context,
                                                 reminderId = reminderId,
@@ -309,7 +309,7 @@ fun AddReminderScreen(
                                                 recurrenceType = selectedPengulangan
                                             )
 
-                                            // ✅ Alarm kedua (1 jam sebelum waktu yang dipilih)
+                                            // Alarm kedua (1 jam sebelum waktu yang dipilih)
                                             val oneHourBefore = timeInMillis - 60 * 60 * 1000
                                             if (oneHourBefore > System.currentTimeMillis()) { // jangan pasang alarm di masa lalu
                                                 com.example.medicineremindernew.ui.alarm.AlarmUtils.scheduleRecurringReminder(
@@ -505,7 +505,7 @@ fun ReminderButton(
                     painter = painterResource(id = android.R.drawable.checkbox_on_background),
                     contentDescription = "Selected",
                     modifier = Modifier.size(18.dp),
-                    tint = Color.Unspecified // ✅ ini biar pakai warna asli
+                    tint = Color.Unspecified // ini biar pakai warna asli
                 )
             }
         }
