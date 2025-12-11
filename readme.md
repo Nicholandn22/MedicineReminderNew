@@ -9,7 +9,7 @@
 
 ## 💊 Deskripsi Aplikasi
 
-MedTime adalah aplikasi Android yang dirancang untuk membantu pengguna (petugas panti) dalam mengatur jadwal minum obat lansia dengan lebih teratur dan tepat waktu. Aplikasi ini memungkinkan pengguna menambahkan informasi obat, menentukan jadwal pengingat, serta menerima notifikasi ketika tiba waktunya untuk minum obat.
+MedTime adalah aplikasi Android yang dirancang untuk membantu pengguna (petugas panti) dalam mengatur jadwal minum obat lansia dengan lebih teratur dan tepat waktu. Aplikasi ini memungkinkan pengguna menambahkan informasi obat dan lansia, menentukan jadwal pengingat, serta menerima notifikasi ketika tiba waktunya untuk minum obat.
 
 ---
 
@@ -52,5 +52,3 @@ main/
 ## 📝 Notes
 
 Aplikasi MedTime ini kami rancang sebagai bentuk partisipasi kami dalam `Program Kreativitas Mahasiswa` bagian `Pengabdian Masyarakat` serta sebagai bentuk Project Akhir kami dalam matakuliah `Pemrograman Perangkat Bergerak Berbasis Android`. 
-
----
