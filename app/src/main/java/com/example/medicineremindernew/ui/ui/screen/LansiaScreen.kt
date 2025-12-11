@@ -112,7 +112,7 @@ fun LansiaScreen(
                     lansiaList.forEach { lansia ->
                         val usia = hitungUsiaDariTanggalLahir(lansia.lahir)
 
-                        // 🔹 Ambil daftar obat yang cocok dengan ID yg disimpan di Lansia
+                        // Ambil daftar obat yang cocok dengan ID yg disimpan di Lansia
                         val obatDipilih: List<Obat> = allObat.filter { obat ->
                             lansia.obatIds.contains(obat.id.toString())
                         }

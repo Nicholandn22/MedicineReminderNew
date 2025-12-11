@@ -34,7 +34,6 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
         Log.d("AlarmReceiver", "Alarm diterima!")
 
-        // Periksa action untuk memastikan ini adalah alarm yang benar
         if (intent?.action != "com.example.medicineremindernew.ALARM") {
             Log.d("AlarmReceiver", "Received intent with wrong action: ${intent?.action}")
             return
@@ -56,7 +55,6 @@ class AlarmReceiver : BroadcastReceiver() {
 
         Log.d("AlarmReceiver", "Received - Single ID: $singleReminderId, Multiple: ${multipleReminderIds?.size}, Snooze: $isSnooze, SnoozeTime: $snoozeTime")
 
-        // Determine which reminder IDs to process
         val reminderIds = when {
             // Jika snooze dengan snooze_time, ambil dari saved group
             isSnooze && snoozeTime > 0L -> {
@@ -142,7 +140,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 showFallbackNotification(context, currentReminderId, false)
             }
 
-            // Trigger Firestore untuk ESP8266 untuk semua reminder
+            // Trigger Firestore untuk ESP (IoTnya) untuk semua reminder
             simultaneousReminderIds.forEach { reminderId ->
                 triggerActiveAlarm(reminderId, false)
             }
@@ -276,7 +274,6 @@ class AlarmReceiver : BroadcastReceiver() {
         val reminderIds = mutableSetOf<String>()
 
         try {
-            // Get current reminder data
             val currentReminderSnap = db.collection("reminders").document(currentReminderId).get().await()
             if (!currentReminderSnap.exists()) {
                 Log.w("AlarmReceiver", "Current reminder not found: $currentReminderId")
@@ -292,7 +289,6 @@ class AlarmReceiver : BroadcastReceiver() {
             val currentDateTime = "${currentReminder.tanggal} ${currentReminder.waktu}"
             Log.d("AlarmReceiver", "Looking for reminders at time: $currentDateTime")
 
-            // Find all reminders with same date and time
             val allReminders = db.collection("reminders").get().await()
             for (document in allReminders.documents) {
                 val reminder = document.toObject(Reminder::class.java)

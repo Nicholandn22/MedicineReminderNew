@@ -74,7 +74,7 @@ class HybridLansiaRepository(
             if (networkUtils.isNetworkAvailable()) {
                 lansiaRepository.deleteLansia(id)
             } else {
-                localDao.deleteLansia(id) // ✅ benar-benar hapus
+                localDao.deleteLansia(id) // benar-benar dihapus
             }
             true
         } catch (e: Exception) {
@@ -128,11 +128,9 @@ class HybridLansiaRepository(
                 penyakit = entity.penyakit
             )
 
-            // Gunakan suspendCoroutine agar sinkronisasi menunggu callback selesai
             suspendCoroutine<Unit> { continuation ->
                 lansiaRepository.addLansia(lansia) { success ->
                     if (success) {
-                        // Karena ini sudah dalam coroutine (suspend function), kita bisa langsung panggil DAO tanpa GlobalScope
                         runBlocking {
                             localDao.markAsSynced(entity.id)
                             Log.d("HybridLansiaRepo", "Synced lansia: ${entity.id}")

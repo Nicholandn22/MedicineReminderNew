@@ -12,10 +12,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object AlarmUtils {
-
-    /**
-     * Menjadwalkan alarm berulang berdasarkan jenis pengulangan
-     */
     fun scheduleRecurringReminder(
         context: Context,
         reminderId: String,
@@ -47,7 +43,7 @@ object AlarmUtils {
 //        }
 
         try {
-            // Jadwalkan alarm pertama kali
+            // Jadwalin alarm pertama kali
             scheduleAlarmSafely(alarmManager, timeInMillis, pendingIntent)
             Log.d("AlarmUtils", "Initial alarm scheduled for $reminderId with type: $recurrenceType at ${Date(timeInMillis)}")
         } catch (e: Exception) {
@@ -55,10 +51,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Update alarm ke waktu berikutnya setelah obat diminum
-     * Dipanggil setelah user mengkonfirmasi "sudah diminum"
-     */
     fun updateToNextAlarmTime(
         context: Context,
         reminderId: String,
@@ -67,14 +59,13 @@ object AlarmUtils {
         currentTimeStr: String   // Format: "15:00"
     ) {
         if (recurrenceType == "Sekali") {
-            // Jika hanya sekali, hapus alarm dan jangan buat ulang
+            // Kalo cuman sekali, hapus alarm dan jangan buat ulang
             cancelRecurringAlarm(context, reminderId)
             Log.d("AlarmUtils", "One-time alarm completed for $reminderId")
             return
         }
 
         try {
-            // Parse current date dan time
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -82,7 +73,6 @@ object AlarmUtils {
             val currentTime = timeFormat.parse(currentTimeStr)
 
             if (currentDate != null && currentTime != null) {
-                // Gabungkan date dan time
                 val calendar = Calendar.getInstance()
                 calendar.time = currentDate
 
@@ -110,9 +100,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Menghitung waktu alarm berikutnya berdasarkan jenis recurrence
-     */
     private fun calculateNextAlarmTime(currentTimeInMillis: Long, recurrenceType: String): Long {
         val calendar = Calendar.getInstance().apply {
             timeInMillis = currentTimeInMillis
@@ -153,9 +140,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Update data alarm di Firestore dengan tanggal dan waktu baru
-     */
     private fun updateAlarmInFirestore(
         reminderId: String,
         nextTimeInMillis: Long,
@@ -203,9 +187,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Jadwalkan alarm berikutnya setelah obat diminum
-     */
     private fun scheduleNextAlarmAfterTaken(
         context: Context,
         reminderId: String,
@@ -238,10 +219,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Menjadwalkan alarm berikutnya setelah alarm saat ini berbunyi
-     * Dipanggil dari AlarmReceiver - hanya untuk fallback
-     */
     fun scheduleNextRecurringAlarm(
         context: Context,
         reminderId: String,
@@ -260,9 +237,6 @@ object AlarmUtils {
         scheduleNextAlarmAfterTaken(context, reminderId, nextTimeInMillis, recurrenceType)
     }
 
-    /**
-     * Membatalkan alarm berulang
-     */
     fun cancelRecurringAlarm(context: Context, reminderId: String) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -281,9 +255,6 @@ object AlarmUtils {
         Log.d("AlarmUtils", "Recurring alarm cancelled for: $reminderId")
     }
 
-    /**
-     * Menjadwalkan alarm sekali saja (non-recurring)
-     */
     fun scheduleOneTimeReminder(
         context: Context,
         reminderId: String,
@@ -314,9 +285,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Memeriksa apakah alarm masih aktif
-     */
     fun isAlarmSet(context: Context, reminderId: String): Boolean {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             action = "com.example.medicineremindernew.ALARM"
@@ -330,10 +298,6 @@ object AlarmUtils {
         return pendingIntent != null
     }
 
-    /**
-     * Helper function untuk mendapatkan data reminder dari Firestore
-     * dan melakukan update alarm berdasarkan data terbaru
-     */
     fun updateAlarmFromFirestore(context: Context, reminderId: String) {
         val db = FirebaseFirestore.getInstance()
 
@@ -368,9 +332,6 @@ object AlarmUtils {
             }
     }
 
-    /**
-     * Menjadwalkan alarm dengan aman, menangani permission dan fallback
-     */
     private fun scheduleAlarmSafely(
         alarmManager: AlarmManager,
         timeInMillis: Long,
@@ -433,9 +394,7 @@ object AlarmUtils {
             fallbackToInexactAlarm(alarmManager, timeInMillis, pendingIntent)
         }
     }
-    /**
-     * Fallback ke alarm yang tidak exact jika exact alarm gagal
-     */
+
     private fun fallbackToInexactAlarm(
         alarmManager: AlarmManager,
         timeInMillis: Long,
@@ -461,9 +420,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Periksa apakah aplikasi memiliki permission untuk exact alarm
-     */
     fun canScheduleExactAlarms(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -473,9 +429,6 @@ object AlarmUtils {
         }
     }
 
-    /**
-     * Minta user untuk memberikan permission exact alarm
-     */
     fun requestExactAlarmPermission(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager

@@ -10,9 +10,9 @@ data class LocalKunjunganEntity(
     val lansiaIds: String, // simpan sebagai string CSV "id1,id2"
     val tanggal: String,
     val waktu: String,
-    val jenisKunjungan: String, // 🔹 field baru
+    val jenisKunjungan: String, // field baru
 
 
-    val isSynced: Boolean = false, // ✅ Status sinkronisasi
+    val isSynced: Boolean = false, // Status sinkronisasi
     val createdAt: Long = System.currentTimeMillis()
 )

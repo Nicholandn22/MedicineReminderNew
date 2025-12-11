@@ -24,8 +24,8 @@ import com.example.medicineremindernew.ui.data.entity.LocalKunjunganEntity // �
         LocalReminderEntity::class,
         LocalLansiaEntity::class,
         LocalObatEntity::class,
-        LocalKunjunganEntity::class, // ✅ tambahkan ini
-        LocalRiwayatEntity::class // ✅ tambahkan ini
+        LocalKunjunganEntity::class,
+        LocalRiwayatEntity::class
     ],
     version = 2,
     exportSchema = false
@@ -36,7 +36,7 @@ abstract class LocalDatabase : RoomDatabase() {
     abstract fun reminderDao(): LocalReminderDao
     abstract fun lansiaDao(): LocalLansiaDao
     abstract fun obatDao(): LocalObatDao
-    abstract fun kunjunganDao(): LocalKunjunganDao // ✅ perbaiki return DAO
+    abstract fun kunjunganDao(): LocalKunjunganDao
     abstract fun riwayatDao(): LocalRiwayatDao
 
     companion object {
@@ -61,7 +61,7 @@ abstract class LocalDatabase : RoomDatabase() {
                     LocalDatabase::class.java,
                     "medicine_local_database"
                 )
-                    .addMigrations(MIGRATION_1_2) // 🆕 tambahkan migration
+                    .addMigrations(MIGRATION_1_2)
                     .build()
                 INSTANCE = instance
                 instance

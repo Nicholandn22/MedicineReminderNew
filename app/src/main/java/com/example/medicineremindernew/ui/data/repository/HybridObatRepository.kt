@@ -45,11 +45,10 @@ class HybridObatRepository(
     suspend fun updateObat(obat: Obat): Boolean {
         return try {
             if (networkUtils.isNetworkAvailable()) {
-                // ✅ Tunggu hasil dari suspending function
                 val success = obatRepository.updateObat(obat)
                 success
             } else {
-                // ✅ Pastikan id tidak null
+                // Memastikan id tidak null
                 val id = obat.id ?: return false
 
                 val existing = localDao.getAllObat().find { it.id == id }
@@ -84,7 +83,7 @@ class HybridObatRepository(
             if (networkUtils.isNetworkAvailable()) {
                 obatRepository.deleteObat(id)
             } else {
-                localDao.deleteObat(id) // ✅ benar-benar hapus
+                localDao.deleteObat(id) // benar-benar dihapus
             }
             true
         } catch (e: Exception) {
@@ -141,11 +140,9 @@ class HybridObatRepository(
                 catatan = entity.catatan,
                 stok = entity.stok
             )
-            // Gunakan suspendCoroutine agar sinkronisasi menunggu callback selesai
             suspendCoroutine<Unit> { continuation ->
                 obatRepository.addObat(obat) { success ->
                     if (success) {
-                        // Karena ini sudah dalam coroutine (suspend function), kita bisa langsung panggil DAO tanpa GlobalScope
                         runBlocking {
                             localDao.markAsSynced(entity.id)
                             Log.d("HybridLansiaRepo", "Synced lansia: ${entity.id}")

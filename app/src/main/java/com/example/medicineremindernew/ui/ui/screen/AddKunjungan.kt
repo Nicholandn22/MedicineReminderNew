@@ -257,7 +257,7 @@ fun AddKunjunganScreen(
                                 lansiaIds = listOf(selectedLansia!!),
                                 tanggal = tanggal,
                                 waktu = waktu,
-                                jenisKunjungan = selectedJenisKunjungan // 🔹 ikut disimpan
+                                jenisKunjungan = selectedJenisKunjungan // ikut disimpan
 
                             )
                             kunjunganViewModel.addKunjungan(kunjungan) { success ->

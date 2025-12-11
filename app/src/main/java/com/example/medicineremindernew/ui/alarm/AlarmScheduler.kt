@@ -26,10 +26,8 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
         }
     }
 
-    // SUPER AGGRESSIVE CANCEL - Coba semua kemungkinan kombinasi
     Log.d("AlarmScheduler", "=== SUPER AGGRESSIVE CANCEL FOR $reminderId ===")
 
-    // Semua kemungkinan requestCode yang pernah digunakan
     val possibleRequestCodes = listOf(
         0,                           // RequestCode lama
         reminderId.hashCode(),       // RequestCode baru
@@ -38,14 +36,12 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
         reminderId.toIntOrNull() ?: 0 // Jika reminderId berupa angka
     ).distinct()
 
-    // Semua kemungkinan action
     val possibleActions = listOf(
         "com.example.medicineremindernew.ALARM",
         "ALARM",
         null
     )
 
-    // Semua kemungkinan data URI
     val possibleDataUris = listOf(
         "reminder://$reminderId",
         "reminder:$reminderId",
@@ -79,7 +75,7 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
                         Log.d("AlarmScheduler", "CANCELLED: reqCode=$reqCode, action=$action, data=$dataUri")
                     }
                 } catch (e: Exception) {
-                    // Ignore individual errors, continue with other combinations
+
                 }
             }
         }
@@ -87,12 +83,10 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
 
     Log.d("AlarmScheduler", "Total alarms cancelled: $totalCancelled")
 
-    // Tunggu lebih lama untuk memastikan cancel selesai
     Thread.sleep(500)
 
     Log.d("AlarmScheduler", "=== CREATING NEW ALARM FOR $reminderId ===")
 
-    // Buat alarm baru dengan cara yang paling standar
     val intent = Intent(context, AlarmReceiver::class.java).apply {
         action = "com.example.medicineremindernew.ALARM"
         data = Uri.parse("reminder://$reminderId")
@@ -101,7 +95,7 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
 
     val pendingIntent = PendingIntent.getBroadcast(
         context,
-        reminderId.hashCode(), // Gunakan hashCode secara konsisten
+        reminderId.hashCode(),
         intent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
@@ -116,12 +110,10 @@ fun scheduleAlarm(context: Context, reminderId: String, timeInMillis: Long) {
 }
 
 fun cancelAlarm(context: Context, reminderId: String) {
-    // Gunakan fungsi yang sama dengan scheduleAlarm untuk konsistensi
     Log.d("AlarmScheduler", "Using aggressive cancel strategy...")
 
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    // Sama seperti di scheduleAlarm, coba semua kemungkinan
     val possibleRequestCodes = listOf(
         0,
         reminderId.hashCode(),
@@ -169,7 +161,7 @@ fun cancelAlarm(context: Context, reminderId: String) {
                         Log.d("AlarmScheduler", "CANCELLED: reqCode=$reqCode, action=$action, data=$dataUri")
                     }
                 } catch (e: Exception) {
-                    // Continue with other combinations
+
                 }
             }
         }

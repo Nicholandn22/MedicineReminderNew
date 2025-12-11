@@ -64,7 +64,7 @@ fun HomeScreen(
     val now = remember { LocalDateTime.now() }
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
-    // ✅ Filter hanya reminder >= sekarang
+    // Filter hanya reminder >= sekarang
     val filteredReminders = reminders
         .mapNotNull { reminder ->
             try {
@@ -78,12 +78,12 @@ fun HomeScreen(
         .sortedBy { (_, dateTime) -> dateTime }
         .map { (reminder, _) -> reminder }
 
-    // ✅ Reminder terdekat
+    // Reminder terdekat
     val reminderTerdekat = filteredReminders
         .sortedWith(compareBy({ it.tanggal }, { it.waktu }))
         .firstOrNull()
 
-    // ✅ Reminder jam 11 - 12 siang
+    // Reminder jam 11 - 12 siang
     val reminderJam11to12 = filteredReminders.filter { reminder ->
         try {
             val dateTime = LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)

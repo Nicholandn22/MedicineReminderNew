@@ -28,14 +28,14 @@ class HybridReminderRepository(
 
     suspend fun addReminder(reminder: Reminder): Boolean {
         return try {
-            // ✅ Pastikan reminder punya ID
+            // Memastikan reminder punya ID
             val fixedReminder = if (reminder.id.isEmpty()) {
                 reminder.copy(id = java.util.UUID.randomUUID().toString())
             } else {
                 reminder
             }
 
-            // ✅ Pastikan ada lansia dan obat yang dipilih
+            // Memastikan ada lansia dan obat yang dipilih
             if (fixedReminder.lansiaIds.isEmpty()) {
                 Log.e("HybridReminderRepo", "LansiaIds kosong! Reminder id=${fixedReminder.id}")
                 return false
@@ -45,7 +45,7 @@ class HybridReminderRepository(
                 return false
             }
 
-            // ✅ Simpan ke Firestore jika network tersedia
+            // Otomatis nyimpen ke Firestore jika network tersedia
             if (networkUtils.isNetworkAvailable()) {
                 reminderRepository.addReminder(fixedReminder)  // Firestore
                 try {
@@ -82,10 +82,8 @@ class HybridReminderRepository(
                 return false
             }
 
-            // STEP 1: Cancel alarm lama (try/catch biar tidak stop eksekusi)
             try { cancelAlarm(context, reminder.id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Cancel alarm failed: ${e.message}") }
 
-            // STEP 2: Update Firestore & Room
             if (networkUtils.isNetworkAvailable()) {
                 try { reminderRepository.updateReminder(reminder) } catch(e: Exception) { Log.e("HybridReminderRepo", "Firestore update failed: ${e.message}") }
                 try { localDao.updateReminder(reminder.toLocalEntity(isSynced = true)) } catch(e: Exception) { Log.e("HybridReminderRepo", "Room update failed: ${e.message}") }
@@ -96,7 +94,6 @@ class HybridReminderRepository(
                 }
             }
 
-            // STEP 3: Schedule alarm baru (try/catch biar gagal alarm tidak return false)
             try {
                 val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
                 val localDateTime = java.time.LocalDateTime.parse("${reminder.tanggal} ${reminder.waktu}", formatter)
@@ -121,10 +118,8 @@ class HybridReminderRepository(
 
     suspend fun deleteReminder(id: String): Boolean {
         return try {
-            // STEP 1: Cancel alarm dulu (try/catch biar tidak stop eksekusi)
             try { cancelAlarm(context, id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Cancel alarm failed: ${e.message}") }
 
-            // STEP 2: Delete Firestore & Room
             if (networkUtils.isNetworkAvailable()) {
                 try { reminderRepository.deleteReminder(id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Firestore delete failed: ${e.message}") }
                 try { localDao.deleteReminder(id) } catch(e: Exception) { Log.e("HybridReminderRepo", "Room delete failed: ${e.message}") }
@@ -143,7 +138,7 @@ class HybridReminderRepository(
         try {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            // ✅ 1. Alarm utama
+            // 1. Alarm utama
             val mainIntent = Intent(context, AlarmReceiver::class.java).apply {
                 putExtra("reminderId", reminderId)
             }
@@ -156,7 +151,7 @@ class HybridReminderRepository(
             alarmManager.cancel(mainPendingIntent)
             Log.d("CancelAlarm", "Alarm utama dibatalkan untuk reminder $reminderId")
 
-            // ✅ 2. Snooze alarm (5 menit)
+            // 2. Snooze alarm (5 menit)
             val snoozeIntent = Intent(context, AlarmReceiver::class.java).apply {
                 putExtra("reminderId", reminderId)
                 putExtra("is_snooze", true)
@@ -199,7 +194,7 @@ class HybridReminderRepository(
         unsynced.forEach { entity ->
             val reminder = entity.toDomainModel()
             try {
-                reminderRepository.addReminder(reminder)  // ✅ Ensure Firestore doc ID = reminder.id
+                reminderRepository.addReminder(reminder)
                 localDao.markAsSynced(entity.id)
             } catch (e: Exception) {
                 Log.e("HybridReminderRepo", "Sync failed for ${entity.id}: ${e.message}")

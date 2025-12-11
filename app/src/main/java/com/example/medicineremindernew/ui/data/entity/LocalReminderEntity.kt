@@ -12,6 +12,6 @@ data class LocalReminderEntity(
     val tanggal: String,
     val waktu: String,
     val pengulangan: String,
-    val isSynced: Boolean = false, // ✅ Status sinkronisasi
+    val isSynced: Boolean = false, // Status sinkronisasi
     val createdAt: Long = System.currentTimeMillis()
 )

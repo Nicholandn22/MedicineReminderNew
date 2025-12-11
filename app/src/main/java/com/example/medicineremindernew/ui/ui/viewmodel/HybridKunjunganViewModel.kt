@@ -119,9 +119,6 @@ class HybridKunjunganViewModel(
         }
     }
 
-    /**
-     * 🔹 Ambil data hanya dari Firestore via HybridRepo.getAllKunjunganOnce()
-     */
     private fun observeKunjungan() {
         viewModelScope.launch {
             try {
@@ -196,9 +193,6 @@ class HybridKunjunganViewModel(
         }
     }
 
-    /**
-     * 🔹 Sync dulu (biar data offline masuk Firestore), lalu reload dari Firestore
-     */
     fun syncPendingData() {
         viewModelScope.launch {
             try {

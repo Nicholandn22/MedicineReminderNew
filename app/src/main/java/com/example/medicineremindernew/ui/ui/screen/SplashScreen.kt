@@ -50,11 +50,11 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically)
         ) {
             Image(
-                painter = painterResource(id = R.mipmap.logo), // ganti sesuai nama file logo
+                painter = painterResource(id = R.mipmap.logo),
                 contentDescription = "Logo",
                 modifier = Modifier
                     .size(100.dp) // ukuran logo
-                    .clip(RoundedCornerShape(16.dp)) // sudut melengkung
+                    .clip(RoundedCornerShape(16.dp)) // sudutnya ngelengkung
             )
 
             Text(

@@ -54,7 +54,7 @@
     ) {
         NavHost(navController, startDestination = "home",modifier = modifier) {
 
-            // ✅ HOME (Reminder)
+            // HOME (Reminder)
             composable(BottomNavItem.Home.route) {
                 HomeScreen(
                     navController = navController,
@@ -66,7 +66,7 @@
 
 
 
-            // ✅ Tambahan lain
+            // Tambahan lain
             composable("add_reminder") {
                 AddReminderScreen(
                     onBackClick = { navController.popBackStack() },
@@ -110,7 +110,7 @@
 //                AlarmPopupPreviewScreen()
 //            }
 
-            // ✅ Lansia
+            // Lansia
             composable("lansia") {
                 LansiaScreen(
                     navController = navController,
@@ -193,7 +193,7 @@
                 )
             }
 
-            // Tambah ini jika kamu punya screen khusus untuk daftar obat/lansia:
+
 //            composable("lansia") {
 //                LansiaScreen(navController, lansiaViewModel)
 //            }

@@ -48,7 +48,7 @@ fun KunjunganScreen(
 
 
     // Fetch ulang setiap screen dibuka
-    // 🔄 Fetch data ulang saat screen dibuka
+    // Fetch data ulang saat screen dibuka
     LaunchedEffect(Unit) {
         kunjunganViewModel.syncPendingData()
     }

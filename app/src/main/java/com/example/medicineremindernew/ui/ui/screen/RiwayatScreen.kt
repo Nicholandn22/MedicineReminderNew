@@ -35,10 +35,6 @@ import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-/**
- * Ui model internal yang lebih fleksibel — dibangun dari dokumen Firestore riwayat
- */
 private data class UiRiwayat(
     val id: String,
     val lansiaIds: List<String> = emptyList(),
@@ -51,10 +47,6 @@ private data class UiRiwayat(
     val pertamaKonsumsi: String? = null
 )
 
-/**
- * RiwayatScreen (1 file). Gunakan dengan:
- * RiwayatScreen(navController, riwayatViewModel, lansiaViewModel, obatViewModel)
- */
 @Composable
 fun RiwayatScreen(
     navController: NavController,

@@ -58,35 +58,35 @@ import com.example.medicineremindernew.ui.alarm.AlarmPopupActivity
 
 class MainActivity : AppCompatActivity() {
 
-    // ✅ Local Database
+    // ini Local Database
     private lateinit var localDatabase: LocalDatabase
     private lateinit var networkUtils: NetworkUtils
 
-    // ✅ Hybrid Repositories
+    // ini Hybrid Repositories
     private lateinit var hybridReminderRepository: HybridReminderRepository
     private lateinit var hybridLansiaRepository: HybridLansiaRepository
     private lateinit var hybridObatRepository: HybridObatRepository
     private lateinit var hybridKunjunganRepository: HybridKunjunganRepository
     private lateinit var hybridRiwayatRepository: HybridRiwayatRepository
 
-    // ✅ Repository utama (Firestore base)
+    // ini Repository utama (Firestore base)
     private val firestoreRepository = FirestoreRepository()
 
-    // ✅ Repository untuk tiap data
+    // ini Repository untuk tiap data
     private val lansiaRepository by lazy { LansiaRepository(firestoreRepository) }
     private val obatRepository by lazy { ObatRepository(firestoreRepository) }
     private val reminderRepository by lazy { ReminderRepository(firestoreRepository) }
     private val kunjunganRepository by lazy { KunjunganRepository(firestoreRepository) }
     private val riwayatRepository by lazy { RiwayatRepository() }
 
-    // ✅ Hybrid ViewModels (akan diinisialisasi manual)
+    // ini Hybrid ViewModels (akan diinisialisasi manual)
     private lateinit var hybridObatViewModel: HybridObatViewModel
     private lateinit var hybridLansiaViewModel: HybridLansiaViewModel
     private lateinit var hybridReminderViewModel: HybridReminderViewModel
     private lateinit var hybridKunjunganViewModel: HybridKunjunganViewModel
     private lateinit var hybridRiwayatViewModel: HybridRiwayatViewModel
 
-    // ✅ ViewModels standar
+    // ini ViewModels standar
     private val lansiaViewModel: LansiaViewModel by viewModels {
         LansiaViewModelFactory(lansiaRepository)
     }
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
         // State untuk loading refresh
         var isRefreshing by remember { mutableStateOf(false) }
 
-        // ✅ Check active alarm saat pertama kali load
+        // Check active alarm saat pertama kali load
         LaunchedEffect(Unit) {
             Log.d("MainActivity", "Checking for active alarms on app start...")
             AlarmPopupActivity.checkAndShowActiveAlarms(this@MainActivity)
@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                 lansiaViewModel = hybridLansiaViewModel,
                 reminderViewModel = hybridReminderViewModel,
                 kunjunganViewModel = hybridKunjunganViewModel,
-                riwayatViewModel = hybridRiwayatViewModel, // ✅ tambahkan ini
+                riwayatViewModel = hybridRiwayatViewModel,
                 hybridReminderRepository = hybridReminderRepository,
                 hybridLansiaRepository = hybridLansiaRepository,
                 hybridObatRepository = hybridObatRepository,
@@ -223,11 +223,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         FirebaseApp.initializeApp(this)
 
-        // ✅ Inisialisasi local database & network utils
+        // Inisialisasi local database & network utils
         localDatabase = LocalDatabase.getDatabase(this)
         networkUtils = NetworkUtils(this)
 
-        // ✅ Inisialisasi hybrid repositories
+        // Inisialisasi hybrid repositories
         hybridReminderRepository = HybridReminderRepository(
             context = this,
             reminderRepository = reminderRepository,
@@ -260,7 +260,7 @@ class MainActivity : AppCompatActivity() {
             networkUtils = networkUtils
         )
 
-        // ✅ Inisialisasi Hybrid ViewModels setelah repositories siap
+        // Inisialisasi Hybrid ViewModels setelah repositories siap
         hybridObatViewModel = HybridObatViewModelFactory(hybridObatRepository)
             .create(HybridObatViewModel::class.java)
 
@@ -277,14 +277,14 @@ class MainActivity : AppCompatActivity() {
             .create(HybridRiwayatViewModel::class.java)
 
 
-        // ✅ Create notification channel untuk alarm
+        // Create notification channel untuk alarm
         createNotificationChannel(this)
 
-        // ✅ Check active alarm saat onCreate juga (fallback)
+        // Check active alarm saat onCreate juga (fallback)
         checkActiveAlarmFromIntent()
 
 
-        // ✅ Observer perubahan koneksi untuk auto-sync
+        // Observer perubahan koneksi untuk auto-sync
         lifecycleScope.launch {
             networkUtils.observeNetworkChanges().collect { isConnected ->
                 if (isConnected) {
@@ -296,7 +296,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // ✅ Pastikan alarm tidak mati karena Battery Optimization
+        // Pastikan alarm tidak mati karena Battery Optimization
         requestIgnoreBatteryOptimization()
 
         setContent {
@@ -350,7 +350,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ UPDATED: Check active alarm dari intent yang diterima - Support multiple reminders
+    // UPDATED: Check active alarm dari intent yang diterima - Support multiple reminders
     private fun checkActiveAlarmFromIntent() {
         // Check for multiple reminders
         val checkActiveAlarms = intent?.getBooleanExtra("check_active_alarms", false) ?: false
@@ -377,7 +377,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Handle onResume untuk check active alarm
+    // Handle onResume untuk check active alarm
     override fun onResume() {
         super.onResume()
 
@@ -386,7 +386,7 @@ class MainActivity : AppCompatActivity() {
         Log.d("MainActivity", "onResume - Checking for active alarms...")
     }
 
-    // ✅ UPDATED: Handle new intent - Support multiple reminders
+    // UPDATED: Handle new intent - Support multiple reminders
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent) // Important: Update the intent
@@ -415,7 +415,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Sinkronisasi semua data yang pending
+    // Sinkronisasi semua data yang pending
     private suspend fun syncAllPendingData() {
         try {
             hybridReminderRepository.syncPendingData()
@@ -427,7 +427,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Minta user agar mengizinkan aplikasi mengabaikan battery optimization
+    // Minta user agar mengizinkan aplikasi mengabaikan battery optimization
     private fun requestIgnoreBatteryOptimization() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val pm = getSystemService(Context.POWER_SERVICE) as PowerManager

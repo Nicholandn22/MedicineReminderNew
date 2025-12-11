@@ -4,9 +4,9 @@ import com.example.medicineremindernew.ui.data.model.Riwayat
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
-class RiwayatRepository {   // ❌ hapus FirestoreRepository dari constructor
+class RiwayatRepository {
     private val db = FirebaseFirestore.getInstance()
-    private val collection = db.collection("riwayat") // 📌 nama collection Firestore
+    private val collection = db.collection("riwayat")
 
     suspend fun addRiwayat(riwayat: Riwayat) {
         collection.document(riwayat.idRiwayat)
