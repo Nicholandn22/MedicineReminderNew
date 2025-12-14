@@ -76,7 +76,6 @@ fun OCRCameraScreen(
                 onTextFound = { text ->
                     if (text.isNotBlank()) {
                         extractedText = text
-                        // Update stable text only if significantly different
                         if (text.length > 3 && text != lastStableText) {
                             lastStableText = text
                         }
@@ -84,7 +83,6 @@ fun OCRCameraScreen(
                 }
             )
 
-            // Header
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,7 +100,6 @@ fun OCRCameraScreen(
                 )
             }
 
-            // Bottom Panel with detected text
             Card(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -152,7 +149,6 @@ fun OCRCameraScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Action Buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -174,7 +170,7 @@ fun OCRCameraScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Batal")
+                            Text("Cancel")
                         }
 
                         Button(
@@ -186,7 +182,7 @@ fun OCRCameraScreen(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = BiruMuda,
-                                contentColor = Color.White
+                                contentColor = Color.Black
                             ),
                             enabled = lastStableText.isNotBlank()
                         ) {
@@ -196,13 +192,12 @@ fun OCRCameraScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Gunakan")
+                            Text("Confirm")
                         }
                     }
                 }
             }
         } else {
-            // Permission required state
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -210,7 +205,7 @@ fun OCRCameraScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "Izin Kamera Diperlukan",
+                    "Camera Permission Diperlukan",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )

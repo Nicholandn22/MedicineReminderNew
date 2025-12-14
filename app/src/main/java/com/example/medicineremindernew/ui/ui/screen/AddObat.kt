@@ -47,7 +47,6 @@ fun AddObatScreen(
 
     var namaObat by remember { mutableStateOf("") }
 
-// Update namaObat ketika scannedText berubah
     LaunchedEffect(scannedText) {
         if (scannedText != null && scannedText.isNotBlank()) {
             namaObat = scannedText.trim().replace("\n", " ").replace(Regex("\\s+"), " ")
@@ -104,7 +103,6 @@ fun AddObatScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -124,7 +122,6 @@ fun AddObatScreen(
             Text("Tambah Obat", color = Color.White, fontSize = 20.sp)
         }
 
-        // Form Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -354,7 +351,6 @@ fun AddObatScreen(
             }
         }
 
-        // Buttons Row (Save + Clear)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -445,9 +441,7 @@ fun AddObatScreen(
     }
 }
 
-// Callback function to update namaObat from OCR result
 fun updateNamaObatFromOCR(text: String): String {
-    // Clean up the OCR text (remove extra spaces, newlines, etc.)
     return text.trim().replace("\n", " ").replace(Regex("\\s+"), " ")
 }
 
