@@ -6,6 +6,7 @@
     import android.os.Build
     import androidx.annotation.RequiresApi
     import androidx.compose.runtime.Composable
+    import androidx.compose.runtime.LaunchedEffect
     import androidx.compose.ui.Modifier
     import androidx.navigation.NavHostController
     import androidx.navigation.NavType
@@ -18,6 +19,11 @@
     import com.example.medicineremindernew.ui.ui.screen.AddKunjunganScreen
     import com.example.medicineremindernew.ui.ui.screen.AddLansiaScreen
     import com.example.medicineremindernew.ui.ui.screen.AddObatScreen
+    import com.example.medicineremindernew.ui.ui.screen.OCRCameraScreen
+    import androidx.compose.runtime.getValue
+    import androidx.compose.runtime.mutableStateOf
+    import androidx.compose.runtime.remember
+    import androidx.compose.runtime.setValue
     import com.example.medicineremindernew.ui.ui.screen.AddReminderScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailKunjunganScreen
     import com.example.medicineremindernew.ui.ui.screen.DetailLansiaScreen
@@ -81,9 +87,25 @@
 
 
             composable("addObat") {
+                // Ambil scanned text jika ada
+                val scannedText = navController.currentBackStackEntry
+                    ?.savedStateHandle
+                    ?.get<String>("scanned_text")
+
+                // Clear scanned text setelah diambil
+                LaunchedEffect(scannedText) {
+                    if (scannedText != null) {
+                        navController.currentBackStackEntry
+                            ?.savedStateHandle
+                            ?.remove<String>("scanned_text")
+                    }
+                }
+
                 AddObatScreen(
                     viewModel = obatViewModel,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { navController.popBackStack() },
+                    onScanClick = { navController.navigate("ocr_camera") },
+                    scannedText = scannedText
                 )
             }
 
@@ -102,6 +124,21 @@
                     obatViewModel = obatViewModel,
                     onBackClick = { navController.popBackStack() }
 
+                )
+            }
+
+            composable("ocr_camera") {
+                OCRCameraScreen(
+                    onTextConfirmed = { text ->
+                        // Kirim hasil ke AddObatScreen
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("scanned_text", text)
+                        navController.popBackStack()
+                    },
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
                 )
             }
 
