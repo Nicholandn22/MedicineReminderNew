@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,13 +34,25 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 fun AddObatScreen(
     viewModel: HybridObatViewModel,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onScanClick: () -> Unit = {},
+    scannedText: String? = null
 ) {
+//    var namaObat by remember { mutableStateOf("") }
+
     var namaObat by remember { mutableStateOf("") }
+
+// Update namaObat ketika scannedText berubah
+    LaunchedEffect(scannedText) {
+        if (scannedText != null && scannedText.isNotBlank()) {
+            namaObat = scannedText.trim().replace("\n", " ").replace(Regex("\\s+"), " ")
+        }
+    }
     var jenisObat by remember { mutableStateOf("Tablet") }
     var satuanDosis by remember { mutableStateOf("mg") }
     var waktuMinum by remember { mutableStateOf("Sebelum Makan") }
@@ -49,13 +62,18 @@ fun AddObatScreen(
     var takaranDosis by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
 
+    LaunchedEffect(scannedText) {
+        if (scannedText != null && scannedText.isNotBlank()) {
+            namaObat = scannedText.trim().replace("\n", " ").replace(Regex("\\s+"), " ")
+        }
+    }
+
     val context = LocalContext.current
     val sharedPrefs = context.getSharedPreferences("satuan_dosis", Context.MODE_PRIVATE)
 
     val defaultSatuan = listOf("mg", "ml", "IU", "Tetes")
     val savedSatuan = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toList() ?: emptyList()
     var listSatuanDosis by remember { mutableStateOf((defaultSatuan + savedSatuan).distinct().toMutableList()) }
-//    var listSatuanDosis by remember { mutableStateOf(mutableListOf("mg", "ml", "IU", "Tetes")) }
     var inputSatuanBaru by remember { mutableStateOf(false) }
     var satuanBaru by remember { mutableStateOf("") }
 
@@ -75,7 +93,6 @@ fun AddObatScreen(
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    // Fungsi untuk menyimpan satuan baru ke SharedPreferences
     fun saveSatuanToPrefs(newSatuan: String) {
         val currentSaved = sharedPrefs.getStringSet("custom_satuan", emptySet())?.toMutableSet() ?: mutableSetOf()
         currentSaved.add(newSatuan)
@@ -106,6 +123,7 @@ fun AddObatScreen(
             }
             Text("Tambah Obat", color = Color.White, fontSize = 20.sp)
         }
+
         // Form Card
         Card(
             modifier = Modifier
@@ -115,16 +133,44 @@ fun AddObatScreen(
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                OutlinedTextField(
-                    value = namaObat,
-                    onValueChange = { namaObat = it },
-                    placeholder = { Text("Nama Obat") },
-                    label = { Text("Masukkan Nama Obat") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 20.dp),
-                    singleLine = true
-                )
+                // Nama Obat with OCR Scan Button
+                Text("Nama Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = namaObat,
+                        onValueChange = { namaObat = it },
+                        placeholder = { Text("Nama Obat") },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(bottom = 8.dp),
+                        singleLine = true
+                    )
+
+                    OutlinedButton(
+                        onClick = onScanClick,
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .height(56.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = BiruMuda.copy(alpha = 1.0f)
+                        ),
+                        border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Scan dengan OCR",
+                            tint = BiruMuda.copy(alpha = 1.0f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(7.dp))
 
                 Text("Jenis Obat", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 DropdownMenuField(
@@ -140,8 +186,7 @@ fun AddObatScreen(
                     onValueChange = { deskripsi = it },
                     placeholder = { Text("Deskripsi Obat") },
                     label = { Text("Masukkan Deskripsi Obat") },
-                    modifier = Modifier
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
 
@@ -153,12 +198,10 @@ fun AddObatScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    // ini buat masukkin takaran
                     OutlinedTextField(
                         value = takaranDosis,
-                        onValueChange = {takaranDosis = it},
-                        placeholder = {Text ("Takaran")},
+                        onValueChange = { takaranDosis = it },
+                        placeholder = { Text("Takaran") },
                         modifier = Modifier.weight(1f).height(56.dp),
                         singleLine = true
                     )
@@ -172,18 +215,22 @@ fun AddObatScreen(
                         },
                         modifier = Modifier.weight(1f)
                     )
+
                     Box(
                         modifier = Modifier
                             .height(56.dp)
                             .aspectRatio(1f)
-                            .border(width = 1.dp, color = BiruMuda.copy(alpha = 1.0f), shape = RoundedCornerShape(12.dp)) // garis tepi
+                            .border(
+                                width = 1.dp,
+                                color = BiruMuda.copy(alpha = 1.0f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
                     ) {
                         OutlinedIconButton(
                             onClick = {
                                 inputSatuanBaru = !inputSatuanBaru
                                 satuanBaru = ""
                             },
-//                            modifier = Modifier.fillMaxSize()
                             modifier = Modifier.size(56.dp),
                             border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)),
                             shape = RoundedCornerShape(12.dp)
@@ -191,7 +238,7 @@ fun AddObatScreen(
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = "Tambah Satuan Baru",
-                                tint = BiruMuda.copy(alpha = 1.0f), // icon sekarang berwarna BiruMuda
+                                tint = BiruMuda.copy(alpha = 1.0f),
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -217,7 +264,7 @@ fun AddObatScreen(
                             onClick = {
                                 if (satuanBaru.isNotBlank() && !listSatuanDosis.contains(satuanBaru)) {
                                     listSatuanDosis = (listSatuanDosis + satuanBaru).toMutableList()
-                                    saveSatuanToPrefs(satuanBaru) // Simpan ke SharedPreferences
+                                    saveSatuanToPrefs(satuanBaru)
                                     satuanDosis = satuanBaru
                                     satuanBaru = ""
                                     inputSatuanBaru = false
@@ -235,17 +282,13 @@ fun AddObatScreen(
                                 }
                             },
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = BiruMuda.copy(alpha = 1.0f) // teks tombol
+                                contentColor = BiruMuda.copy(alpha = 1.0f)
                             ),
-                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)), // garis tepi
-                            shape = RoundedCornerShape(8.dp), // <-- ngatur lengkungannya
+                            border = BorderStroke(1.dp, BiruMuda.copy(alpha = 1.0f)),
+                            shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.height(56.dp)
                         ) {
-                            Text(
-                                "Add",
-                                fontSize = 16.sp, // Font lebih besar
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("Add", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -270,7 +313,7 @@ fun AddObatScreen(
                         .padding(vertical = 8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = biru),
                     border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(biru)
+                        brush = SolidColor(biru)
                     )
                 ) {
                     Text(
@@ -293,6 +336,7 @@ fun AddObatScreen(
                         .padding(bottom = 2.dp),
                     singleLine = true
                 )
+
                 Spacer(modifier = Modifier.height(15.dp))
 
                 OutlinedTextField(
@@ -307,7 +351,6 @@ fun AddObatScreen(
                         .padding(bottom = 20.dp),
                     singleLine = true
                 )
-
             }
         }
 
@@ -336,11 +379,9 @@ fun AddObatScreen(
                             waktuMinum = waktuMinum,
                             pertamaKonsumsi = pertamaKonsumsi?.let { Timestamp(it) },
                             catatan = notes,
-                            stok = stok.toIntOrNull() ?: 0 // simpan stok
-
+                            stok = stok.toIntOrNull() ?: 0
                         )
 
-                        // Simpan ke Firestore lewat ViewModel
                         viewModel.addObat(newObat) { success ->
                             scope.launch {
                                 if (success) {
@@ -402,6 +443,12 @@ fun AddObatScreen(
                 .padding(16.dp)
         )
     }
+}
+
+// Callback function to update namaObat from OCR result
+fun updateNamaObatFromOCR(text: String): String {
+    // Clean up the OCR text (remove extra spaces, newlines, etc.)
+    return text.trim().replace("\n", " ").replace(Regex("\\s+"), " ")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
